@@ -1,25 +1,19 @@
 
 Een intern Engels-talige applicatie voor tafelmanagement, reserveringen, betalingen en inzicht in verkoop en omzet.
 
-  
-
 ## Thema
   
-
 Donkerblauw/Lichtblauw/Wit kleuren.
 
 Donkerblauw: #                (Haal uit het logo)
-Lichtblauw:     #                (Haal uit het logo)
-Wit:                #FFFFFF
-
-  
+Lichtblauw:  #                (Haal uit het logo)
+Wit:       #FFFFFF
 
 ## Table Management Systeem
 
 ##### [[Voorbeeld Table Management]] 
   
 aanpasbaar tafelmanagementsysteem waar de gebruiker tafels kan aanmaken en overzien voor een bepaald aantal gasten in het restaurant. De gebruiker moet kunnen zien of de tafel bezet, vrij of gereserveerd is met een begin- en eindtijd (maximaal 2 uur).  
-
 
 ## Authenticatie en Autorisatie
 
@@ -34,11 +28,12 @@ Management heeft toegang tot alle rechten.
 - Welke rollen moeten er bestaan? (type personeel)
 - Welke rechten moet elke rol hebben?
 - Wat moet rol X kunnen doen? (Waar X staat voor een rol hierboven)
+
 ## Reserveringen
 
 Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voor het restaurant.
 
-1.  Restaurant/Hotel personeel voert gegevens in van klant door middel van het aanpassen van een tafel die kan worden gereserveerd.
+1. Restaurant/Hotel personeel voert gegevens in van klant door middel van het aanpassen van een tafel die kan worden gereserveerd.
 2. Als een reservering via het hotel komt moet dat tafelnummer gelinkt worden aan het kamernummer.
 3. De ingevoerde gegevens wordt opgeslagen in de database.
 4. Als de persoon heeft betaald wordt de tafel als vrij beschouwd.
@@ -59,7 +54,6 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 ###### Vragen hierover:
 - Welk personeel moeten er ingrediënten kunnen aanmaken?
 
-
 ## Recepten
 
 ##### Het recept moet aanpasbaar zijn (Edit knop)
@@ -79,7 +73,6 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 ##### ==BELANGRIJK==: Dit systeem moet werken op kleine resoluties voor handheldapparaten
 
 1. De gebruiker geeft een bestelling door via het systeem
-2. Het systeem 
 
 ## Bestelling informatie
 
@@ -95,13 +88,12 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 ### Betalingen
 
 1. De gebruiker vinkt af dat de tafel heeft betaald 
-	-   Als de gebruiker een hotelkamer heeft, wordt dit toegevoegd aan de totaalprijs en wordt later betaald via het hotel.
+	-   Als de gebruiker een hotelkamer heeft, wordt dit toegevoegd aan de totaalprijs en dat wordt later betaald via het hotel.
 2. Dit wordt verwerkt in de database en dat is terug te zien op het statistieken overzicht
-3. 
 
 ###### Vragen hierover:
-- 
 - Wie hanteerd de betalingen?
+
 ## Statistieken
 
 Inzicht betalingen, verkoop en omzet
@@ -114,7 +106,6 @@ Inzicht betalingen, verkoop en omzet
 - Moeten betalingen apart worden weergegeven?
 	- Ja -> Wat voor informatie is belangrijk per betaling.
 - Wat wordt er precies bedoeld met inzicht verkoop?
-
 
 ### Room service bijhouden
 
