@@ -1,11 +1,4 @@
-## Feedback 23/02/26
-- Document-type veranderen ipv. .md document (mogelijk naar .pdf)
-- Prioriteit tussen bestellingen vanuit het restaurant en room service
-	- Vanuit welke applicatie wordt de room service gehandelt?
-- Voeg hoofdtitel toe aan de bovenkant van het document
-- Volgende keer meer doorvragen over de communicatie tussen de serveersters en de keuken in verband met de gerechten. 
-- Vragen over op welk soort niveau de klant zijn applicatie opgericht wilt hebben (gerechten, recepten en/of ingrëdienten)?
-- Vragen over de plattegrond van het restaurant? 
+# Verslag Restaurantapplicatie Molveno Lake Resort
 
 Een intern Engels-talige applicatie voor tafelmanagement, reserveringen, betalingen en inzicht in verkoop en omzet.
 
@@ -51,7 +44,7 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 
 ###### Vragen hierover:
 - Hoe verloopt het proces wanneer een gast zonder reservering binnenloopt?
-- Zijn er tafels die specifiek alleen gereserveerd kunnen worden?
+- Zijn er tafels die specifiek alleen bestemd zijn voor mensen met een reservering?
 
 ## Ingrediënten
 
@@ -105,7 +98,7 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 2. Dit wordt verwerkt in de database en dat is terug te zien op het statistieken overzicht
 
 ###### Vragen hierover:
-- Wie hanteert de betalingen?
+- Welke rol hanteert de betalingen?
 
 ## Statistieken
 

@@ -79,3 +79,13 @@ dit moet worden doorgestuurd naar het betaal systeem
 
 - [X] Wie voorziet de afbeeldingen?
 - answer: de owner
+
+## Feedback 23/02/26
+- Document-type veranderen ipv. .md document (mogelijk naar .pdf)
+- Prioriteit tussen bestellingen vanuit het restaurant en room service
+	- Vanuit welke applicatie wordt de room service gehandelt?
+- Voeg hoofdtitel toe aan de bovenkant van het document
+- Volgende keer meer doorvragen over de communicatie tussen de serveersters en de keuken in verband met de gerechten. 
+- Vragen over op welk soort niveau de klant zijn applicatie opgericht wilt hebben (gerechten, recepten en/of ingrëdienten)?
+- Vragen over de plattegrond van het restaurant? 
+
