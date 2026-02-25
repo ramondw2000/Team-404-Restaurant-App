@@ -1,6 +1,9 @@
 # Verslag Restaurantapplicatie Molveno Lake Resort
 
-Een intern Engels-talige applicatie voor tafelmanagement, reserveringen, betalingen en inzicht in verkoop en omzet.
+Een intern Engels-talige applicatie voor tafelmanagement, reserveringen, betalingen en inzicht in verkoop en inkomsten.
+
+##### Vragen hierover: 
+- Wat is precies het doel van de applicatie, wat moet er bereikt worden? 
 
 ## Thema
   
@@ -46,6 +49,14 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 - Hoe verloopt het proces wanneer een gast zonder reservering binnenloopt?
 - Zijn er tafels die specifiek alleen bestemd zijn voor mensen met een reservering?
 
+### Recepten
+
+##### Vragen hierover:
+- Moeten er recepten toegevoegd kunnen worden?
+	- Zo ja:
+		Aanpak voorbeeld 1: Eerst individuele ingrediënten toevoegen en daarna uit een lijst van die ingrediënten een recept opbouwen.
+		Aanpak voorbeeld 2: In een keer een recept toevoegen.
+
 ## Ingrediënten
 
 #### Ingrediënten moeten aanpasbaar zijn (bewerkknop)
@@ -76,14 +87,14 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 
 ##### ==BELANGRIJK VOOR MAARTEN-JAN==: Dit systeem moet werken op kleine resoluties voor handheldapparaten
 
-1. De gebruiker geeft een bestelling door via het systeem
+De gebruiker geeft een bestelling door via het systeem
 
 ## Bestelling informatie
 
 1. Het overzichtspagina toont aan de gebruiker als er een nieuwe bestelling is. 
 2. De bestelling wordt weergegeven aan de gebruikers die dit nodig hebben. 
-3. De bestelling laat een tafelnummer, bestellingsnummen en de gerechten zien.
-4. Als de bestelling klaar is, kan een gebruiker deze markeren als klaar (gerecht afbeelding wordt grijs?)
+3. De bestelling laat een tafelnummer, bestellingsnummer, speciale instructies en de gerechten zien.
+4. Als de bestelling klaar is, kan een gebruiker deze markeren als klaar
 
 
 ###### Vragen hierover:
@@ -102,9 +113,9 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 
 ## Statistieken
 
-Inzicht betalingen, verkoop en omzet
+Inzicht betalingen, verkoop en inkomsten
 
-- De gebruiker moet de omzet kunnen zien van het afgelopen jaar, maand, week, en dag.
+- De gebruiker moet de inkomsten kunnen zien van het afgelopen jaar, maand, week, en dag.
 
 ###### Vragen hierover:
 - Is het van belang om de statistieken te zien binnen in de applicatie?
