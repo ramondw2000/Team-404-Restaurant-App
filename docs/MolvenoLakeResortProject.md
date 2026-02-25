@@ -13,7 +13,7 @@ Donkerblauw/Lichtblauw/Wit kleuren.
 
 ##### [[Voorbeeld Table Management]] 
   
-Aanpasbaar tafelmanagementsysteem waar de gebruiker tafels kan aanmaken en overzien voor een bepaald aantal gasten in het restaurant. De gebruiker moet kunnen zien of de tafel bezet, vrij of gereserveerd is met een begin- en eindtijd (maximaal 2 uur).  
+Aanpasbaar table management systeem waar de gebruiker tafels kan aanmaken en overzien voor een bepaald aantal gasten in het restaurant. De gebruiker moet kunnen zien of de tafel bezet, vrij of gereserveerd is met een begin- en eindtijd (maximaal 2 uur).  
 
 ##### Vragen hierover:
 - Is er een vast aantal mensen die bij een bepaalde tafel kunnen zitten?
@@ -22,7 +22,7 @@ Aanpasbaar tafelmanagementsysteem waar de gebruiker tafels kan aanmaken en overz
 
 Rollen:
 - Management (SuperAdmin)
-- Kokken (?)
+- Kokken
 - Personeel 
 (evt. meerdere rollen hieronder?)
 
