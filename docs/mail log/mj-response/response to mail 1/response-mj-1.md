@@ -60,4 +60,5 @@ Ik wens jullie veel succes en tot snel!
 Arrivederci! 
 
 bijlagen:
-    
+    - Molveno Lake Resort v2.pptx
+    - Molveno LR.jpg
