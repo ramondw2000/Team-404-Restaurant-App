@@ -54,7 +54,7 @@ Bedienend personeel en koks
 ## vraag: Welke rol hanteert de betalingen?
 Alle bedienend personeel, receptie, eigenaar
 
-### Dan zie ik nog een aantal vragen over statestieken
+# Dan zie ik nog een aantal vragen over statestieken
 In z'n algemeenheid wil je natuurlijk kunnen zien hoeveel je hebt verkocht op een dag, week, maand, jaar
 En uiteraard welke gerechten het beste lopen en wat juist niet.
 
