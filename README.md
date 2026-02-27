@@ -1,5 +1,3 @@
-Hallo jeroen ik wil kaas
-
 # Requirements
 
 ## Reserveringen
