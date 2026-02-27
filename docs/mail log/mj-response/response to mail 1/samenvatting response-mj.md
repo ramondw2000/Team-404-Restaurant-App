@@ -1,6 +1,7 @@
 ## klant idee:
 Zo is een functionaliteit waaraan ik dit weekend dacht: We moeten meerdere tafels aan elkaar kunnen koppelen in het systeem, zodat we bijvoorbeeld ook een groep van 12 mensen kunnen reseveren. 
 
+
 # De vragen
 ## vraag: Wat is precies het doel van de applicatie, wat moet er bereikt worden?
 Antwoord: Ik neem aan dat jullie dit weten, toch? 
@@ -66,7 +67,6 @@ Ja daar moeten jullie ook iets mee doen, dat hebben we besproken tijdens de pres
 Het is belangrijk dat gasten die bij ons logeren ook op hun kamer gerechten kunnen bestellen en dat die bestellen worden opgevoerd in het systeem, gekoppeld aan hun kamer/rekening. 
     - Hoe dit moet:
         daar hoop ik dat jullie een goeie oplossing voor hebben. 
-
 
 
 # feedback:
