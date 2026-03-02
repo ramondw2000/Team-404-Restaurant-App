@@ -53,15 +53,16 @@
 - De gebruiker kan een specifieke selecteren om de volgende informatie te bekijken:
     - Een lijst van alle drank en gerechten die de tafel heeft besteld. 
     - De totaalprijs van alle drank en gerechten.
+    - Een button betreft voor het afrekenen v. 
 
 ### Betalingen
 
-- Wanneer een tafel wilt betalen, kan de gebruiker de betreffende tafel selecteren en vanaf daar de betaling uitvoeren.
+- Wanneer een tafel wilt betalen, kan de gebruiker de betreffende tafel selecteren en vanaf daar de betaling uitvoeren. De gebruiker drukt op de button om de betaling uit te voeren. 
 
 ## Bestellingen plaatsen
 
 - Het bedienend personeel nemen de bestellingen op per tafel en kunnen het daarna plaatsen op een apart apparaat waar de applicatie op draait. De volgende elementen moeten hierin zichtbaar zijn:
-    - Een kader waar de gebruiker het tafelnummer in kan voeren.
+    - Een kader waar de gebruiker het betreffende tafelnummer in kan voeren.
     - Een lijst met alle drank en gerechten, waaronder de naam en de prijs van het gerecht aangetoond zijn.
         - Een nav-bar aanmaken met verschillende categorienamen.*
         - De gebruiker kan per gerecht nog extra commentaar bij toevoegen, om eventuele bijzonderheden te vermelden (bv. allergenen, substituties, gaarheid van vlees).
