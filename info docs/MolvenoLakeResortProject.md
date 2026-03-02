@@ -40,10 +40,21 @@ Management heeft toegang tot alle rechten.
 
 Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voor het restaurant.
 
-1. Restaurant/Hotel personeel voert gegevens in van de gast door middel van het aanpassen van een tafel die kan worden gereserveerd.
-2. Als een reservering via het hotel komt moet dat tafelnummer gelinkt worden aan het kamernummer.
-3. De ingevoerde gegevens worden opgeslagen in de database.
-4. Als de gast heeft betaald wordt de tafel als vrij beschouwd.
+
+- De gebruiker kan de specifieke informatie zien van elke reservering die opgeslagen is in de database. De volgende gegevens moeten als volgt zichtbaar zijn: 
+    - De volledige naam van de gast.
+    - De hoeveelheid gasten.
+    - De aankomsttijd.
+    - Het telefoonnummer en/of e-mailadres.
+    - evt. bijzonderheden (bv. gehandicapten, allergenen).
+
+    - Als benodigd is, moet de gebruiker de mogelijkheid hebben om de gegevens aan te passen voor elke reservering, zoals volgt: 
+        - Het aanpassen van de persoonlijke informatie voor elke reservering.
+        - Het annuleren van een reservering.
+
+- De gebruiker moet een overzicht zien van alle reserveringen op een bepaalde dag. 
+    - De reserveringen zijn gesorteerd in tijdvakken om de halfuur.
+    - De gebruiker kan een latere datum uitkiezen om de reserveringen op die bepaalde dag in te kunnen zien.
 
 ###### Vragen hierover:
 - Hoe verloopt het proces wanneer een gast zonder reservering binnenloopt?
@@ -56,18 +67,6 @@ Mensen kunnen bellen of langskomen bij het hotel om een reservering te maken voo
 	- Zo ja:
 		Aanpak voorbeeld 1: Eerst individuele ingrediënten toevoegen en daarna uit een lijst van die ingrediënten een recept opbouwen.
 		Aanpak voorbeeld 2: In een keer een recept toevoegen.
-
-## Ingrediënten
-
-#### Ingrediënten moeten aanpasbaar zijn (bewerkknop)
-
-1. De gebruiker maakt een lijst van ingrediënten (indien deze ontbreken)
-2. De gebruiker voegt de allergeneninformatie toe per ingrediënt (maakt zelf een notitie per allergeen)
-3. Het ingrediënt wordt opgeslagen in de database
-4. Het ingrediënt kan dan worden gebruikt in het maken van gerechten
-
-###### Vragen hierover:
-- Welk personeel moeten er ingrediënten kunnen aanmaken?
 
 ## Gerechten
 
