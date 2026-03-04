@@ -48,9 +48,9 @@
         - Al bezet voor een reservering. 
 
     - Het aantal gasten die momenteel aan tafel zit. 
-    - De resterende tijd die de tafel heeft om te blijven.
+    - De resterende tijd die de gasten hebben om te blijven.
 
-- De gebruiker kan een specifieke selecteren om de volgende informatie te bekijken:
+- De gebruiker kan een specifieke tafel selecteren om de volgende informatie te bekijken:
     - Een lijst van alle drank en gerechten die de tafel heeft besteld. 
     - De totaalprijs van alle drank en gerechten.
     - Een button betreft voor het afrekenen. 
@@ -61,7 +61,7 @@
 
 ## Bestellingen plaatsen
 
-- Het bedienend personeel nemen de bestellingen op per tafel en kunnen het daarna plaatsen op een apart apparaat waar de applicatie op draait. De volgende elementen moeten hierin zichtbaar zijn:
+- Het bedienend personeel nemen de bestellingen op per tafel, daarna moeten ze deze op een apart apparaat waar de applicatie op draait kunnen invoeren. De volgende elementen moeten hierin zichtbaar zijn:
     - Een kader waar de gebruiker het betreffende tafelnummer in kan voeren.
     - Een lijst met alle drank en gerechten, waaronder de naam en de prijs van het gerecht aangetoond zijn.
         - Een nav-bar aanmaken met verschillende categorienamen.*
@@ -87,7 +87,6 @@
 
 - De gebruiker kan de statistieken zien op een dagelijks, wekelijks, maandelijks en jaarlijks basis. Onder statistieken wordt het volgende weergeven:
     - Het totaalwinst van de gekozen periode.
-    - Een cirkeldiagram van de verschillende betaalmethodes.
     - Een lijst van de meest en minst verkochte gerechten.
 
 ## Room Service
