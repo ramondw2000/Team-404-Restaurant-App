@@ -87,7 +87,6 @@
 
 - De gebruiker kan de statistieken zien op een dagelijks, wekelijks, maandelijks en jaarlijks basis. Onder statistieken wordt het volgende weergeven:
     - Het totaalwinst van de gekozen periode.
-    - Een cirkeldiagram van de verschillende betaalmethodes.
     - Een lijst van de meest en minst verkochte gerechten.
 
 ## Room Service

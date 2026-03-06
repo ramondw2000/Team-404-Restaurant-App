@@ -11,6 +11,10 @@ Route::get('/tablemanagement', function () {
     return view('tablemanagement');
 });
 
+Route::get('/statisticsOvervieuw', function () {
+    return view('statisticsOvervieuw');
+});
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
