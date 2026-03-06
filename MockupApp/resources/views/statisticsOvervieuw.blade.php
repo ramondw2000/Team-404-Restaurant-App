@@ -158,14 +158,8 @@
             margin: 0.75rem 0 0.2rem;
         }
 
-        .stat-delta {
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--blue-300);
-        }
-
         .stat-label {
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: rgba(0, 86, 147, 0.75);
         }
 
@@ -334,7 +328,6 @@
                 <article class="stat-card stat-card--focus">
                     <h3>Total profit</h3>
                     <p class="stat-value" data-profit>—</p>
-                    <p class="stat-delta" data-delta></p>
                     <p class="stat-label" data-label></p>
                     <p class="insight-text" data-highlight></p>
                 </article>
@@ -367,79 +360,74 @@
                 daily: {
                     label: 'Today • 6 March 2026',
                     profit: '€ 2,340',
-                    delta: '+6.2% vs yesterday',
-                    highlight: 'Lunch specials drove 42% of daily revenue. Guest satisfaction scored 4.7/5.',
+                    highlight: '',
                     orders: '184',
                     ordersDetail: 'Average 23 per hour',
                     topDishes: [
-                        { name: 'Truffle Ravioli', sold: 58, trend: '+12% vs last week', share: 92 },
-                        { name: 'Surf & Turf', sold: 41, trend: '+8% vs average', share: 74 },
-                        { name: 'Lemon Cheesecake', sold: 33, trend: '+15% vs average', share: 66 }
+                        { name: 'Tartufo Ravioli', sold: 58, share: 92 },
+                        { name: 'Tagliata di Manzo', sold: 41, share: 74 },
+                        { name: 'Torta al Limone', sold: 33, share: 66 }
                     ],
                     lowDishes: [
-                        { name: 'Vegan Burger', sold: 12, trend: '-8% vs target', share: 34 },
-                        { name: 'Ratatouille', sold: 9, trend: '-4% vs target', share: 28 },
-                        { name: 'Gluten-free Tartlet', sold: 6, trend: '-11% vs target', share: 22 }
+                        { name: 'Panino Caprese', sold: 12, share: 34 },
+                        { name: 'Minestrone Verde', sold: 9, share: 28 },
+                        { name: 'Crostata Senza Glutine', sold: 6, share: 22 }
                     ]
                 },
                 weekly: {
                     label: 'Week 10 • 3 – 9 March',
                     profit: '€ 14,870',
-                    delta: '+4.1% vs prior week',
-                    highlight: 'New tasting menu unlocked one in three reservations over the weekend.',
+                    highlight: '',
                     orders: '1,182',
-                    ordersDetail: '+86 year over year',
+                    ordersDetail: '1,182 covers served',
                     topDishes: [
-                        { name: 'Chef’s Degustation', sold: 176, trend: '+21% vs last week', share: 94 },
-                        { name: 'Black Angus Burger', sold: 142, trend: '+9% vs last week', share: 78 },
-                        { name: 'Burrata Salad', sold: 131, trend: '+5% vs last week', share: 71 }
+                        { name: 'Degustazione dello Chef', sold: 176, share: 94 },
+                        { name: 'Burger di Chianina', sold: 142, share: 78 },
+                        { name: 'Insalata di Burrata', sold: 131, share: 71 }
                     ],
                     lowDishes: [
-                        { name: 'Seasonal Soup', sold: 44, trend: '-12% vs last week', share: 38 },
-                        { name: 'Gnocchi Verde', sold: 32, trend: '-6% vs last week', share: 30 },
-                        { name: 'Vegan Molten Cake', sold: 27, trend: '-4% vs last week', share: 28 }
+                        { name: 'Zuppa di Stagione', sold: 44, share: 38 },
+                        { name: 'Gnocchi al Pesto', sold: 32, share: 30 },
+                        { name: 'Torta al Cioccolato Vegana', sold: 27, share: 28 }
                     ]
                 },
                 monthly: {
                     label: 'March 2026',
                     profit: '€ 62,480',
-                    delta: '+11.3% vs February',
-                    highlight: 'Staycation packages pushed room service orders up by 19%.',
+                    highlight: '',
                     orders: '4,812',
                     ordersDetail: 'Average 155 per day',
                     topDishes: [
-                        { name: 'Dry-aged Côte de Boeuf', sold: 522, trend: '+17% vs Feb', share: 96 },
-                        { name: 'Miso Glazed Cod', sold: 414, trend: '+12% vs Feb', share: 82 },
-                        { name: 'Salted Caramel Tart', sold: 398, trend: '+9% vs Feb', share: 76 }
+                        { name: 'Bistecca alla Fiorentina', sold: 522, share: 96 },
+                        { name: 'Branzino al Limone', sold: 414, share: 82 },
+                        { name: 'Crostata al Caramello Salato', sold: 398, share: 76 }
                     ],
                     lowDishes: [
-                        { name: 'Pumpkin Risotto', sold: 133, trend: '-15% vs Feb', share: 36 },
-                        { name: 'Spiced Cauliflower', sold: 118, trend: '-7% vs Feb', share: 32 },
-                        { name: 'Matcha Panna Cotta', sold: 101, trend: '-5% vs Feb', share: 30 }
+                        { name: 'Risotto alla Zucca', sold: 133, share: 36 },
+                        { name: 'Cavolfiore Piccante', sold: 118, share: 32 },
+                        { name: 'Panna Cotta al Pistacchio', sold: 101, share: 30 }
                     ]
                 },
                 yearly: {
                     label: '2025 (Jan – Dec)',
                     profit: '€ 742,300',
-                    delta: '+18.4% vs 2024',
-                    highlight: 'Premium positioning delivered an 11% higher margin per dish.',
+                    highlight: '',
                     orders: '55,418',
-                    ordersDetail: '+6,214 year over year',
+                    ordersDetail: '55,418 covers served',
                     topDishes: [
-                        { name: 'Chef tasting (7 courses)', sold: 6_830, trend: '+24% vs 2024', share: 98 },
-                        { name: 'Lobster Tagliolini', sold: 5_944, trend: '+19% vs 2024', share: 85 },
-                        { name: 'Molten Pistachio Cake', sold: 5_311, trend: '+14% vs 2024', share: 79 }
+                        { name: 'Percorso Degustazione (7 portate)', sold: 6_830, share: 98 },
+                        { name: 'Tagliolini all’Astice', sold: 5_944, share: 85 },
+                        { name: 'Tortino Morbido al Pistacchio', sold: 5_311, share: 79 }
                     ],
                     lowDishes: [
-                        { name: 'Classic Club Sandwich', sold: 1_904, trend: '-9% vs 2024', share: 44 },
-                        { name: 'Seasonal Gazpacho', sold: 1_502, trend: '-11% vs 2024', share: 34 },
-                        { name: 'Vegan Charcuterie', sold: 1_211, trend: '-6% vs 2024', share: 29 }
+                        { name: 'Panino Club Classico', sold: 1_904, share: 44 },
+                        { name: 'Gazpacho Mediterraneo', sold: 1_502, share: 34 },
+                        { name: 'Antipasto Vegano all’Italiana', sold: 1_211, share: 29 }
                     ]
                 }
             };
 
             const profitEl = document.querySelector('[data-profit]');
-            const deltaEl = document.querySelector('[data-delta]');
             const labelEl = document.querySelector('[data-label]');
             const highlightEl = document.querySelector('[data-highlight]');
             const ordersEl = document.querySelector('[data-orders]');
@@ -454,7 +442,7 @@
                         <div class="dish-row">
                             <div>
                                 <p class="dish-name">${item.name}</p>
-                                <p class="dish-meta">${item.sold.toLocaleString('en-US')} sold · ${item.trend}</p>
+                                <p class="dish-meta">${item.share}% of sales</p>
                             </div>
                             <span class="font-semibold text-slate-600">${item.sold.toLocaleString('en-US')}</span>
                         </div>
@@ -468,7 +456,6 @@
                 if (!data) return;
 
                 profitEl.textContent = data.profit;
-                deltaEl.textContent = data.delta;
                 labelEl.textContent = data.label;
                 highlightEl.textContent = data.highlight;
                 ordersEl.textContent = data.orders;
