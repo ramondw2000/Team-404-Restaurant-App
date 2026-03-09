@@ -12,6 +12,11 @@ Route::get('/tablemanagement', function () {
     return view('tablemanagement');
 });
 
+Route::get('/statisticsOvervieuw', function () {
+    return view('statisticsOvervieuw');
+});
+
+
 Route::get('/dishes', function () {
     return view('dishes');
 });
