@@ -25,6 +25,10 @@ Route::get('/orders', function () {
     return view('orders');
 });
 
+Route::get('/ordermanagement', function () {
+    return view('ordermanagement');
+});
+
 Route::get('/accounts',             [AccountController::class, 'index'])  ->name('accounts.index');
 Route::post('/accounts',            [AccountController::class, 'store'])  ->name('accounts.store');
 Route::put('/accounts/{account}',   [AccountController::class, 'update']) ->name('accounts.update');
