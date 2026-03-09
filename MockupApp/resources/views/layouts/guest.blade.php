@@ -14,16 +14,22 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
-            </div>
+    <body class="font-sans text-white antialiased bg-red-400">
+        <div class="min-h-screen flex flex-col sm:gap-4 items-center bg-white sm:pb-6">
+            @include('layouts.guest-navigation')
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
+            <div class="flex flex-col md:flex-row items-stretch m-auto w-full max-w-4xl border-gray-200 sm:border sm:shadow  sm:shadow-gray-600">
+                <div class="flex flex-col justify-center p-8 gap-4 bg-gray-200">
+                    <img class="max-w-full border-gray-800 border-2 px-8 bg-white rounded-lg mx-auto" src="{{ asset('images/molveno-logo.png') }}" alt="molveno lake resort logo"/>
+                    <h1 class="text-3xl text-molveno-blue-300 font-black text-center">Molveno Lake Resort</h1>
+                    <span class="text-xl text-white text-wrap font-bold bg-molveno-blue-300 p-4 rounded-lg tracking-wide uppercase text-center">Restaurant</span>
+                </div>
+
+                <div class="flex flex-col justify-center overflow-hidden w-full sm:bg-molveno-blue-300 sm:px-8">
+                    <div class="bg-molveno-blue-300 px-4 sm:px-0 py-8 rounded-lg w-full">
+                        {{ $slot }}
+                    </div>
+                </div>
             </div>
         </div>
     </body>

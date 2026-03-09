@@ -14,6 +14,14 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                'primary': '#005693',
+                'molveno-blue-100': '#66b6dc',
+                'molveno-blue-300': '#309bcf',
+                'molveno-blue-500': '#0084c4',
+                'molveno-blue-700': '#006ead',
+
+            }
         },
     },
 
