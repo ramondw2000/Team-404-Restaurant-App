@@ -83,14 +83,25 @@
 
 - Als een bestelling klaar is, kan de gebruiker een bestelling afvinken.*
 
+### Room Service
+
+- Gasten die voor room service hebben gevraagd komen ook in het overzichtsysteem te zien. Hiervoor is de kamernummer vermeld van de gast, naast alle andere benodigde informatie die vermeld is in de vorige paragraaf. 
+
+## Menuoverzicht
+
+- De gebruiker kan een overzicht zien van alle gerechten die momenteel te bestellen zijn. Hieronder is de volgende informatie te zien per gerecht: 
+    - Naam van het gerecht.
+    - Evt. afbeelding van het gerecht. 
+    - De ingrediënten nodig voor het gerecht.
+    - Instructies voor het gerecht.
+    - Allergenen.
+
+- De gebruiker kan vervolgens nieuwe gerechten kunnen toevoegen of verwijderen in het menu. De benodigde informatie hiervoor is al uitgelijst in de vorige paragraaf. 
+
 ## Statistieken
 
 - De gebruiker kan de statistieken zien op een dagelijks, wekelijks, maandelijks en jaarlijks basis. Onder statistieken wordt het volgende weergeven:
     - Het totaalwinst van de gekozen periode.
     - Een lijst van de meest en minst verkochte gerechten.
-
-## Room Service
-
-- wat
 
 *Nog bespreken met de anderen
