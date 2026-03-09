@@ -12,8 +12,8 @@ Route::get('/tablemanagement', function () {
     return view('tablemanagement');
 });
 
-Route::get('/statisticsOvervieuw', function () {
-    return view('statisticsOvervieuw');
+Route::get('/statistics', function () {
+    return view('statistics');
 });
 
 
