@@ -1,22 +1,17 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <div class="p-2 rounded-xl brand-pill">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="1.7">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6m6 6V7" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 3v18h16" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-sm concept-label">Concept</p>
-                <h2 class="text-2xl font-semibold header-title">Statistics preview</h2>
-            </div>
-        </div>
-    </x-slot>
-
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&display=swap');
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <title>Statistics - {{ config('app.name', 'Laravel') }}</title>
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,900&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <style>
 
         :root {
             --primary-blue: #005693;
@@ -43,7 +38,6 @@
         .stats-shell {
             font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             padding-bottom: 4rem;
-            background-color: var(--neutral-white);
         }
 
         .stats-panel {
@@ -277,7 +271,7 @@
             color: rgba(0, 86, 147, 0.8) !important;
         }
 
-        @media (max-width: 1024px) {
+        @@media (max-width: 1024px) {
             .payment-card {
                 grid-template-columns: 1fr;
                 text-align: center;
@@ -288,7 +282,7 @@
             }
         }
 
-        @media (max-width: 640px) {
+        @@media (max-width: 640px) {
             .stats-panel {
                 padding: 1.8rem;
                 border-radius: 24px;
@@ -305,175 +299,179 @@
                 text-align: center;
             }
         }
-    </style>
+        </style>
+    </head>
+    <body class="font-sans antialiased min-h-screen bg-gray-100">
+        @include('layouts.guest-navigation')
 
-    <section class="stats-shell">
-        <div class="stats-panel">
-            <div class="stats-header">
-                <div>
-                    <p class="text-sm uppercase tracking-[0.25em] text-slate-500">Overview</p>
-                    <h1>Sales performance</h1>
-                    <p class="stats-description">Concept preview of the statistics experience. Toggle between timeframes to
-                        see profit, demand patterns and menu winners.</p>
+        <section class="stats-shell max-w-screen-xl mx-auto px-6 py-8">
+            <div class="stats-panel">
+                <div class="stats-header">
+                    <div>
+                        <p class="text-sm uppercase tracking-[0.25em] text-slate-500">Overview</p>
+                        <h1>Sales performance</h1>
+                        <p class="stats-description">Concept preview of the statistics experience. Toggle between timeframes to
+                            see profit, demand patterns and menu winners.</p>
+                    </div>
+                    <div class="timeframe-toggle">
+                        <button type="button" class="timeframe-button is-active" data-range="daily">Daily</button>
+                        <button type="button" class="timeframe-button" data-range="weekly">Weekly</button>
+                        <button type="button" class="timeframe-button" data-range="monthly">Monthly</button>
+                        <button type="button" class="timeframe-button" data-range="yearly">Yearly</button>
+                    </div>
                 </div>
-                <div class="timeframe-toggle">
-                    <button type="button" class="timeframe-button is-active" data-range="daily">Daily</button>
-                    <button type="button" class="timeframe-button" data-range="weekly">Weekly</button>
-                    <button type="button" class="timeframe-button" data-range="monthly">Monthly</button>
-                    <button type="button" class="timeframe-button" data-range="yearly">Yearly</button>
+
+                <div class="stat-grid">
+                    <article class="stat-card stat-card--focus">
+                        <h3>Total profit</h3>
+                        <p class="stat-value" data-profit>—</p>
+                        <p class="stat-label" data-label></p>
+                        <p class="insight-text" data-highlight></p>
+                    </article>
+
+                    <article class="stat-card">
+                        <h3>Orders</h3>
+                        <p class="stat-value" data-orders>—</p>
+                        <p class="stat-label" data-orders-detail></p>
+                    </article>
                 </div>
+
+                <div class="lists-grid">
+                    <article class="stat-card">
+                        <h3>Best-selling dishes</h3>
+                        <ul class="dish-list" data-top-list></ul>
+                    </article>
+
+                    <article class="stat-card">
+                        <h3>Lowest-selling dishes</h3>
+                        <ul class="dish-list" data-low-list></ul>
+                    </article>
+                </div>
+
             </div>
+        </section>
 
-            <div class="stat-grid">
-                <article class="stat-card stat-card--focus">
-                    <h3>Total profit</h3>
-                    <p class="stat-value" data-profit>—</p>
-                    <p class="stat-label" data-label></p>
-                    <p class="insight-text" data-highlight></p>
-                </article>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const statisticsData = {
+                    daily: {
+                        label: 'Today • 6 March 2026',
+                        profit: '€ 2,340',
+                        highlight: '',
+                        orders: '184',
+                        ordersDetail: 'Average 23 per hour',
+                        topDishes: [
+                            { name: 'Tartufo Ravioli', sold: 58, share: 92 },
+                            { name: 'Tagliata di Manzo', sold: 41, share: 74 },
+                            { name: 'Torta al Limone', sold: 33, share: 66 }
+                        ],
+                        lowDishes: [
+                            { name: 'Panino Caprese', sold: 12, share: 34 },
+                            { name: 'Minestrone Verde', sold: 9, share: 28 },
+                            { name: 'Crostata Senza Glutine', sold: 6, share: 22 }
+                        ]
+                    },
+                    weekly: {
+                        label: 'Week 10 • 3 – 9 March',
+                        profit: '€ 14,870',
+                        highlight: '',
+                        orders: '1,182',
+                        ordersDetail: '1,182 covers served',
+                        topDishes: [
+                            { name: 'Degustazione dello Chef', sold: 176, share: 94 },
+                            { name: 'Burger di Chianina', sold: 142, share: 78 },
+                            { name: 'Insalata di Burrata', sold: 131, share: 71 }
+                        ],
+                        lowDishes: [
+                            { name: 'Zuppa di Stagione', sold: 44, share: 38 },
+                            { name: 'Gnocchi al Pesto', sold: 32, share: 30 },
+                            { name: 'Torta al Cioccolato Vegana', sold: 27, share: 28 }
+                        ]
+                    },
+                    monthly: {
+                        label: 'March 2026',
+                        profit: '€ 62,480',
+                        highlight: '',
+                        orders: '4,812',
+                        ordersDetail: 'Average 155 per day',
+                        topDishes: [
+                            { name: 'Bistecca alla Fiorentina', sold: 522, share: 96 },
+                            { name: 'Branzino al Limone', sold: 414, share: 82 },
+                            { name: 'Crostata al Caramello Salato', sold: 398, share: 76 }
+                        ],
+                        lowDishes: [
+                            { name: 'Risotto alla Zucca', sold: 133, share: 36 },
+                            { name: 'Cavolfiore Piccante', sold: 118, share: 32 },
+                            { name: 'Panna Cotta al Pistacchio', sold: 101, share: 30 }
+                        ]
+                    },
+                    yearly: {
+                        label: '2025 (Jan – Dec)',
+                        profit: '€ 742,300',
+                        highlight: '',
+                        orders: '55,418',
+                        ordersDetail: '55,418 covers served',
+                        topDishes: [
+                            { name: 'Percorso Degustazione (7 portate)', sold: 6_830, share: 98 },
+                            { name: 'Tagliolini all'Astice', sold: 5_944, share: 85 },
+                            { name: 'Tortino Morbido al Pistacchio', sold: 5_311, share: 79 }
+                        ],
+                        lowDishes: [
+                            { name: 'Panino Club Classico', sold: 1_904, share: 44 },
+                            { name: 'Gazpacho Mediterraneo', sold: 1_502, share: 34 },
+                            { name: 'Antipasto Vegano all'Italiana', sold: 1_211, share: 29 }
+                        ]
+                    }
+                };
 
-                <article class="stat-card">
-                    <h3>Orders</h3>
-                    <p class="stat-value" data-orders>—</p>
-                    <p class="stat-label" data-orders-detail></p>
-                </article>
-            </div>
+                const profitEl = document.querySelector('[data-profit]');
+                const labelEl = document.querySelector('[data-label]');
+                const highlightEl = document.querySelector('[data-highlight]');
+                const ordersEl = document.querySelector('[data-orders]');
+                const ordersDetailEl = document.querySelector('[data-orders-detail]');
+                const topListEl = document.querySelector('[data-top-list]');
+                const lowListEl = document.querySelector('[data-low-list]');
+                const buttons = document.querySelectorAll('.timeframe-button');
 
-            <div class="lists-grid">
-                <article class="stat-card">
-                    <h3>Best-selling dishes</h3>
-                    <ul class="dish-list" data-top-list></ul>
-                </article>
-
-                <article class="stat-card">
-                    <h3>Lowest-selling dishes</h3>
-                    <ul class="dish-list" data-low-list></ul>
-                </article>
-            </div>
-
-        </div>
-    </section>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const statisticsData = {
-                daily: {
-                    label: 'Today • 6 March 2026',
-                    profit: '€ 2,340',
-                    highlight: '',
-                    orders: '184',
-                    ordersDetail: 'Average 23 per hour',
-                    topDishes: [
-                        { name: 'Tartufo Ravioli', sold: 58, share: 92 },
-                        { name: 'Tagliata di Manzo', sold: 41, share: 74 },
-                        { name: 'Torta al Limone', sold: 33, share: 66 }
-                    ],
-                    lowDishes: [
-                        { name: 'Panino Caprese', sold: 12, share: 34 },
-                        { name: 'Minestrone Verde', sold: 9, share: 28 },
-                        { name: 'Crostata Senza Glutine', sold: 6, share: 22 }
-                    ]
-                },
-                weekly: {
-                    label: 'Week 10 • 3 – 9 March',
-                    profit: '€ 14,870',
-                    highlight: '',
-                    orders: '1,182',
-                    ordersDetail: '1,182 covers served',
-                    topDishes: [
-                        { name: 'Degustazione dello Chef', sold: 176, share: 94 },
-                        { name: 'Burger di Chianina', sold: 142, share: 78 },
-                        { name: 'Insalata di Burrata', sold: 131, share: 71 }
-                    ],
-                    lowDishes: [
-                        { name: 'Zuppa di Stagione', sold: 44, share: 38 },
-                        { name: 'Gnocchi al Pesto', sold: 32, share: 30 },
-                        { name: 'Torta al Cioccolato Vegana', sold: 27, share: 28 }
-                    ]
-                },
-                monthly: {
-                    label: 'March 2026',
-                    profit: '€ 62,480',
-                    highlight: '',
-                    orders: '4,812',
-                    ordersDetail: 'Average 155 per day',
-                    topDishes: [
-                        { name: 'Bistecca alla Fiorentina', sold: 522, share: 96 },
-                        { name: 'Branzino al Limone', sold: 414, share: 82 },
-                        { name: 'Crostata al Caramello Salato', sold: 398, share: 76 }
-                    ],
-                    lowDishes: [
-                        { name: 'Risotto alla Zucca', sold: 133, share: 36 },
-                        { name: 'Cavolfiore Piccante', sold: 118, share: 32 },
-                        { name: 'Panna Cotta al Pistacchio', sold: 101, share: 30 }
-                    ]
-                },
-                yearly: {
-                    label: '2025 (Jan – Dec)',
-                    profit: '€ 742,300',
-                    highlight: '',
-                    orders: '55,418',
-                    ordersDetail: '55,418 covers served',
-                    topDishes: [
-                        { name: 'Percorso Degustazione (7 portate)', sold: 6_830, share: 98 },
-                        { name: 'Tagliolini all’Astice', sold: 5_944, share: 85 },
-                        { name: 'Tortino Morbido al Pistacchio', sold: 5_311, share: 79 }
-                    ],
-                    lowDishes: [
-                        { name: 'Panino Club Classico', sold: 1_904, share: 44 },
-                        { name: 'Gazpacho Mediterraneo', sold: 1_502, share: 34 },
-                        { name: 'Antipasto Vegano all’Italiana', sold: 1_211, share: 29 }
-                    ]
-                }
-            };
-
-            const profitEl = document.querySelector('[data-profit]');
-            const labelEl = document.querySelector('[data-label]');
-            const highlightEl = document.querySelector('[data-highlight]');
-            const ordersEl = document.querySelector('[data-orders]');
-            const ordersDetailEl = document.querySelector('[data-orders-detail]');
-            const topListEl = document.querySelector('[data-top-list]');
-            const lowListEl = document.querySelector('[data-low-list]');
-            const buttons = document.querySelectorAll('.timeframe-button');
-
-            const renderList = (element, list, soft = false) => {
-                element.innerHTML = list.map(item => `
-                    <li class="dish-item">
-                        <div class="dish-row">
-                            <div>
-                                <p class="dish-name">${item.name}</p>
-                                <p class="dish-meta">${item.share}% of sales</p>
+                const renderList = (element, list, soft = false) => {
+                    element.innerHTML = list.map(item => `
+                        <li class="dish-item">
+                            <div class="dish-row">
+                                <div>
+                                    <p class="dish-name">${item.name}</p>
+                                    <p class="dish-meta">${item.share}% of sales</p>
+                                </div>
+                                <span class="font-semibold text-slate-600">${item.sold.toLocaleString('en-US')}</span>
                             </div>
-                            <span class="font-semibold text-slate-600">${item.sold.toLocaleString('en-US')}</span>
-                        </div>
-                        <div class="dish-bar"><span class="${soft ? 'is-soft' : ''}" style="width:${item.share}%"></span></div>
-                    </li>
-                `).join('');
-            };
+                            <div class="dish-bar"><span class="${soft ? 'is-soft' : ''}" style="width:${item.share}%"></span></div>
+                        </li>
+                    `).join('');
+                };
 
-            const renderRange = (range) => {
-                const data = statisticsData[range];
-                if (!data) return;
+                const renderRange = (range) => {
+                    const data = statisticsData[range];
+                    if (!data) return;
 
-                profitEl.textContent = data.profit;
-                labelEl.textContent = data.label;
-                highlightEl.textContent = data.highlight;
-                ordersEl.textContent = data.orders;
-                ordersDetailEl.textContent = data.ordersDetail;
+                    profitEl.textContent = data.profit;
+                    labelEl.textContent = data.label;
+                    highlightEl.textContent = data.highlight;
+                    ordersEl.textContent = data.orders;
+                    ordersDetailEl.textContent = data.ordersDetail;
 
-                renderList(topListEl, data.topDishes);
-                renderList(lowListEl, data.lowDishes, true);
-            };
+                    renderList(topListEl, data.topDishes);
+                    renderList(lowListEl, data.lowDishes, true);
+                };
 
-            buttons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const range = button.dataset.range;
-                    buttons.forEach(btn => btn.classList.toggle('is-active', btn === button));
-                    renderRange(range);
+                buttons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const range = button.dataset.range;
+                        buttons.forEach(btn => btn.classList.toggle('is-active', btn === button));
+                        renderRange(range);
+                    });
                 });
-            });
 
-            renderRange('daily');
-        });
-    </script>
-</x-app-layout>
+                renderRange('daily');
+            });
+        </script>
+    </body>
+</html>

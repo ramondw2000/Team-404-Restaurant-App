@@ -15,6 +15,21 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
+                        {{ __('Dishes') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
+                        {{ __('Statistics') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('orders')" :active="request()->routeIs('orders')">
+                        {{ __('Orders') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
+                        {{ __('Order Management') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
+                        {{ __('Table Management') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -69,6 +84,21 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
+                {{ __('Dishes') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
+                {{ __('Statistics') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('orders')" :active="request()->routeIs('orders')">
+                {{ __('Orders') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
+                {{ __('Order Management') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
+                {{ __('Table Management') }}
             </x-responsive-nav-link>
         </div>
 

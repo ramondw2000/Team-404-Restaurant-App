@@ -277,6 +277,32 @@
                     </label>
                 </div>
 
+                <!-- Table actions (edit mode only) -->
+                <div id="sheet-actions" class="flex flex-col gap-2" style="display:none">
+                    <hr class="border-gray-100">
+                    <p class="text-sm font-semibold text-gray-700">Actions</p>
+                    <div class="flex flex-col gap-2">
+                        <a id="btn-check-orders" href="#"
+                           class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                                <rect x="9" y="3" width="6" height="4" rx="1"/>
+                                <path d="M9 12h6M9 16h4"/>
+                            </svg>
+                            Check orders for this table
+                        </a>
+                        <a id="btn-new-order" href="#"
+                           class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-white bg-molveno-blue-500 hover:bg-molveno-blue-700 rounded-lg shadow-sm transition-colors">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                            Take new order
+                        </a>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Footer -->
@@ -414,6 +440,7 @@
                 document.getElementById('sheet-title').textContent         = 'Add Table';
                 document.getElementById('sheet-save-btn').textContent      = 'Save Table';
                 document.getElementById('sheet-delete-btn').classList.add('hidden');
+                document.getElementById('sheet-actions').style.display = 'none';
 
                 document.getElementById('field-id').value                  = '';
                 document.getElementById('field-seats').value               = '4';
@@ -437,6 +464,10 @@
                 document.getElementById('field-seats').value               = String(table.seats);
                 document.querySelector(`input[name="status"][value="${table.status}"]`).checked = true;
                 document.getElementById('field-waiter').checked            = table.waiter;
+
+                document.getElementById('btn-check-orders').href = `/orders?table=${encodeURIComponent(table.id)}`;
+                document.getElementById('btn-new-order').href    = `/ordermanagement`;
+                document.getElementById('sheet-actions').style.display = 'flex';
 
                 openSheet();
             }
