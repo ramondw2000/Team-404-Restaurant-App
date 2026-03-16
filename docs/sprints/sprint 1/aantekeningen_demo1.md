@@ -20,7 +20,7 @@
 
 ### Gerechtenpagina
 - Ingrediëntenlijst toevoegen aan receptenpagina.
-- Gerechten automatisch op allergenen sorteren gebaseert op welke ingrediënten in het recept zit. (NIET DOEN)
+- Gerechten automatisch op allergenen sorteren gebaseert op welke ingrediënten in het recept zit. 
 - Knoppen en buttons groter maken voor makkelijker gebruik.
 - Sorteren onder categorieën (onder mains/sides/appetizers).
 
@@ -29,7 +29,7 @@
 - Meer compacte overzicht van gerechten, aantal dingen weglaten en de rest groter maken.
 
 ### Table management
-- WAITER NEEDED NIET NODIG !!!!!! (heeft even tijd nodig om erover na te denken)
+- Vragen over "waiter needed" button (heeft even tijd nodig om erover na te denken)
 - Sorteren op tafels waar ze momenteel staan (bv. tafels langs raam).
 - Table management systeem ombouwen op een soort plattegrond? (klant geeft aan om plattegrond op een latere tijd te delen?)
 
