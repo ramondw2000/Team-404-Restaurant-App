@@ -17,7 +17,7 @@
                 Statistics
             </a>
             <a href="{{ route('orders') }}" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-molveno-blue-700 {{ request()->routeIs('orders') ? 'bg-molveno-blue-700' : '' }}">
-                Orders
+                Kitchen Orders
             </a>
             <a href="{{ route('ordermanagement') }}" class="px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-molveno-blue-700 {{ request()->routeIs('ordermanagement') ? 'bg-molveno-blue-700' : '' }}">
                 Order Management
@@ -42,7 +42,7 @@
             Statistics
         </a>
         <a href="{{ route('orders') }}" class="px-3 py-1 rounded-md text-sm font-medium text-white hover:bg-molveno-blue-700 {{ request()->routeIs('orders') ? 'bg-molveno-blue-700' : '' }}">
-            Orders
+            Kitchen Orders
         </a>
         <a href="{{ route('ordermanagement') }}" class="px-3 py-1 rounded-md text-sm font-medium text-white hover:bg-molveno-blue-700 {{ request()->routeIs('ordermanagement') ? 'bg-molveno-blue-700' : '' }}">
             Order Management
