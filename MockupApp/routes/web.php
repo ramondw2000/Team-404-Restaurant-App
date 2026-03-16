@@ -13,9 +13,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/tablemanagement', function () {
-        return view('tablemanagement');
-    })->name('tablemanagement');
+    Route::livewire('/tablemanagement', TableManagement::class)->name('tablemanagement');
 
     Route::get('/statistics', function () {
         return view('statistics');
@@ -33,10 +31,10 @@ Route::middleware('auth')->group(function () {
         return view('ordermanagement');
     })->name('ordermanagement');
 
-    Route::get('/accounts',             [AccountController::class, 'index'])  ->name('accounts.index');
-    Route::post('/accounts',            [AccountController::class, 'store'])  ->name('accounts.store');
-    Route::put('/accounts/{account}',   [AccountController::class, 'update']) ->name('accounts.update');
-    Route::delete('/accounts/{account}',[AccountController::class, 'destroy'])->name('accounts.destroy');
+    Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
+    Route::post('/accounts', [AccountController::class, 'store'])->name('accounts.store');
+    Route::put('/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
+    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
