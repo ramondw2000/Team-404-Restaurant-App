@@ -18,7 +18,7 @@
         }
         @media (max-width: 1279px) { .order-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 767px)  { .order-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 479px)  { http://127.0.0.1:8000/orders.order-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 479px)  { .order-grid { grid-template-columns: 1fr; } }
 
         /* ── Filter tabs ──────────────────────────────────── */
         .tab-btn {
