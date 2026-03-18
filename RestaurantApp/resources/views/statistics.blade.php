@@ -8,75 +8,6 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,900&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <style>
-            .metric-card {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 1rem;
-                padding: 1.5rem;
-                box-shadow: 0 8px 24px rgba(2, 132, 199, 0.08);
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
-            }
-            .metric-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 12px 32px rgba(2, 132, 199, 0.12);
-            }
-            .spark-line {
-                height: 4px;
-                border-radius: 9999px;
-                background: linear-gradient(90deg, #0ea5e9, #10b981);
-            }
-            .stat-pill {
-                border-radius: 9999px;
-                padding: 0.25rem 0.75rem;
-                font-size: 0.75rem;
-                font-weight: 600;
-            }
-            .channel-card {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 1rem;
-                padding: 1.25rem;
-                display: flex;
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-            .channel-bar {
-                height: 0.85rem;
-                border-radius: 9999px;
-                background: #eef2ff;
-                overflow: hidden;
-            }
-            .channel-bar > span {
-                display: block;
-                height: 100%;
-                border-radius: inherit;
-            }
-            .top-item-card {
-                border: 1px solid #e5e7eb;
-                border-radius: 0.85rem;
-                padding: 0.875rem;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                background: #fff;
-            }
-            .badge {
-                border-radius: 9999px;
-                padding: 0.25rem 0.6rem;
-                font-size: 0.7rem;
-                font-weight: 700;
-            }
-            .recent-orders-table thead th {
-                text-transform: uppercase;
-                font-size: 0.7rem;
-                letter-spacing: 0.08em;
-                color: #94a3b8;
-            }
-            .recent-orders-table tbody tr {
-                border-bottom: 1px solid #f1f5f9;
-            }
-        </style>
     </head>
     <body class="font-sans antialiased min-h-screen bg-[#eaf4fa]">
         @include('layouts.navigation')
@@ -103,23 +34,23 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="metric-card">
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg shadow-sky-100 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em]">Total Sales</p>
                     <h2 class="text-3xl font-black text-gray-900 mt-2">€ {{ number_format($totalSales, 2) }}</h2>
                     <p class="text-sm text-gray-500 mt-1">Across {{ $orderCount }} completed orders</p>
-                    <div class="spark-line mt-4"></div>
+                    <div class="mt-4 h-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-500"></div>
                 </div>
-                <div class="metric-card">
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg shadow-sky-100 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em]">Average order value</p>
                     <h2 class="text-3xl font-black text-gray-900 mt-2">€ {{ number_format($averageOrderValue, 2) }}</h2>
                     <p class="text-sm text-gray-500 mt-1">{{ $orderCount }} orders today</p>
-                    <div class="spark-line mt-4"></div>
+                    <div class="mt-4 h-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-500"></div>
                 </div>
-                <div class="metric-card">
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg shadow-sky-100 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em]">Completed orders</p>
                     <h2 class="text-3xl font-black text-gray-900 mt-2">{{ $orderCount }}</h2>
                     <p class="text-sm text-gray-500 mt-1">Ready for final review</p>
-                    <div class="spark-line mt-4"></div>
+                    <div class="mt-4 h-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-500"></div>
                 </div>
             </div>
 
@@ -130,21 +61,21 @@
                             <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em]">Channel performance</p>
                             <h3 class="text-lg font-bold text-gray-900">Sales breakdown</h3>
                         </div>
-                        <span class="stat-pill bg-molveno-blue-50 text-molveno-blue-700">Total € {{ number_format($totalSales, 2) }}</span>
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-molveno-blue-50 text-molveno-blue-700">Total € {{ number_format($totalSales, 2) }}</span>
                     </div>
 
                     <div class="grid sm:grid-cols-2 gap-4">
                         @foreach($salesByType as $channel)
-                            <div class="channel-card">
+                            <div class="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em]">{{ $channel['label'] }}</p>
                                         <p class="text-2xl font-bold text-gray-900 mt-1">€ {{ number_format($channel['sales'], 2) }}</p>
                                     </div>
-                                    <span class="stat-pill bg-gray-100 text-gray-700">{{ $channel['orders'] }} orders</span>
+                                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700">{{ $channel['orders'] }} orders</span>
                                 </div>
-                                <div class="channel-bar">
-                                    <span style="width: {{ min(100, $channel['share']) }}%; background: {{ $channel['key'] === 'restaurant' ? '#0ea5e9' : '#16a34a' }}"></span>
+                                <div class="h-3 rounded-full bg-indigo-50 overflow-hidden">
+                                    <span class="block h-full rounded-full {{ $channel['key'] === 'restaurant' ? 'bg-sky-500' : 'bg-emerald-500' }}" style="width: {{ min(100, $channel['share']) }}%"></span>
                                 </div>
                                 <p class="text-xs text-gray-500">{{ $channel['share'] }}% of daily revenue</p>
                             </div>
@@ -155,7 +86,7 @@
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em] mb-3">Top dishes</p>
                         <div class="flex flex-col gap-3">
                             @forelse($topItems as $index => $item)
-                                <div class="top-item-card">
+                                <div class="flex items-center justify-between border border-gray-200 rounded-xl p-4 bg-white">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <span class="w-8 h-8 rounded-full bg-molveno-blue-50 text-molveno-blue-600 font-bold flex items-center justify-center">{{ $index + 1 }}</span>
                                         <div class="min-w-0">
@@ -163,7 +94,7 @@
                                             <p class="text-xs text-gray-500">{{ $item['qty'] }} servings sold</p>
                                         </div>
                                     </div>
-                                    <span class="badge bg-emerald-50 text-emerald-700">€ {{ number_format($item['revenue'], 2) }}</span>
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold bg-emerald-50 text-emerald-700">€ {{ number_format($item['revenue'], 2) }}</span>
                                 </div>
                             @empty
                                 <p class="text-sm text-gray-500">No sales recorded yet.</p>
@@ -201,24 +132,24 @@
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em]">Order ledger</p>
                         <h3 class="text-lg font-bold text-gray-900">Completed orders</h3>
                     </div>
-                    <span class="stat-pill bg-primary/10 text-primary">{{ $orderCount }} orders logged</span>
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-primary/10 text-primary">{{ $orderCount }} orders logged</span>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm recent-orders-table">
+                    <table class="w-full text-sm">
                         <thead>
                             <tr>
-                                <th class="text-left py-2">Order</th>
-                                <th class="text-left py-2">Location</th>
-                                <th class="text-left py-2">Waiter</th>
-                                <th class="text-center py-2">Items</th>
-                                <th class="text-right py-2">Total</th>
-                                <th class="text-right py-2">Closed</th>
+                                <th class="text-left py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">Order</th>
+                                <th class="text-left py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">Location</th>
+                                <th class="text-left py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">Waiter</th>
+                                <th class="text-center py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">Items</th>
+                                <th class="text-right py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">Total</th>
+                                <th class="text-right py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">Closed</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($completedOrders as $order)
-                                <tr>
+                                <tr class="border-b border-slate-100 last:border-0">
                                     <td class="py-3 font-semibold text-gray-900">{{ $order['id'] }}</td>
                                     <td class="py-3 text-gray-500">{{ $order['location'] }}</td>
                                     <td class="py-3 text-gray-500">{{ $order['waiter'] }}</td>
