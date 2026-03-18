@@ -18,7 +18,7 @@
                     <x-nav-link :href="route('dishes')" :active="false">
                         {{ __('Dishes') }}
                     </x-nav-link>
-                    <x-nav-link href="#" :active="false">
+                    <x-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
                         {{ __('Statistics') }}
                     </x-nav-link>
                     <x-nav-link :href="route('orders')" :active="false">
@@ -88,16 +88,16 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" :active="false">
+            <x-responsive-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
                 {{ __('Dishes') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" :active="false">
+            <x-responsive-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
                 {{ __('Statistics') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" :active="false">
-                {{ __('Orders') }}
+            <x-responsive-nav-link :href="route('orders')" :active="request()->routeIs('orders')">
+                {{ __('Kitchen Orders') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" :active="false">
+            <x-responsive-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
                 {{ __('Order Management') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link href="#" :active="false">
