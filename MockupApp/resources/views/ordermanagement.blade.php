@@ -332,10 +332,7 @@
                     @foreach($allergenConfig as $key => $cfg)
                         <button class="filter-btn" data-freefrom="{{ $key }}" onclick="toggleFreefrom(this)">
                             <span class="inline-flex items-center gap-1.5">
-                                <span class="w-3.5 h-3.5 rounded-full inline-flex items-center justify-center"
-                                      style="background-color: {{ $cfg['bg'] }}">
-                                    <svg viewBox="0 0 16 16" width="8" height="8">{!! $cfg['icon'] !!}</svg>
-                                </span>
+                                <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" size="sm" />
                                 {{ $cfg['label'] }}-free
                             </span>
                         </button>
@@ -346,74 +343,7 @@
             <!-- ── Dish grid ──────────────────────────────────── -->
             <div id="dish-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 @foreach($dishes as $dish)
-                    <div class="dish-card"
-                         id="dish-card-{{ $dish['id'] }}"
-                         data-id="{{ $dish['id'] }}"
-                         data-cat="{{ $dish['cat'] }}"
-                         data-name="{{ strtolower($dish['name']) }} {{ strtolower($dish['desc']) }}"
-                         data-allergens="{{ implode(',', $dish['allergens']) }}"
-                         data-dietary="{{ implode(',', $dish['dietary']) }}">
-
-                        <!-- Text side -->
-                        <div class="dish-card-body">
-                            <!-- Name row with dietary icons -->
-                            <div class="flex items-start gap-2 flex-wrap">
-                                <span class="text-sm font-bold text-gray-900 leading-snug">{{ $dish['name'] }}</span>
-                                <div class="flex items-center gap-1 mt-0.5">
-                                    @if(in_array('vegetarian', $dish['dietary']))
-                                        <div title="Vegetarian" class="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center shrink-0">
-                                            <svg viewBox="0 0 16 16" width="8" height="8"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
-                                        </div>
-                                    @endif
-                                    @if(in_array('vegan', $dish['dietary']))
-                                        <div title="Vegan" class="w-4 h-4 rounded-full bg-green-700 flex items-center justify-center shrink-0">
-                                            <svg viewBox="0 0 16 16" width="8" height="8"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- Price -->
-                            <p class="text-sm font-semibold text-primary">&euro;&nbsp;{{ number_format($dish['price'], 2) }}</p>
-
-                            <!-- Description -->
-                            <p class="text-xs text-gray-500 leading-snug">{{ $dish['desc'] }}</p>
-
-                            <!-- Allergen icons -->
-                            @if(!empty($dish['allergens']))
-                                <div class="flex items-center gap-1 flex-wrap mt-1">
-                                    @foreach($dish['allergens'] as $a)
-                                        @if(isset($allergenConfig[$a]))
-                                            <div title="{{ $allergenConfig[$a]['label'] }}"
-                                                 class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 shadow-sm"
-                                                 style="background-color: {{ $allergenConfig[$a]['bg'] }}">
-                                                <svg viewBox="0 0 16 16" width="10" height="10">{!! $allergenConfig[$a]['icon'] !!}</svg>
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Image side (+ button lives HERE, inside this container) -->
-                        <div class="dish-card-image">
-                            <!-- Placeholder illustration -->
-                            <svg class="text-gray-300" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
-                                <circle cx="12" cy="13" r="8"/><path d="M7 5v3M8 5v3M7.5 8v5"/>
-                                <path d="M15 5c1 1 1.5 2 1.5 3v6"/><path d="M15 5c-1 1-1.5 2-1.5 3h3"/>
-                            </svg>
-
-                            <!-- Qty badge (top-right of image) -->
-                            <div class="qty-badge" id="badge-{{ $dish['id'] }}">0</div>
-
-                            <!-- Add button (bottom-right of image) -->
-                            <button class="btn-add-dish"
-                                    onclick="addDish({{ $dish['id'] }})"
-                                    aria-label="Add {{ $dish['name'] }}">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                            </button>
-                        </div>
-                    </div>
+                    <x-ordermanagement.dish-card :dish="$dish" :allergenConfig="$allergenConfig" />
                 @endforeach
             </div>
 
@@ -426,171 +356,9 @@
 
         </div>
 
-        <!-- ════════════════════════════════════════════════
-             Sticky bottom order bar
-        ════════════════════════════════════════════════ -->
-        <div id="order-bar"
-             class="hidden-bar fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-2xl px-4 sm:px-6 py-3">
-            <div class="max-w-screen-xl mx-auto flex items-center justify-between gap-4">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-9 h-9 rounded-full bg-molveno-blue-500 flex items-center justify-center shrink-0 shadow-sm">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-bold text-gray-800 truncate">
-                            <span id="bar-count">0</span> <span id="bar-item-label">items</span>
-                            <span class="text-gray-400 font-normal mx-1">&middot;</span>
-                            <span id="bar-table" class="text-gray-500 font-normal">No table</span>
-                        </p>
-                        <p class="text-xs text-gray-400">John Doe &middot; <span id="bar-total" class="font-semibold text-gray-600">&euro; 0.00</span></p>
-                    </div>
-                </div>
-                <button onclick="openReview()"
-                        class="shrink-0 flex items-center gap-2 bg-molveno-blue-500 hover:bg-molveno-blue-700
-                               text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-sm transition-colors">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    Review Order
-                </button>
-            </div>
-        </div>
-
-        <!-- ════════════════════════════════════════════════
-             Review screen — full viewport, slides up
-        ════════════════════════════════════════════════ -->
-        <div id="review-screen"
-             class="fixed inset-0 z-50 bg-[#eaf4fa] flex flex-col"
-             style="height: 100dvh;">
-
-            <!-- ── Sticky top nav ─────────────────────────── -->
-            <div class="shrink-0 bg-white border-b border-gray-200 shadow-sm">
-                <div class="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-                    <button onclick="closeReview()"
-                            class="flex items-center gap-2 text-molveno-blue-500 hover:text-molveno-blue-700 font-semibold text-sm transition-colors">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                        Back
-                    </button>
-                    <h2 class="text-base font-bold text-gray-900 absolute left-1/2 -translate-x-1/2">Your Order</h2>
-                    <span id="review-nav-table" class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full"></span>
-                </div>
-            </div>
-
-            <!-- ── Scrollable content ─────────────────────── -->
-            <div class="flex-1 overflow-y-auto">
-                <div class="max-w-2xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-4">
-
-                    <!-- Waiter info row -->
-                    <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-full bg-molveno-blue-500 flex items-center justify-center shrink-0">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        </div>
-                        <span class="text-sm text-gray-600 font-medium">John Doe</span>
-                        <span class="text-gray-300 mx-1">·</span>
-                        <span id="review-meta-time" class="text-sm text-gray-400"></span>
-                    </div>
-
-                    <!-- ── Order card — same structure as orders.blade.php ── -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-
-                        <!-- Ticket header -->
-                        <div id="review-ticket-header" class="px-4 py-3 text-white"></div>
-
-                        <!-- Dish list -->
-                        <div id="review-dish-list" class="divide-y divide-gray-100"></div>
-
-                        <!-- Card footer -->
-                        <div id="review-card-footer" class="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between"></div>
-
-                    </div>
-
-                    <!-- Extra bottom padding so content clears the sticky footer -->
-                    <div class="h-4"></div>
-                </div>
-            </div>
-
-            <!-- ── Sticky bottom action bar ───────────────── -->
-            <div class="shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,.06)]">
-                <div class="max-w-2xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs text-gray-500">Order total</p>
-                        <p id="review-total" class="text-lg font-black text-gray-900 leading-tight"></p>
-                    </div>
-                    <button onclick="sendOrder()"
-                            class="shrink-0 flex items-center gap-2 bg-molveno-blue-500 hover:bg-molveno-blue-700
-                                   text-white text-sm font-bold px-6 py-3 rounded-xl shadow-sm transition-colors">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        Send to Kitchen
-                    </button>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ════════════════════════════════════════════════
-             Add-dish modal
-        ════════════════════════════════════════════════ -->
-        <div id="add-overlay"
-             class="add-overlay fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-             onclick="closeAddModal(event)" >
-
-            <div class="add-modal w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-
-                <!-- Header -->
-                <div class="px-5 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <h2 id="add-modal-name" class="text-base font-bold text-gray-900 leading-snug"></h2>
-                        <p id="add-modal-price" class="text-sm font-semibold text-primary mt-0.5"></p>
-                    </div>
-                    <button onclick="closeAddModal()"
-                            class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors mt-0.5">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="px-5 py-4 flex flex-col gap-4">
-
-                    <!-- Allergen / dietary row -->
-                    <div id="add-modal-badges" class="flex items-center gap-1.5 flex-wrap"></div>
-
-                    <!-- Qty -->
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm font-semibold text-gray-700">Quantity</span>
-                        <div class="flex items-center gap-2 ms-auto">
-                            <button class="qty-btn" onclick="addModalChangeQty(-1)">
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>
-                            </button>
-                            <span id="add-modal-qty" class="text-sm font-bold text-gray-800 w-6 text-center">1</span>
-                            <button class="qty-btn" onclick="addModalChangeQty(1)">
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Note -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                            Notes for kitchen
-                            <span class="text-gray-400 font-normal">(optional)</span>
-                        </label>
-                        <textarea id="add-modal-note" class="note-area" rows="3"
-                                  placeholder="e.g. No onions, extra sauce on the side…"></textarea>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="px-5 py-4 border-t border-gray-100 flex gap-3">
-                    <button onclick="closeAddModal()"
-                            class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-                        Cancel
-                    </button>
-                    <button onclick="confirmAddDish()"
-                            class="flex-1 px-4 py-2.5 rounded-xl bg-molveno-blue-500 hover:bg-molveno-blue-700 text-white text-sm font-bold transition-colors inline-flex items-center justify-center gap-2">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                        Add to Order
-                    </button>
-                </div>
-            </div>
-        </div>
+        <x-ordermanagement.order-bar />
+        <x-ordermanagement.review-screen />
+        <x-ordermanagement.add-dish-modal />
 
         <!-- Toast -->
         <div id="toast"
@@ -679,16 +447,13 @@
             if (!dish) return;
 
             addModalDishId = id;
-            // Pre-fill qty from existing order entry if already added
             addModalQty = order[id] ? 1 : 1;
 
-            // Populate modal fields
             document.getElementById('add-modal-name').textContent  = dish.name;
             document.getElementById('add-modal-price').textContent = '€ ' + dish.price.toFixed(2);
             document.getElementById('add-modal-qty').textContent   = addModalQty;
             document.getElementById('add-modal-note').value        = '';
 
-            // Build allergen + dietary badge row
             const badgeRow = document.getElementById('add-modal-badges');
             badgeRow.innerHTML = '';
             dish.allergens.forEach(a => {
@@ -712,7 +477,6 @@
 
             document.getElementById('add-overlay').classList.add('open');
             document.body.style.overflow = 'hidden';
-            // Focus the note field after transition
             setTimeout(() => document.getElementById('add-modal-note').focus(), 220);
         }
 
@@ -729,7 +493,7 @@
 
             if (order[id]) {
                 order[id].qty  += addModalQty;
-                if (note) order[id].note = note; // overwrite note if one was given
+                if (note) order[id].note = note;
             } else {
                 order[id] = { dish, qty: addModalQty, note };
             }
@@ -740,7 +504,6 @@
         }
 
         function closeAddModal(e) {
-            // Called directly (button) or from backdrop click
             if (e instanceof MouseEvent && e.target !== document.getElementById('add-overlay')) return;
             document.getElementById('add-overlay').classList.remove('open');
             document.body.style.overflow = '';
@@ -755,7 +518,7 @@
             delete order[id];
             updateBadge(id);
             updateOrderBar();
-            renderReviewCard(); // keep review in sync if open
+            renderReviewCard();
         }
 
         function changeQty(id, delta) {
@@ -832,12 +595,10 @@
             const cntPending = items.reduce((s, i) => s + i.qty, 0);
             const total      = items.reduce((s, i) => s + i.dish.price * i.qty, 0);
 
-            /* ── Populate screen-level fields ── */
             document.getElementById('review-nav-table').textContent  = table !== '—' ? 'Table ' + table : 'No table';
             document.getElementById('review-meta-time').textContent  = time;
             document.getElementById('review-total').textContent      = '€ ' + total.toFixed(2);
 
-            /* ── Ticket header ── */
             document.getElementById('review-ticket-header').style.backgroundColor = '#0084c4';
             document.getElementById('review-ticket-header').innerHTML = `
                 <div class="flex items-start justify-between gap-2">
@@ -860,7 +621,6 @@
                     </div>
                 </div>`;
 
-            /* ── Dish list ── */
             document.getElementById('review-dish-list').innerHTML = items.map(({ dish, qty, note }) => {
                 const allergenHtml = dish.allergens.length
                     ? `<div class="flex items-center gap-1 flex-wrap mt-1">
@@ -899,13 +659,11 @@
                             ${allergenHtml}${dietaryHtml}${noteHtml}
                         </div>
                     </div>
-                    <!-- Per-dish note editor (editable inline in review) -->
                     <div class="pl-4">
                         <textarea class="note-area" rows="1"
                                   placeholder="Add notes for this dish…"
                                   oninput="updateNote(${dish.id}, this.value); updateNotePreview(${dish.id}, this.value)">${esc(note)}</textarea>
                     </div>
-                    <!-- Qty controls -->
                     <div class="pl-4 flex items-center gap-2">
                         <button class="qty-btn" onclick="changeQty(${dish.id}, -1)">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>
@@ -922,7 +680,6 @@
                 </div>`;
             }).join('');
 
-            /* ── Card footer ── */
             const dishCount = items.length;
             document.getElementById('review-card-footer').innerHTML = `
                 <span class="text-xs text-gray-400">${dishCount} ${dishCount === 1 ? 'dish' : 'dishes'} &middot; 0 served</span>
@@ -949,11 +706,9 @@
                 return;
             }
             closeReview();
-            // Reset all state
             Object.keys(order).forEach(id => updateBadge(id));
             order = {};
             updateOrderBar();
-            // Show toast
             const toast = document.getElementById('toast');
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3200);

@@ -204,10 +204,7 @@
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Legend:</span>
                     @foreach($allergenConfig as $key => $cfg)
                         <div class="flex items-center gap-1.5">
-                            <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                                 style="background-color: {{ $cfg['bg'] }}">
-                                <svg viewBox="0 0 16 16" width="11" height="11">{!! $cfg['icon'] !!}</svg>
-                            </div>
+                            <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" />
                             <span class="text-xs font-medium text-gray-600">{{ $cfg['label'] }}</span>
                         </div>
                     @endforeach
@@ -279,10 +276,7 @@
                         <button class="filter-btn" data-filter="freefrom" data-value="{{ $key }}"
                                 onclick="toggleMulti(this, 'freefrom')">
                             <span class="inline-flex items-center gap-1">
-                                <span class="w-3.5 h-3.5 rounded-full inline-flex items-center justify-center"
-                                      style="background-color: {{ $cfg['bg'] }}">
-                                    <svg viewBox="0 0 16 16" width="8" height="8">{!! $cfg['icon'] !!}</svg>
-                                </span>
+                                <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" size="sm" />
                                 {{ $cfg['label'] }}-free
                             </span>
                         </button>
@@ -293,57 +287,7 @@
             <!-- ── Dish grid ─────────────────────────────────────── -->
             <div id="dish-grid" class="grid gap-4 justify-center dish-grid">
                 @foreach($dishes as $dish)
-                    <div class="dish-card rounded-2xl shadow-md overflow-hidden flex flex-col
-                                cursor-pointer select-none transition-all duration-150
-                                hover:shadow-xl hover:-translate-y-1"
-                         data-name="{{ strtolower($dish['name']) }}"
-                         data-category="{{ $dish['category'] }}"
-                         data-allergens="{{ implode(',', $dish['allergens']) }}"
-                         data-dietary="{{ implode(',', $dish['dietary']) }}"
-                         data-price="{{ $dish['price'] }}"
-                         data-color="{{ $dish['color'] }}"
-                         onclick="openEditSheet(this)">
-
-                        <!-- Image placeholder -->
-                        <div class="flex-1 flex items-center justify-center"
-                             style="background-color: {{ $dish['color'] }}">
-                            <svg class="opacity-30" width="52" height="52" viewBox="0 0 24 24" fill="none"
-                                 stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="13" r="8"/>
-                                <path d="M7 5v3M8 5v3M7.5 8v5"/>
-                                <path d="M15 5c1 1 1.5 2 1.5 3v6"/>
-                                <path d="M15 5c-1 1-1.5 2-1.5 3h3"/>
-                            </svg>
-                        </div>
-
-                        <!-- Info strip -->
-                        <div class="shrink-0 bg-white px-3 py-2 flex flex-col gap-1">
-                            <p class="font-bold text-molveno-blue-700 text-xs leading-tight line-clamp-2">{{ $dish['name'] }}</p>
-                            <p class="text-primary font-black text-xs">&euro;{{ number_format($dish['price'], 2) }}</p>
-                            <div class="flex items-center gap-1 flex-wrap">
-                                @foreach($dish['allergens'] as $allergen)
-                                    @if(isset($allergenConfig[$allergen]))
-                                        @php $cfg = $allergenConfig[$allergen]; @endphp
-                                        <div title="{{ $cfg['label'] }}"
-                                             class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 shadow-sm"
-                                             style="background-color: {{ $cfg['bg'] }}">
-                                            <svg viewBox="0 0 16 16" width="10" height="10">{!! $cfg['icon'] !!}</svg>
-                                        </div>
-                                    @endif
-                                @endforeach
-                                @if(in_array('vegetarian', $dish['dietary']))
-                                    <div title="Vegetarian" class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0 shadow-sm">
-                                        <svg viewBox="0 0 16 16" width="10" height="10"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
-                                    </div>
-                                @endif
-                                @if(in_array('vegan', $dish['dietary']))
-                                    <div title="Vegan" class="w-5 h-5 rounded-full bg-green-700 flex items-center justify-center shrink-0 shadow-sm">
-                                        <svg viewBox="0 0 16 16" width="10" height="10"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                    <x-dishes.dish-card :dish="$dish" :allergenConfig="$allergenConfig" />
                 @endforeach
             </div>
 
@@ -363,195 +307,7 @@
 
         </div>
 
-        <!-- ── Sheet overlay ───────────────────────────────────── -->
-        <div id="sheet-overlay"
-             class="sheet-overlay fixed inset-0 z-40 bg-black/30 backdrop-blur-md"
-             onclick="closeSheet()">
-        </div>
-
-        <!-- ── Sheet panel ─────────────────────────────────────── -->
-        <div id="sheet-panel"
-             class="sheet-panel fixed top-0 right-0 z-50 w-full sm:max-w-md bg-white shadow-2xl flex flex-col">
-
-            <!-- Header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-                <div>
-                    <h2 id="sheet-title" class="text-base font-bold text-gray-900">Add New Dish</h2>
-                    <p id="sheet-subtitle" class="text-xs text-gray-400 mt-0.5">Fill in the details below to add a dish to the menu.</p>
-                </div>
-                <button onclick="closeSheet()"
-                        class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2.5" stroke-linecap="round">
-                        <path d="M18 6 6 18M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Body -->
-            <div class="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-
-                <!-- Edit mode: current photo preview -->
-                <div id="current-photo-preview" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Current Photo</label>
-                    <div class="relative w-full rounded-xl overflow-hidden group cursor-pointer" style="aspect-ratio:16/9">
-                        <div id="preview-bg" class="w-full h-full flex items-center justify-center">
-                            <svg class="opacity-30" width="52" height="52" viewBox="0 0 24 24" fill="none"
-                                 stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="13" r="8"/>
-                                <path d="M7 5v3M8 5v3M7.5 8v5"/>
-                                <path d="M15 5c1 1 1.5 2 1.5 3v6"/>
-                                <path d="M15 5c-1 1-1.5 2-1.5 3h3"/>
-                            </svg>
-                        </div>
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                                <circle cx="12" cy="13" r="4"/>
-                            </svg>
-                            <span class="text-white text-sm font-semibold">Change photo</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Create mode: upload zone -->
-                <div id="upload-zone-wrapper">
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Photo</label>
-                    <div class="upload-zone">
-                        <svg class="mx-auto mb-2 text-gray-300" width="36" height="36" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                            <rect x="3" y="3" width="18" height="18" rx="3"/>
-                            <circle cx="8.5" cy="8.5" r="1.5"/>
-                            <path d="M21 15l-5-5L5 21"/>
-                        </svg>
-                        <p class="text-sm font-medium text-gray-500">Click to upload or drag &amp; drop</p>
-                        <p class="text-xs text-gray-400 mt-0.5">PNG, JPG up to 5 MB</p>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="dish-name" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Dish Name <span class="text-red-400">*</span>
-                    </label>
-                    <input id="dish-name" type="text" class="sheet-input" placeholder="e.g. Spaghetti Bolognese"/>
-                </div>
-
-                <div>
-                    <label for="dish-desc" class="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
-                    <textarea id="dish-desc" rows="3" class="sheet-input resize-none"
-                              placeholder="Short description of the dish…"></textarea>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="dish-price" class="block text-sm font-semibold text-gray-700 mb-1.5">
-                            Price <span class="text-red-400">*</span>
-                        </label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">&euro;</span>
-                            <input id="dish-price" type="number" min="0" step="0.01" class="sheet-input pl-7" placeholder="0.00"/>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="dish-category" class="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
-                        <select id="dish-category" class="sheet-input">
-                            <option value="" disabled selected>Select…</option>
-                            <option>Starters</option>
-                            <option>Mains</option>
-                            <option>Desserts</option>
-                            <option>Drinks</option>
-                            <option>Sides</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Allergens</label>
-                    <p class="text-xs text-gray-400 mb-2.5">Select all that apply.</p>
-                    <div class="flex flex-wrap gap-2">
-                        <div>
-                            <input type="checkbox" id="al-gluten" class="allergen-checkbox"/>
-                            <label for="al-gluten" class="allergen-label">
-                                <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style="background:#D97706">
-                                    <svg viewBox="0 0 16 16" width="9" height="9"><path fill="white" d="M8 1.5C6.5 3 5 5.5 5 7.5c0 1 .4 1.9 1 2.6V14h4V10.1c.6-.7 1-1.6 1-2.6 0-2-1.5-4.5-3-6z"/></svg>
-                                </span>
-                                Gluten
-                            </label>
-                        </div>
-                        <div>
-                            <input type="checkbox" id="al-nuts" class="allergen-checkbox"/>
-                            <label for="al-nuts" class="allergen-label">
-                                <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style="background:#92400E">
-                                    <svg viewBox="0 0 16 16" width="9" height="9"><ellipse cx="8" cy="9.5" rx="5" ry="5.5" fill="white"/><path d="M5.5 5C5.5 3.3 6.6 2 8 2s2.5 1.3 2.5 3" stroke="#92400E" stroke-width="1" fill="none" stroke-linecap="round"/></svg>
-                                </span>
-                                Nuts
-                            </label>
-                        </div>
-                        <div>
-                            <input type="checkbox" id="al-milk" class="allergen-checkbox"/>
-                            <label for="al-milk" class="allergen-label">
-                                <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style="background:#0284C7">
-                                    <svg viewBox="0 0 16 16" width="9" height="9"><path fill="white" d="M6 2h4l.5 2.5H5.5L6 2zM5 5h6l-1 9H6L5 5z"/></svg>
-                                </span>
-                                Milk
-                            </label>
-                        </div>
-                        <div>
-                            <input type="checkbox" id="al-wheat" class="allergen-checkbox"/>
-                            <label for="al-wheat" class="allergen-label">
-                                <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style="background:#CA8A04">
-                                    <svg viewBox="0 0 16 16" width="9" height="9"><line x1="8" y1="14" x2="8" y2="4" stroke="white" stroke-width="1.5"/><ellipse cx="5.5" cy="6" rx="2.5" ry="1.5" fill="white" transform="rotate(-20 5.5 6)"/><ellipse cx="10.5" cy="6" rx="2.5" ry="1.5" fill="white" transform="rotate(20 10.5 6)"/><ellipse cx="5" cy="9" rx="2.5" ry="1.5" fill="white" transform="rotate(-20 5 9)"/><ellipse cx="11" cy="9" rx="2.5" ry="1.5" fill="white" transform="rotate(20 11 9)"/><ellipse cx="8" cy="3" rx="1.5" ry="2" fill="white"/></svg>
-                                </span>
-                                Wheat
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Dietary</label>
-                    <p class="text-xs text-gray-400 mb-2.5">Select all that apply.</p>
-                    <div class="flex flex-wrap gap-2">
-                        <div>
-                            <input type="checkbox" id="diet-veg" class="allergen-checkbox"/>
-                            <label for="diet-veg" class="allergen-label">
-                                <span class="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center shrink-0">
-                                    <svg viewBox="0 0 16 16" width="9" height="9"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
-                                </span>
-                                Vegetarian
-                            </label>
-                        </div>
-                        <div>
-                            <input type="checkbox" id="diet-vegan" class="allergen-checkbox"/>
-                            <label for="diet-vegan" class="allergen-label">
-                                <span class="w-4 h-4 rounded-full bg-green-700 flex items-center justify-center shrink-0">
-                                    <svg viewBox="0 0 16 16" width="9" height="9"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
-                                </span>
-                                Vegan
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Footer -->
-            <div class="shrink-0 border-t border-gray-100 px-6 py-4 flex items-center gap-3 bg-gray-50">
-                <button id="sheet-delete-btn"
-                        class="hidden mr-auto px-4 py-2 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
-                    Delete Dish
-                </button>
-                <button onclick="closeSheet()"
-                        class="ml-auto px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    Cancel
-                </button>
-                <button id="sheet-save-btn"
-                        class="px-5 py-2 text-sm font-semibold text-white bg-molveno-blue-500 hover:bg-molveno-blue-700 rounded-lg shadow-sm transition-colors">
-                    Save Dish
-                </button>
-            </div>
-        </div>
+        <x-dishes.dish-sheet />
 
         <script>
             /* ── Sheet helpers ─────────────────────────────────── */
