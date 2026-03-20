@@ -13,7 +13,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
             {{-- Kitchen Orders --}}
-            <a href="{{ route('orders') }}"
+            <a href="{{ route('kitchenorders') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
