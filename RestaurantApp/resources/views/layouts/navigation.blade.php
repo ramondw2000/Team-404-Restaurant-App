@@ -21,7 +21,7 @@
                     <x-nav-link href="#" :active="false">
                         {{ __('Statistics') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('orders')" :active="false">
+                    <x-nav-link :href="route('kitchenorders')" :active="request()->routeIs('kitchenorders')">
                         {{ __('Kitchen Orders') }}
                     </x-nav-link>
                     <x-nav-link :href="route('ordermanagement')" :active="false">
@@ -94,8 +94,8 @@
             <x-responsive-nav-link href="#" :active="false">
                 {{ __('Statistics') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" :active="false">
-                {{ __('Orders') }}
+            <x-responsive-nav-link :href="route('kitchenorders')" :active="request()->routeIs('kitchenorders')">
+                {{ __('Kitchen Orders') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link href="#" :active="false">
                 {{ __('Order Management') }}
