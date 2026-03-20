@@ -26,7 +26,7 @@
                 padding: 0.375rem 0.875rem; border-radius: 9999px;
                 font-size: 0.8125rem; font-weight: 600;
                 border: 1px solid #e5e7eb; background: #fff; color: #6b7280;
-                cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+                cursor: pointer; transition: border-color 0.15s; background: 0.15s; color 0.15s;
                 font-family: inherit; white-space: nowrap;
             }
             .tab-btn:hover { border-color: #309bcf; color: #005693; }
@@ -161,7 +161,7 @@
 
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
 
-            <!-- ── Page header ───────────────────────────────── -->`
+            <!-- ── Page header ───────────────────────────────── -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h1 class="text-xl font-bold text-gray-900">Kitchen Orders</h1>
@@ -183,7 +183,7 @@
                 </div>
             </div>
 
-            <!-- ── Filter tabs ────────────────────────────────── -->`
+            <!-- ── Filter tabs ────────────────────────────────── -->
             <div class="flex items-center gap-2 flex-wrap">
                 <button class="tab-btn tab-active" data-tab="all"          onclick="switchTab(this)">All <span class="tab-count">{{ count($orders) }}</span></button>
                 <button class="tab-btn"            data-tab="active"       onclick="switchTab(this)">Active <span class="tab-count">{{ $countActive }}</span></button>
@@ -203,7 +203,7 @@
                 </button>
             </div>
 
-            <!-- ── KDS order grid ─────────────────────────────── -->`
+            <!-- ── KDS order grid ─────────────────────────────── -->
             <div class="order-grid" id="order-list">
                 @foreach($orders as $order)
                     <x-orders.order-card :order="$order" :allergenConfig="$allergenConfig" />

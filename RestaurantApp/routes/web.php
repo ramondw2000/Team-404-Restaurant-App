@@ -29,9 +29,9 @@ Route::middleware('auth')->group(function () {
         return view('ordermanagement');
     })->name('ordermanagement');
 
-    Route::get('/orders', function () {
-        return view('orders');
-    })->name('orders');
+    Route::get('/KitchenOrders', function () {
+        return view('kitchenorders');
+    })->name('kitchenorders');
 });
 
 require __DIR__.'/auth.php';
