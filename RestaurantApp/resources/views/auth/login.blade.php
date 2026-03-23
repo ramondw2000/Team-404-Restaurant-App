@@ -8,22 +8,21 @@
         @csrf
 
         <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-white" for="email">{{ __('Email') }}</label>
+            <x-ui.input id="email" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" :error="$errors->has('email')" />
+            @if($errors->has('email'))
+                <p class="text-xs text-red-300">{{ $errors->first('email') }}</p>
+            @endif
         </div>
 
         <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        <div class="mt-4 flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-white" for="password">{{ __('Password') }}</label>
+            <x-ui.input id="password" type="password" name="password" required autocomplete="current-password" :error="$errors->has('password')" />
+            @if($errors->has('password'))
+                <p class="text-xs text-red-300">{{ $errors->first('password') }}</p>
+            @endif
         </div>
 
         <!-- Remember Me -->
@@ -41,9 +40,9 @@
                 </a>
             @endif
 
-            <x-primary-button class="ms-3">
+            <x-ui.button type="submit" variant="secondary" class="ms-3">
                 {{ __('Log in') }}
-            </x-primary-button>
+            </x-ui.button>
         </div>
     </form>
 </x-guest-layout>

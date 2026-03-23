@@ -6,34 +6,36 @@
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
         <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-white" for="email">{{ __('Email') }}</label>
+            <x-ui.input id="email" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" :error="$errors->has('email')" />
+            @if($errors->has('email'))
+                <p class="text-xs text-red-300">{{ $errors->first('email') }}</p>
+            @endif
         </div>
 
         <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        <div class="mt-4 flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-white" for="password">{{ __('Password') }}</label>
+            <x-ui.input id="password" type="password" name="password" required autocomplete="new-password" :error="$errors->has('password')" />
+            @if($errors->has('password'))
+                <p class="text-xs text-red-300">{{ $errors->first('password') }}</p>
+            @endif
         </div>
 
         <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                type="password"
-                                name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+        <div class="mt-4 flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-white" for="password_confirmation">{{ __('Confirm Password') }}</label>
+            <x-ui.input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" :error="$errors->has('password_confirmation')" />
+            @if($errors->has('password_confirmation'))
+                <p class="text-xs text-red-300">{{ $errors->first('password_confirmation') }}</p>
+            @endif
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
+            <x-ui.button type="submit" variant="secondary">
                 {{ __('Reset Password') }}
-            </x-primary-button>
+            </x-ui.button>
         </div>
     </form>
 </x-guest-layout>

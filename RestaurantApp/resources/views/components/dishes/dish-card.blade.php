@@ -38,14 +38,10 @@
                 @endif
             @endforeach
             @if(in_array('vegetarian', $dish['dietary']))
-                <div title="Vegetarian" class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0 shadow-sm">
-                    <svg viewBox="0 0 16 16" width="10" height="10"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
-                </div>
+                <x-dishes.dietary-icon type="vegetarian" shadow />
             @endif
             @if(in_array('vegan', $dish['dietary']))
-                <div title="Vegan" class="w-5 h-5 rounded-full bg-green-700 flex items-center justify-center shrink-0 shadow-sm">
-                    <svg viewBox="0 0 16 16" width="10" height="10"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
-                </div>
+                <x-dishes.dietary-icon type="vegan" shadow />
             @endif
         </div>
     </div>

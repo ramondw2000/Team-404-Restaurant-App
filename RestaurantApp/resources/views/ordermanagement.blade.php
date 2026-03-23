@@ -252,57 +252,45 @@
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 pb-32 flex flex-col gap-5">
 
             <!-- ── Page header ──────────────────────────────── -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <h1 class="text-2xl font-black text-primary">New Order</h1>
-                    <p class="text-sm text-gray-500 mt-0.5">Select dishes for the guest &mdash; Molveno Lake Resort Restaurant</p>
-                </div>
-
-                <!-- Table selector + logged-in server -->
-                <div class="flex items-center gap-3">
-                    <!-- Server pill -->
-                    <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
-                        <div class="w-6 h-6 rounded-full bg-molveno-blue-500 flex items-center justify-center text-white shrink-0">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <x-ui.page-header title="New Order" subtitle="Select dishes for the guest — Molveno Lake Resort Restaurant">
+                <x-slot:actions>
+                    <div class="flex items-center gap-3">
+                        <!-- Server pill -->
+                        <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+                            <x-ui.avatar name="John Doe" size="sm" />
+                            <span class="text-sm font-semibold text-gray-700">John Doe</span>
                         </div>
-                        <span class="text-sm font-semibold text-gray-700">John Doe</span>
-                    </div>
 
-                    <!-- Table picker -->
-                    <div class="relative">
-                        <select id="sel-table"
-                                class="appearance-none text-sm font-semibold border border-gray-200 rounded-lg pl-9 pr-8 py-2 bg-white text-gray-700 shadow-sm
-                                       focus:outline-none focus:ring-2 focus:ring-molveno-blue-300 cursor-pointer">
-                            <option value="">Select table</option>
-                            @foreach($tables as $t)
-                                <option value="{{ $t }}">Table {{ $t }}</option>
-                            @endforeach
-                        </select>
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
-                        <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                        <!-- Table picker -->
+                        <div class="relative">
+                            <select id="sel-table"
+                                    class="appearance-none text-sm font-semibold border border-gray-200 rounded-lg pl-9 pr-8 py-2 bg-white text-gray-700 shadow-sm
+                                           focus:outline-none focus:ring-2 focus:ring-molveno-blue-300 cursor-pointer">
+                                <option value="">Select table</option>
+                                @foreach($tables as $t)
+                                    <option value="{{ $t }}">Table {{ $t }}</option>
+                                @endforeach
+                            </select>
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+                            <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </x-slot:actions>
+            </x-ui.page-header>
 
             <!-- ── Filters ───────────────────────────────────── -->
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
 
                 <!-- Search -->
-                <div class="relative">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    <input id="search-input" type="search" placeholder="Search dishes…"
-                           class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white
-                                  focus:outline-none focus:ring-2 focus:ring-molveno-blue-300 focus:border-transparent"
-                           oninput="applyFilters()">
-                </div>
+                <x-ui.search-input id="search-input" placeholder="Search dishes…" oninput="applyFilters()" />
 
                 <!-- Category pills -->
-                <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-                    <button class="filter-btn filter-active" data-cat="all" onclick="setCategory(this)">All</button>
+                <x-ui.tab-group class="overflow-x-auto scrollbar-hide pb-0.5">
+                    <x-ui.tab :active="true" value="all" data-cat="all" onclick="setCategory(this)">All</x-ui.tab>
                     @foreach($categories as $cat)
-                        <button class="filter-btn" data-cat="{{ $cat }}" onclick="setCategory(this)">{{ $cat }}</button>
+                        <x-ui.tab :active="false" value="{{ $cat }}" data-cat="{{ $cat }}" onclick="setCategory(this)">{{ $cat }}</x-ui.tab>
                     @endforeach
-                </div>
+                </x-ui.tab-group>
 
                 <!-- Dietary + free-from -->
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -348,10 +336,15 @@
             </div>
 
             <!-- No results -->
-            <div id="no-results" class="hidden text-center py-14">
-                <svg class="mx-auto mb-3 text-gray-300" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <p class="text-gray-500 font-semibold">No dishes match your filters.</p>
-                <button onclick="resetFilters()" class="mt-3 text-sm font-semibold text-molveno-blue-500 hover:underline">Clear filters</button>
+            <div id="no-results" class="hidden">
+                <x-ui.empty-state title="No dishes match your filters.">
+                    <x-slot:icon>
+                        <svg class="w-10 h-10 text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    </x-slot:icon>
+                    <x-slot:action>
+                        <x-ui.button variant="ghost" onclick="resetFilters()" size="sm">Clear filters</x-ui.button>
+                    </x-slot:action>
+                </x-ui.empty-state>
             </div>
 
         </div>
@@ -360,14 +353,7 @@
         <x-ordermanagement.review-screen />
         <x-ordermanagement.add-dish-modal />
 
-        <!-- Toast -->
-        <div id="toast"
-             class="fixed top-5 left-1/2 -translate-x-1/2 z-50
-                    bg-green-600 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-xl
-                    flex items-center gap-2 whitespace-nowrap">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
-            Order sent to kitchen!
-        </div>
+        <x-ui.toast />
 
         <script>
         /* ═══════════════════════════════════════════════════════
@@ -388,9 +374,16 @@
         let activeDietary = new Set();
         let activeFreefrom = new Set();
 
+        const TAB_ACTIVE   = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
+        const TAB_INACTIVE = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
+
         function setCategory(btn) {
             activeCat = btn.dataset.cat;
-            document.querySelectorAll('[data-cat]').forEach(b => b.classList.toggle('filter-active', b === btn));
+            document.querySelectorAll('[data-cat]').forEach(b => {
+                const isActive = b === btn;
+                b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
+                b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
+            });
             applyFilters();
         }
 
@@ -431,8 +424,12 @@
             activeDietary.clear();
             activeFreefrom.clear();
             document.getElementById('search-input').value = '';
+            document.querySelectorAll('[data-cat]').forEach(b => {
+                const isActive = b.dataset.cat === 'all';
+                b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
+                b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
+            });
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('filter-active'));
-            document.querySelector('[data-cat="all"]').classList.add('filter-active');
             applyFilters();
         }
 
@@ -709,9 +706,9 @@
             Object.keys(order).forEach(id => updateBadge(id));
             order = {};
             updateOrderBar();
-            const toast = document.getElementById('toast');
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3200);
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { message: 'Order sent to kitchen!', type: 'success' }
+            }));
         }
 
         /* ═══════════════════════════════════════════════════════

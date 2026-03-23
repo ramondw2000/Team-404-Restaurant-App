@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <div class="mb-4 text-base font-thin text-white">
+    <div class="mb-4 text-base font-thin text-white/80">
         {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
     </div>
 
@@ -10,16 +10,18 @@
         @csrf
 
         <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-white" for="email">{{ __('Email') }}</label>
+            <x-ui.input id="email" type="email" name="email" :value="old('email')" required autofocus :error="$errors->has('email')" />
+            @if($errors->has('email'))
+                <p class="text-xs text-red-300">{{ $errors->first('email') }}</p>
+            @endif
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
+            <x-ui.button type="submit" variant="secondary">
                 {{ __('Email Password Reset Link') }}
-            </x-primary-button>
+            </x-ui.button>
         </div>
     </form>
 </x-guest-layout>

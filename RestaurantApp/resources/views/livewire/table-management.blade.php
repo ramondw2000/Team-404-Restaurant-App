@@ -111,34 +111,25 @@
                 {{-- Edit Mode Toggle --}}
                 @if($editMode)
                     <div class="flex items-center gap-2">
-                        <button
-                            wire:click="saveChanges"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                        >
+                        <x-ui.button size="sm" wire:click="saveChanges">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M5 13l4 4L19 7"/>
                             </svg>
                             Save
-                        </button>
-                        <button
-                            wire:click="exitEditMode"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
+                        </x-ui.button>
+                        <x-ui.button variant="secondary" size="sm" wire:click="exitEditMode">
                             Done
-                        </button>
+                        </x-ui.button>
                     </div>
                 @else
-                    <button
-                        wire:click="enterEditMode"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-                    >
+                    <x-ui.button variant="outline" size="sm" wire:click="enterEditMode">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                         Edit
-                    </button>
+                    </x-ui.button>
                 @endif
             @endif
         </div>
@@ -209,16 +200,13 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">No floor plans yet</h3>
                         <p class="text-sm text-gray-500 mb-6">Create your first floor plan to start managing your
                             restaurant tables.</p>
-                        <button
-                            wire:click="openCreateFloorPlanModal"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
-                        >
+                        <x-ui.button wire:click="openCreateFloorPlanModal">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M12 4v16m8-8H4"/>
                             </svg>
                             Create your first floor plan
-                        </button>
+                        </x-ui.button>
                     </div>
                 </div>
             @else
@@ -609,17 +597,13 @@
                                 </div>
 
                                 {{-- Delete Floor Plan --}}
-                                <button
-                                    wire:click="deleteFloorPlan"
-                                    wire:confirm="Are you sure you want to delete this floor plan? This cannot be undone."
-                                    class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors text-left"
-                                >
+                                <x-ui.button variant="danger" size="sm" wire:click="deleteFloorPlan" wire:confirm="Are you sure you want to delete this floor plan? This cannot be undone." class="w-full justify-start">
                                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
                                     Delete Floor Plan
-                                </button>
+                                </x-ui.button>
                             </div>
                         </div>
 
@@ -938,27 +922,18 @@
                         >Reset to full image
                         </button>
                         <div class="flex items-center gap-3">
-                            <button
-                                @click="$wire.closeCropModal()"
-                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-                            >Cancel
-                            </button>
+                            <x-ui.button variant="secondary" size="sm" @click="$wire.closeCropModal()">
+                                Cancel
+                            </x-ui.button>
                             @if($isEditCrop)
-                                <button
-                                    @click="$wire.saveCrop({{ $cropEditImageId }}, cropX, cropY, cropW, cropH)"
-                                    class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors"
-                                >Save crop
-                                </button>
+                                <x-ui.button size="sm" @click="$wire.saveCrop({{ $cropEditImageId }}, cropX, cropY, cropW, cropH)">
+                                    Save crop
+                                </x-ui.button>
                             @else
-                                <button
-                                    @click="$wire.uploadElementImage(cropX, cropY, cropW, cropH)"
-                                    wire:loading.attr="disabled"
-                                    wire:target="uploadElementImage"
-                                    class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-60"
-                                >
+                                <x-ui.button size="sm" @click="$wire.uploadElementImage(cropX, cropY, cropW, cropH)" wire:loading.attr="disabled" wire:target="uploadElementImage">
                                     <span wire:loading.remove wire:target="uploadElementImage">Add to library</span>
                                     <span wire:loading wire:target="uploadElementImage">Saving…</span>
-                                </button>
+                                </x-ui.button>
                             @endif
                         </div>
                     </div>
@@ -1046,19 +1021,12 @@
                         </div>
 
                         <div class="flex gap-3 pt-2">
-                            <button
-                                type="button"
-                                wire:click="$set('showCreateFloorPlanModal', false)"
-                                class="flex-1 py-2.5 px-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
-                            >
+                            <x-ui.button type="button" variant="secondary" wire:click="$set('showCreateFloorPlanModal', false)" class="flex-1 justify-center">
                                 Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                class="flex-1 py-2.5 px-4 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
-                            >
+                            </x-ui.button>
+                            <x-ui.button type="submit" class="flex-1 justify-center">
                                 Create Floor Plan
-                            </button>
+                            </x-ui.button>
                         </div>
                     </form>
                 </div>
@@ -1088,19 +1056,12 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                         <div class="flex gap-3">
-                            <button
-                                type="button"
-                                wire:click="$set('showRenameModal', false)"
-                                class="flex-1 py-2.5 px-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
-                            >
+                            <x-ui.button type="button" variant="secondary" wire:click="$set('showRenameModal', false)" class="flex-1 justify-center">
                                 Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                class="flex-1 py-2.5 px-4 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors"
-                            >
+                            </x-ui.button>
+                            <x-ui.button type="submit" class="flex-1 justify-center">
                                 Rename
-                            </button>
+                            </x-ui.button>
                         </div>
                     </form>
                 </div>
@@ -1126,24 +1087,15 @@
                     </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button
-                        wire:click="saveChanges"
-                        class="w-full py-2.5 px-4 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors"
-                    >
+                    <x-ui.button wire:click="saveChanges" class="w-full justify-center">
                         Save Changes
-                    </button>
-                    <button
-                        wire:click="discardChanges"
-                        class="w-full py-2.5 px-4 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors"
-                    >
+                    </x-ui.button>
+                    <x-ui.button variant="danger" wire:click="discardChanges" class="w-full justify-center">
                         Discard Changes
-                    </button>
-                    <button
-                        wire:click="$set('showDiscardConfirm', false)"
-                        class="w-full py-2.5 px-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
-                    >
+                    </x-ui.button>
+                    <x-ui.button variant="secondary" wire:click="$set('showDiscardConfirm', false)" class="w-full justify-center">
                         Keep Editing
-                    </button>
+                    </x-ui.button>
                 </div>
             </div>
         </div>

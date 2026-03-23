@@ -5,11 +5,10 @@
     <!-- ── Sticky top nav ─────────────────────────── -->
     <div class="shrink-0 bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-            <button onclick="closeReview()"
-                    class="flex items-center gap-2 text-molveno-blue-500 hover:text-molveno-blue-700 font-semibold text-sm transition-colors">
+            <x-ui.button variant="ghost" onclick="closeReview()" class="text-molveno-blue-500 hover:text-molveno-blue-700">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                 Back
-            </button>
+            </x-ui.button>
             <h2 class="text-base font-bold text-gray-900 absolute left-1/2 -translate-x-1/2">Your Order</h2>
             <span id="review-nav-table" class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full"></span>
         </div>
@@ -47,12 +46,10 @@
                 <p class="text-xs text-gray-500">Order total</p>
                 <p id="review-total" class="text-lg font-black text-gray-900 leading-tight"></p>
             </div>
-            <button onclick="sendOrder()"
-                    class="shrink-0 flex items-center gap-2 bg-molveno-blue-500 hover:bg-molveno-blue-700
-                           text-white text-sm font-bold px-6 py-3 rounded-xl shadow-sm transition-colors">
+            <x-ui.button onclick="sendOrder()" size="lg" class="shrink-0">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 Send to Kitchen
-            </button>
+            </x-ui.button>
         </div>
     </div>
 

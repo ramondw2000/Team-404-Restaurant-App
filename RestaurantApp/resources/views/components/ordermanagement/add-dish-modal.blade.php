@@ -49,15 +49,13 @@
 
         <!-- Actions -->
         <div class="px-5 py-4 border-t border-gray-100 flex gap-3">
-            <button onclick="closeAddModal()"
-                    class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+            <x-ui.button variant="secondary" onclick="closeAddModal()" class="flex-1 justify-center">
                 Cancel
-            </button>
-            <button onclick="confirmAddDish()"
-                    class="flex-1 px-4 py-2.5 rounded-xl bg-molveno-blue-500 hover:bg-molveno-blue-700 text-white text-sm font-bold transition-colors inline-flex items-center justify-center gap-2">
+            </x-ui.button>
+            <x-ui.button onclick="confirmAddDish()" class="flex-1 justify-center">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                 Add to Order
-            </button>
+            </x-ui.button>
         </div>
     </div>
 </div>
