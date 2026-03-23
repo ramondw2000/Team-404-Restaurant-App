@@ -232,7 +232,7 @@ window.canvasElement = function (elementData) {
         init() {
             this.setupInteract();
             window.addEventListener('element-properties-updated', (event) => {
-                if (event.detail.id == this.elementId) {
+                if (event.detail.id === this.elementId) {
                     this.isTable = event.detail.isTable;
                     this.tableName = event.detail.tableName || '';
                     this.statusValue = event.detail.status || '';
