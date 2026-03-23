@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,6 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dishes', function () {
         return view('dishes');
     })->name('dishes');
+
+    Route::get('/statistics', [StatisticsController::class, 'index'])
+        ->middleware('role:management')
+        ->name('statistics');
 
     Route::get('/ordermanagement', function () {
         return view('ordermanagement');
