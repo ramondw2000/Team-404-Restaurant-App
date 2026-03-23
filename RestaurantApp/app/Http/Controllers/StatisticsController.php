@@ -114,7 +114,6 @@ class StatisticsController extends Controller
         $recentOrders = $completedOrders->sortByDesc('closed_at')->values();
 
         return view('statistics', [
-            'completedOrders' => $completedOrders,
             'totalSales' => $totalSales,
             'orderCount' => $orderCount,
             'averageOrderValue' => $averageOrderValue,

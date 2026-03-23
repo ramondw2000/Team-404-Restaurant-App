@@ -155,44 +155,8 @@
                 </div>
             </div>
 
-            {{-- Completed orders table --}}
-            <div class="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Order Ledger</p>
-                        <h3 class="text-base font-semibold text-gray-900 mt-0.5">Completed orders</h3>
-                    </div>
-                    <span class="text-xs font-semibold text-white bg-primary px-3 py-1 rounded-full self-start">
-                        {{ $orderCount }} orders logged
-                    </span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-slate-200">
-                                <th class="text-left pb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Order</th>
-                                <th class="text-left pb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Location</th>
-                                <th class="text-left pb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Waiter</th>
-                                <th class="text-center pb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Items</th>
-                                <th class="text-right pb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Total</th>
-                                <th class="text-right pb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Closed</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($completedOrders as $order)
-                                <tr class="border-b border-slate-200 last:border-0">
-                                    <td class="py-3 font-semibold text-gray-900">{{ $order['id'] }}</td>
-                                    <td class="py-3 text-gray-500">{{ $order['location'] }}</td>
-                                    <td class="py-3 text-gray-500">{{ $order['waiter'] }}</td>
-                                    <td class="py-3 text-center text-gray-500">{{ count($order['items']) }}</td>
-                                    <td class="py-3 text-right font-semibold text-molveno-blue-700">€ {{ number_format($order['total'], 2) }}</td>
-                                    <td class="py-3 text-right text-gray-400">{{ $order['closed_at'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            {{-- Completed orders table (Livewire component) --}}
+            <livewire:completed-order-table />
 
         </div>
     </body>
