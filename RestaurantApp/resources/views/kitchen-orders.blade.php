@@ -403,5 +403,6 @@
                 return (value || '').split(' ').filter(Boolean);
             }
         </script>
+    @livewireScripts
     </body>
 </html>

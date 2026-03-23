@@ -725,5 +725,6 @@
                 .replace(/"/g,'&quot;');
         }
         </script>
+    @livewireScripts
     </body>
 </html>

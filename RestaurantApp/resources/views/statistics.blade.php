@@ -159,5 +159,6 @@
             <livewire:completed-order-table />
 
         </div>
-    </body>
+    @livewireScripts
+</body>
 </html>
