@@ -27,7 +27,7 @@
                     <x-nav-link :href="route('ordermanagement')" :active="false">
                         {{ __('Order Management') }}
                     </x-nav-link>
-                    <x-nav-link href="#" :active="false">
+                    <x-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                         {{ __('Table Management') }}
                     </x-nav-link>
                     <x-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
@@ -100,7 +100,7 @@
             <x-responsive-nav-link href="#" :active="false">
                 {{ __('Order Management') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" :active="false">
+            <x-responsive-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                 {{ __('Table Management') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
