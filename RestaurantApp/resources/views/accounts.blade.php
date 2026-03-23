@@ -266,5 +266,6 @@
                 @endif
             @endif
         </script>
+    @livewireScripts
     </body>
 </html>

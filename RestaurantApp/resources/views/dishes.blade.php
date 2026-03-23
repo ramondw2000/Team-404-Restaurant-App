@@ -431,5 +431,6 @@
 
             document.getElementById('search-input').addEventListener('input', applyFilters);
         </script>
+    @livewireScripts
     </body>
 </html>
