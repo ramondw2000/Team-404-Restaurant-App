@@ -76,12 +76,18 @@
 ## Keuken overzicht 
 
 - Alle bestellingen worden verstuurd en aangetoond aan het keukenpersoneel via een scherm in de keuken. Per bestelling is er een blokje met daarin de volgende informatie: 
-    - Alle gerechten en de hoeveelheid van elk gerecht. 
-        - Onder het gerecht waarvan het van toepassing is, worden alle bijzonderheden weergeven die voor de koks van belang zijn. 
-    - De tijd van wanneer de bestelling verstuurd werdt.
-    - Het tafel- en bestellingsnummer.
+- Alle gerechten en de hoeveelheid van elk gerecht. 
+  - Onder het gerecht waarvan het van toepassing is, worden alle bijzonderheden weergeven die voor de koks van belang zijn. 
+  - De tijd van wanneer de bestelling verstuurd werdt.
+ - Het tafel- en bestellingsnummer.
 
-- Als een bestelling klaar is, kan de gebruiker een bestelling afvinken.*
+Functionaliteiten van het bestellingsoverzicht:
+
+- Mark Ready – Bestellingen als “gereed” markeren zodra ze volledig bereid of geserveerd zijn.
+
+- Send Out – Bestellingen naar de volgende fase versturen zodat personeel weet dat ze onderweg zijn.
+
+Wij hebben besloten het bestellingsoverzicht aan te passen, zodat bestellingen niet langer individueel met “Mark Ready” of “Send Out” kunnen worden afgevinkt, maar in één handeling per bestelling worden verwerkt.
 
 ### Room Service
 
@@ -102,6 +108,22 @@
 
 - De gebruiker kan de statistieken zien op een dagelijks, wekelijks, maandelijks en jaarlijks basis. Onder statistieken wordt het volgende weergeven:
     - Het totaalwinst van de gekozen periode.
+
+
+
+## Bar overzicht
+
+
+
+- Barmedewerkers moeten als aparte rol worden toegevoegd binnen het systeem, met bijbehorende rechten en toegangsbeheer.
+- Er moet een bestellingsoverzicht worden gemaakt voor barmedewerkers, zodat zij bestellingen kunnen bekijken en verwerken voor:
+    - gasten aan tafel
+   - gasten aan de bar
+- Manager kan het barsysteem en barmedewerkers beheren.
+- Manager kan prestaties en aantal verwerkte bestelligen bekijken.
+- Mogelijkheid om notities door te geven van bediening naar bar
+
     - Een lijst van de meest en minst verkochte gerechten.
 
 *Nog bespreken met de anderen
+

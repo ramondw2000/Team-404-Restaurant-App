@@ -8,58 +8,6 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,900&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <style>
-            /* ── KDS grid ────────────────────────────────────── */
-            .order-grid {
-                display: grid;
-                gap: 1rem;
-                align-items: start;
-                grid-template-columns: repeat(4, 1fr);
-            }
-            @media (max-width: 1279px) { .order-grid { grid-template-columns: repeat(3, 1fr); } }
-            @media (max-width: 767px)  { .order-grid { grid-template-columns: repeat(2, 1fr); } }
-            @media (max-width: 479px)  { .order-grid { grid-template-columns: 1fr; } }
-
-            /* ── Filter tabs ──────────────────────────────────── */
-            .tab-btn {
-                display: inline-flex; align-items: center; gap: 0.375rem;
-                padding: 0.375rem 0.875rem; border-radius: 9999px;
-                font-size: 0.8125rem; font-weight: 600;
-                border: 1px solid #e5e7eb; background: #fff; color: #6b7280;
-                cursor: pointer; transition: border-color .15s, background .15s, color .15s;
-                font-family: inherit; white-space: nowrap;
-            }
-            .tab-btn:hover { border-color: #309bcf; color: #005693; }
-            .tab-btn.tab-active { background: #005693; border-color: #005693; color: #fff; }
-            .tab-count {
-                display: inline-flex; align-items: center; justify-content: center;
-                min-width: 1.125rem; height: 1.125rem; padding: 0 0.25rem;
-                border-radius: 9999px; font-size: 0.6875rem; font-weight: 700;
-                background: #e5e7eb; color: #4b5563;
-            }
-            .tab-active .tab-count { background: rgba(255,255,255,.25); color: #fff; }
-
-            /* ── Notes textarea ───────────────────────────────── */
-            .note-area {
-                width: 100%;
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.375rem;
-                padding: 0.375rem 0.5rem;
-                font-size: 0.75rem;
-                color: #374151;
-                font-family: inherit;
-                resize: none;
-                outline: none;
-                transition: border-color .15s, box-shadow .15s;
-                line-height: 1.45;
-            }
-            .note-area:focus {
-                border-color: #309bcf;
-                box-shadow: 0 0 0 3px rgba(48,155,207,.15);
-            }
-            .note-area::placeholder { color: #9ca3af; }
-        </style>
     </head>
     <body class="font-sans antialiased min-h-screen bg-[#eaf4fa]">
         @include('layouts.navigation')
@@ -76,7 +24,7 @@
             [
                 'id' => 'ORD-047', 'type' => 'restaurant', 'table' => 'A3',  'room' => null,  'time' => '18:32', 'waiter' => 'Sofia R.',
                 'dishes' => [
-                    ['name'=>'Spaghetti Bolognese', 'qty'=>1, 'allergens'=>['gluten','wheat','milk'], 'notes'=>'Extra sauce on the side',                'status'=>'ready'],
+                    ['name'=>'Spaghetti Bolognese', 'qty'=>1, 'allergens'=>['gluten','wheat','milk'], 'notes'=>'Extra sauce on the side',                'status'=>'pending'],
                     ['name'=>'Margherita Pizza',     'qty'=>2, 'allergens'=>['gluten','wheat','milk'], 'notes'=>'Well done crust',                        'status'=>'pending'],
                     ['name'=>'Caesar Salad',         'qty'=>1, 'allergens'=>['gluten','milk'],         'notes'=>'No croutons — guest has gluten allergy', 'status'=>'pending'],
                 ],
@@ -84,7 +32,7 @@
             [
                 'id' => 'ORD-046', 'type' => 'room_service', 'table' => null, 'room' => '204', 'time' => '18:28', 'waiter' => 'Marco D.',
                 'dishes' => [
-                    ['name'=>'Mushroom Risotto', 'qty'=>1, 'allergens'=>['milk'],  'notes'=>'No parmesan, dairy allergy', 'status'=>'ready'],
+                    ['name'=>'Mushroom Risotto', 'qty'=>1, 'allergens'=>['milk'],  'notes'=>'No parmesan, dairy allergy', 'status'=>'pending'],
                     ['name'=>'Panna Cotta',       'qty'=>1, 'allergens'=>['milk'],  'notes'=>'',                          'status'=>'pending'],
                     ['name'=>'Acqua Minerale',    'qty'=>2, 'allergens'=>[],        'notes'=>'Still water, no ice',       'status'=>'served'],
                 ],
@@ -102,7 +50,7 @@
                 'id' => 'ORD-044', 'type' => 'room_service', 'table' => null, 'room' => '118', 'time' => '18:09', 'waiter' => 'Marco D.',
                 'dishes' => [
                     ['name'=>'Bruschetta al Pomodoro', 'qty'=>1, 'allergens'=>['gluten','wheat'],              'notes'=>'',                               'status'=>'served'],
-                    ['name'=>'Pasta Carbonara',         'qty'=>1, 'allergens'=>['gluten','wheat','milk'],       'notes'=>'No guanciale, vegetarian guest', 'status'=>'ready'],
+                    ['name'=>'Pasta Carbonara',         'qty'=>1, 'allergens'=>['gluten','wheat','milk'],       'notes'=>'No guanciale, vegetarian guest', 'status'=>'pending'],
                     ['name'=>'Tiramisu',                'qty'=>2, 'allergens'=>['gluten','wheat','milk','nuts'],'notes'=>'Nut allergy — check recipe!',    'status'=>'pending'],
                 ],
             ],
@@ -120,7 +68,7 @@
                 'dishes' => [
                     ['name'=>'Caprese Salad',             'qty'=>2, 'allergens'=>['milk'], 'notes'=>'Extra basil',                    'status'=>'served'],
                     ['name'=>'Risotto ai Frutti di Mare', 'qty'=>1, 'allergens'=>['milk'], 'notes'=>'',                               'status'=>'served'],
-                    ['name'=>'Branzino al Forno',         'qty'=>1, 'allergens'=>[],       'notes'=>'Lemon on the side',              'status'=>'ready'],
+                    ['name'=>'Branzino al Forno',         'qty'=>1, 'allergens'=>[],       'notes'=>'Lemon on the side',              'status'=>'pending'],
                     ['name'=>'Gelato al Limone',          'qty'=>3, 'allergens'=>[],       'notes'=>'One scoop only for table guest', 'status'=>'pending'],
                 ],
             ],
@@ -161,7 +109,7 @@
 
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
 
-            <!-- ── Page header ───────────────────────────────── -->`
+            <!-- ── Page header ───────────────────────────────── -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h1 class="text-xl font-bold text-gray-900">Kitchen Orders</h1>
@@ -183,19 +131,32 @@
                 </div>
             </div>
 
-            <!-- ── Filter tabs ────────────────────────────────── -->`
+            <!-- ── Filter tabs ────────────────────────────────── -->
             <div class="flex items-center gap-2 flex-wrap">
-                <button class="tab-btn tab-active" data-tab="all"          onclick="switchTab(this)">All <span class="tab-count">{{ count($orders) }}</span></button>
-                <button class="tab-btn"            data-tab="active"       onclick="switchTab(this)">Active <span class="tab-count">{{ $countActive }}</span></button>
-                <button class="tab-btn"            data-tab="completed"    onclick="switchTab(this)">Completed <span class="tab-count">{{ $countCompleted }}</span></button>
+                @php
+                    $tabBtnClasses = 'tab-btn inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:border-sky-400 hover:text-sky-700 shadow-sm';
+                    $tabCountClasses = 'tab-count inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[0.65rem] font-bold bg-slate-100 text-slate-500';
+                @endphp
+                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="all" data-default="true" onclick="switchTab(this)">
+                    All
+                    <span class="{{ $tabCountClasses }}">{{ count($orders) }}</span>
+                </button>
+                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="active" onclick="switchTab(this)">
+                    Active
+                    <span class="{{ $tabCountClasses }}">{{ $countActive }}</span>
+                </button>
+                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="completed" onclick="switchTab(this)">
+                    Completed
+                    <span class="{{ $tabCountClasses }}">{{ $countCompleted }}</span>
+                </button>
                 <div class="w-px h-5 bg-gray-200 mx-1 hidden sm:block"></div>
-                <button class="tab-btn"            data-tab="restaurant"   onclick="switchTab(this)">
+                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="restaurant" onclick="switchTab(this)">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
                     </svg>
                     Restaurant
                 </button>
-                <button class="tab-btn"            data-tab="room_service" onclick="switchTab(this)">
+                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="room_service" onclick="switchTab(this)">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 4v16"/><path d="M22 8H2"/><path d="M22 20V8l-8-4H2"/>
                     </svg>
@@ -203,8 +164,8 @@
                 </button>
             </div>
 
-            <!-- ── KDS order grid ─────────────────────────────── -->`
-            <div class="order-grid" id="order-list">
+            <!-- ── KDS order grid ─────────────────────────────── -->
+            <div class="grid gap-4 items-start xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 grid-cols-1" id="order-list">
                 @foreach($orders as $order)
                     <x-orders.order-card :order="$order" :allergenConfig="$allergenConfig" />
                 @endforeach
@@ -223,9 +184,32 @@
         </div>
 
         <script>
+            const TAB_ACTIVE_CLASSES = ['bg-sky-700', 'border-sky-700', 'text-white', 'shadow'];
+            const TAB_INACTIVE_CLASSES = ['bg-white', 'border-slate-200', 'text-slate-600', 'shadow-sm'];
+            const TAB_COUNT_ACTIVE_CLASSES = ['bg-white/30', 'text-white'];
+            const TAB_COUNT_INACTIVE_CLASSES = ['bg-slate-100', 'text-slate-500'];
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const defaultTab = document.querySelector('.tab-btn[data-default="true"]') || document.querySelector('.tab-btn');
+                if (defaultTab) {
+                    switchTab(defaultTab);
+                }
+                document.querySelectorAll('.mark-ready-btn').forEach(btn => {
+                    setMarkReadyAppearance(btn, btn.dataset.dishStatus === 'ready' ? 'ready' : 'pending');
+                });
+                document.querySelectorAll('.order-card').forEach(card => {
+                    updateOrderSendState(card);
+                    syncCardVisualState(card);
+                });
+                document.addEventListener('click', handleActionClick);
+            });
+
+            const CARD_COMPLETED_CLASSES = ['bg-emerald-50', 'border-emerald-200', 'shadow-md'];
+            const CARD_DEFAULT_CLASSES = ['bg-white', 'border-gray-200', 'shadow-sm'];
+
             function switchTab(btn) {
                 const tab = btn.dataset.tab;
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('tab-active', b === btn));
+                document.querySelectorAll('.tab-btn').forEach(b => setTabAppearance(b, b === btn));
                 let visible = 0;
                 document.querySelectorAll('.order-card').forEach(card => {
                     const overall = card.dataset.overall;
@@ -240,6 +224,183 @@
                     if (show) visible++;
                 });
                 document.getElementById('no-orders').classList.toggle('hidden', visible > 0);
+            }
+
+            function handleActionClick(event) {
+                const target = event.target instanceof Element ? event.target : event.target.parentElement;
+                if (!target) return;
+
+                const markBtn = target.closest('.mark-ready-btn');
+                if (markBtn) {
+                    event.preventDefault();
+                    markDishReady(markBtn);
+                    return;
+                }
+
+                const sendBtn = target.closest('.order-send-btn');
+                if (sendBtn) {
+                    event.preventDefault();
+                    if (!sendBtn.disabled) {
+                        completeOrder(sendBtn);
+                    }
+                }
+            }
+
+            function markDishReady(button) {
+                const nextState = button.dataset.dishStatus === 'ready' ? 'pending' : 'ready';
+                setMarkReadyAppearance(button, nextState);
+                button.dataset.dishStatus = nextState;
+
+                const label = button.querySelector('.mark-ready-label');
+                if (label) label.textContent = nextState === 'ready' ? 'Ready' : 'Mark Ready';
+
+                const dishAction = button.closest('.dish-action');
+                updateDishVisualState(dishAction, nextState);
+
+                updateOrderSendState(button.closest('.order-card'));
+            }
+
+            function completeOrder(button) {
+                setSendButtonState(button, 'sent');
+                const card = button.closest('.order-card');
+                if (card) {
+                    card.dataset.overall = 'completed';
+                    hideOrderActions(card);
+                    syncCardVisualState(card);
+                }
+            }
+
+            function updateOrderSendState(card) {
+                if (!card) return;
+
+                const dishActions = Array.from(card.querySelectorAll('.dish-action'));
+                const hasPending = dishActions.some(action => action.dataset.dishStatus === 'pending');
+                const allReadyOrServed = dishActions.length > 0 && dishActions.every(action => ['ready', 'served'].includes(action.dataset.dishStatus));
+
+                const sendBtn = card.querySelector('.order-send-btn');
+
+                if (sendBtn) {
+                    const currentState = card.dataset.overall === 'completed' ? 'sent'
+                                        : allReadyOrServed ? 'ready'
+                                        : 'disabled';
+                    setSendButtonState(sendBtn, currentState);
+                }
+
+                if (card.dataset.overall !== 'completed') {
+                    card.dataset.overall = allReadyOrServed ? 'ready' : (hasPending ? 'pending' : card.dataset.overall);
+                }
+
+                if (card.dataset.overall === 'completed') {
+                    hideOrderActions(card);
+                } else {
+                    showOrderActions(card);
+                }
+
+                syncCardVisualState(card);
+            }
+
+            function setTabAppearance(button, isActive) {
+                if (!button) return;
+                button.classList.remove(...TAB_ACTIVE_CLASSES, ...TAB_INACTIVE_CLASSES);
+                button.classList.add(...(isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES));
+
+                const count = button.querySelector('.tab-count');
+                if (count) {
+                    count.classList.remove(...TAB_COUNT_ACTIVE_CLASSES, ...TAB_COUNT_INACTIVE_CLASSES);
+                    count.classList.add(...(isActive ? TAB_COUNT_ACTIVE_CLASSES : TAB_COUNT_INACTIVE_CLASSES));
+                }
+            }
+
+            function updateDishVisualState(dishAction, state) {
+                if (!dishAction) return;
+                dishAction.dataset.dishStatus = state;
+
+                const wrapper = dishAction.closest('[data-dish-wrapper]');
+                if (wrapper) {
+                    wrapper.dataset.dishStatus = state;
+                    const dot = wrapper.querySelector('[data-role="status-dot"]');
+                    if (dot) {
+                        setStatusDotAppearance(dot, state);
+                    }
+                }
+            }
+
+            function setMarkReadyAppearance(button, state) {
+                if (!button) return;
+                const pending = parseClasses(button.dataset.classPending);
+                const ready = parseClasses(button.dataset.classReady);
+                button.classList.remove(...pending, ...ready);
+
+                if (state === 'ready') {
+                    button.classList.add(...ready);
+                } else {
+                    button.classList.add(...pending);
+                }
+            }
+
+            function setStatusDotAppearance(dot, state) {
+                if (!dot) return;
+                const pending = parseClasses(dot.dataset.classPending);
+                const ready = parseClasses(dot.dataset.classReady);
+                const served = parseClasses(dot.dataset.classServed);
+                dot.classList.remove(...pending, ...ready, ...served);
+
+                if (state === 'ready') {
+                    dot.classList.add(...ready);
+                } else if (state === 'served') {
+                    dot.classList.add(...served);
+                } else {
+                    dot.classList.add(...pending);
+                }
+
+                dot.dataset.status = state;
+            }
+
+            function setSendButtonState(button, state) {
+                if (!button) return;
+                const disabled = parseClasses(button.dataset.classDisabled);
+                const ready = parseClasses(button.dataset.classReady);
+                const sent = parseClasses(button.dataset.classSent);
+                button.classList.remove(...disabled, ...ready, ...sent);
+
+                if (state === 'sent') {
+                    button.classList.add(...sent);
+                    button.disabled = true;
+                } else if (state === 'ready') {
+                    button.classList.add(...ready);
+                    button.disabled = false;
+                } else {
+                    button.classList.add(...disabled);
+                    button.disabled = true;
+                }
+
+                button.dataset.sendState = state;
+                const label = button.querySelector('.order-send-label');
+                if (label) label.textContent = state === 'sent' ? 'Sent' : 'Send Out';
+            }
+
+            function syncCardVisualState(card) {
+                if (!card) return;
+                card.classList.remove(...CARD_COMPLETED_CLASSES, ...CARD_DEFAULT_CLASSES);
+                if (card.dataset.overall === 'completed') {
+                    card.classList.add(...CARD_COMPLETED_CLASSES);
+                } else {
+                    card.classList.add(...CARD_DEFAULT_CLASSES);
+                }
+            }
+
+            function hideOrderActions(card) {
+                const actions = card.querySelector('[data-role="order-actions"]');
+                if (actions) actions.classList.add('hidden');
+            }
+
+            function showOrderActions(card) {
+                const actions = card.querySelector('[data-role="order-actions"]');
+                if (actions) actions.classList.remove('hidden');
+            }
+
+            function parseClasses(value) {
+                return (value || '').split(' ').filter(Boolean);
             }
         </script>
     </body>

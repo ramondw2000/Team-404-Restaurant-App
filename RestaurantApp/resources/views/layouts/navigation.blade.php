@@ -21,13 +21,13 @@
                     <x-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
                         {{ __('Statistics') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('orders')" :active="false">
+                    <x-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
                         {{ __('Kitchen Orders') }}
                     </x-nav-link>
                     <x-nav-link :href="route('ordermanagement')" :active="false">
                         {{ __('Order Management') }}
                     </x-nav-link>
-                    <x-nav-link href="#" :active="false">
+                    <x-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                         {{ __('Table Management') }}
                     </x-nav-link>
                     <x-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
@@ -94,13 +94,13 @@
             <x-responsive-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
                 {{ __('Statistics') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('orders')" :active="request()->routeIs('orders')">
+            <x-responsive-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
                 {{ __('Kitchen Orders') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
                 {{ __('Order Management') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" :active="false">
+            <x-responsive-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                 {{ __('Table Management') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">

@@ -14,6 +14,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::livewire('/tablemanagement', TableManagement::class)->name('tablemanagement');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -34,9 +35,9 @@ Route::middleware('auth')->group(function () {
         return view('ordermanagement');
     })->name('ordermanagement');
 
-    Route::get('/orders', function () {
-        return view('orders');
-    })->name('orders');
+    Route::get('/kitchenorders', function () {
+        return view('kitchen-orders');
+    })->name('kitchen-orders');
 });
 
 require __DIR__.'/auth.php';

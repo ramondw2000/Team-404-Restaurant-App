@@ -13,7 +13,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
             {{-- Kitchen Orders --}}
-            <a href="{{ route('orders') }}"
+            <a href="{{ route('kitchen-orders') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -89,9 +89,10 @@
                 </svg>
             </a>
 
-            {{-- Table Management (coming soon) --}}
-            <div class="relative bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 opacity-60 cursor-not-allowed">
-                <div class="shrink-0 w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+            {{-- Table Management --}}
+            <a href="{{ route('tablemanagement') }}"
+               class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
+                <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"/>
                         <rect x="14" y="3" width="7" height="7"/>
@@ -100,13 +101,13 @@
                     </svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                        <h3 class="font-semibold text-gray-900">Table Management</h3>
-                        <span class="text-xs font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Coming soon</span>
-                    </div>
+                    <h3 class="font-semibold text-gray-900 group-hover:text-molveno-blue-700 transition-colors duration-200">Table Management</h3>
                     <p class="text-sm text-gray-500 mt-1 leading-relaxed">Oversee table layouts, availability, and assignments.</p>
                 </div>
-            </div>
+                <svg class="shrink-0 w-4 h-4 text-gray-300 group-hover:text-molveno-blue-500 mt-1 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </a>
 
             {{-- Statistics --}}
             <a href="{{ route('statistics') }}"
