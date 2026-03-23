@@ -26,6 +26,12 @@ npm install
 echo "Running composer install..."
 composer install
 
+echo "Migrating database and seeding..."
+php artisan db:wipe
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan db:seed
+
 # ─── Start dev server ─────────────────────────────────────────────────────────
 echo "Starting development server..."
 composer run dev
