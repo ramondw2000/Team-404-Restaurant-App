@@ -24,40 +24,16 @@
         <div class="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
 
             <!-- Name -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-semibold text-gray-700" for="field-name">Full Name</label>
-                <input id="field-name" name="name" type="text"
-                       class="sheet-input @error('name') error @enderror"
-                       value="{{ old('name') }}"
-                       placeholder="e.g. Sofia Ricci">
-                @error('name')
-                    <p class="text-xs text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-ui.input-group label="Full Name" name="name" id="field-name" placeholder="e.g. Sofia Ricci" />
 
             <!-- Email -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-semibold text-gray-700" for="field-email">Email Address</label>
-                <input id="field-email" name="email" type="email"
-                       class="sheet-input @error('email') error @enderror"
-                       value="{{ old('email') }}"
-                       placeholder="name@molvenoresort.it">
-                @error('email')
-                    <p class="text-xs text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-ui.input-group label="Email Address" name="email" type="email" id="field-email" placeholder="name@molvenoresort.it" />
 
             <!-- Password -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-sm font-semibold text-gray-700" for="field-password">Password</label>
-                <input id="field-password" name="password" type="password"
-                       class="sheet-input @error('password') error @enderror"
-                       placeholder="Minimum 8 characters">
+            <x-ui.input-group label="Password" name="password" type="password" id="field-password" placeholder="Minimum 8 characters">
+                <x-ui.input type="password" name="password" id="field-password" placeholder="Minimum 8 characters" :error="$errors->has('password')" />
                 <p id="password-hint" class="text-xs text-gray-400 hidden">Leave blank to keep the current password.</p>
-                @error('password')
-                    <p class="text-xs text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
+            </x-ui.input-group>
 
             <!-- Roles -->
             @php $oldRoles = old('roles', []); @endphp
@@ -84,14 +60,12 @@
 
         <!-- Sheet footer -->
         <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
-            <button type="button" onclick="closeSheet()"
-                    class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            <x-ui.button type="button" variant="secondary" onclick="closeSheet()">
                 Cancel
-            </button>
-            <button type="submit" id="sheet-submit"
-                    class="px-4 py-2 text-sm font-semibold text-white bg-molveno-blue-500 hover:bg-molveno-blue-700 rounded-lg shadow-sm transition-colors">
+            </x-ui.button>
+            <x-ui.button type="submit" id="sheet-submit">
                 Save Account
-            </button>
+            </x-ui.button>
         </div>
     </form>
 </div>

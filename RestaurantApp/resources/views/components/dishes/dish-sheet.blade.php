@@ -173,17 +173,14 @@
 
     <!-- Footer -->
     <div class="shrink-0 border-t border-gray-100 px-6 py-4 flex items-center gap-3 bg-gray-50">
-        <button id="sheet-delete-btn"
-                class="hidden mr-auto px-4 py-2 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+        <x-ui.button variant="danger" id="sheet-delete-btn" class="hidden mr-auto" size="sm">
             Delete Dish
-        </button>
-        <button onclick="closeSheet()"
-                class="ml-auto px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+        </x-ui.button>
+        <x-ui.button variant="secondary" onclick="closeSheet()" class="ml-auto" size="sm">
             Cancel
-        </button>
-        <button id="sheet-save-btn"
-                class="px-5 py-2 text-sm font-semibold text-white bg-molveno-blue-500 hover:bg-molveno-blue-700 rounded-lg shadow-sm transition-colors">
+        </x-ui.button>
+        <x-ui.button id="sheet-save-btn" size="sm">
             Save Dish
-        </button>
+        </x-ui.button>
     </div>
 </div>

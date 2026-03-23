@@ -9,8 +9,10 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,900&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased min-h-screen bg-gray-50">
+    <body class="font-sans antialiased min-h-screen bg-[#eaf4fa]">
         @include('layouts.navigation')
+
+        <x-ui.toast />
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
 
@@ -73,15 +75,16 @@
                 <div class="lg:col-span-2 flex flex-col gap-5">
 
                     {{-- Channel performance --}}
-                    <div class="bg-slate-100 rounded-xl p-6">
+                    <x-ui.card padding="none" class="bg-slate-100 border-0">
+                    <div class="p-6">
                         <div class="flex items-center justify-between gap-3 mb-5">
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Channel Performance</p>
                                 <h3 class="text-base font-semibold text-gray-900 mt-0.5">Sales breakdown</h3>
                             </div>
-                            <span class="text-xs font-semibold text-white bg-primary px-3 py-1 rounded-full">
+                            <x-ui.badge variant="primary" class="bg-primary text-white">
                                 € {{ number_format($totalSales, 2) }} total
-                            </span>
+                            </x-ui.badge>
                         </div>
                         <div class="grid sm:grid-cols-2 gap-4">
                             @foreach($salesByType as $channel)
@@ -91,9 +94,9 @@
                                             <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">{{ $channel['label'] }}</p>
                                             <p class="text-xl font-bold text-gray-900 mt-1">€ {{ number_format($channel['sales'], 2) }}</p>
                                         </div>
-                                        <span class="shrink-0 text-xs font-semibold text-white bg-molveno-blue-700 px-2.5 py-1 rounded-full">
+                                        <x-ui.badge variant="primary" class="shrink-0 bg-molveno-blue-700 text-white">
                                             {{ $channel['orders'] }} orders
-                                        </span>
+                                        </x-ui.badge>
                                     </div>
                                     <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
                                         <span class="block h-full rounded-full {{ $channel['key'] === 'restaurant' ? 'bg-molveno-blue-500' : 'bg-molveno-blue-300' }}"
@@ -104,9 +107,11 @@
                             @endforeach
                         </div>
                     </div>
+                    </x-ui.card>
 
                     {{-- Top dishes --}}
-                    <div class="bg-slate-100 rounded-xl p-6">
+                    <x-ui.card padding="none" class="bg-slate-100 border-0">
+                    <div class="p-6">
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Top Dishes</p>
                         <div class="flex flex-col gap-2">
                             @forelse($topItems as $index => $item)
@@ -120,19 +125,21 @@
                                             <p class="text-xs text-gray-400">{{ $item['qty'] }} servings sold</p>
                                         </div>
                                     </div>
-                                    <span class="shrink-0 text-xs font-semibold text-white bg-primary px-2.5 py-1 rounded-full">
+                                    <x-ui.badge variant="primary" class="shrink-0 bg-primary text-white">
                                         € {{ number_format($item['revenue'], 2) }}
-                                    </span>
+                                    </x-ui.badge>
                                 </div>
                             @empty
                                 <p class="text-sm text-gray-400">No sales recorded yet.</p>
                             @endforelse
                         </div>
                     </div>
+                    </x-ui.card>
                 </div>
 
                 {{-- Right: latest orders --}}
-                <div class="bg-slate-100 rounded-xl p-6 flex flex-col gap-5">
+                <x-ui.card padding="none" class="bg-slate-100 border-0">
+                <div class="p-6 flex flex-col gap-5">
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Recent Highlights</p>
                         <h3 class="text-base font-semibold text-gray-900 mt-0.5">Latest orders</h3>
@@ -147,12 +154,13 @@
                                 <p class="text-xs text-gray-400">{{ $order['location'] }} &middot; {{ $order['waiter'] }}</p>
                                 <div class="flex items-center justify-between pt-1">
                                     <span class="text-xs text-gray-400">{{ count($order['items']) }} items</span>
-                                    <span class="text-xs font-semibold text-white bg-molveno-blue-700 px-2.5 py-1 rounded-full">€ {{ number_format($order['total'], 2) }}</span>
+                                    <x-ui.badge variant="primary" class="bg-molveno-blue-700 text-white">€ {{ number_format($order['total'], 2) }}</x-ui.badge>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 </div>
+                </x-ui.card>
             </div>
 
             {{-- Completed orders table (Livewire component) --}}

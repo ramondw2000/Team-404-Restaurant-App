@@ -183,43 +183,38 @@
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
 
             <!-- ── Page header ───────────────────────────────────── -->
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl font-black text-primary">Dish Menu</h1>
-                        <p class="text-sm text-gray-500 mt-0.5">Molveno Lake Resort &mdash; Restaurant</p>
-                    </div>
-                    <button onclick="openCreateSheet()"
-                            class="shrink-0 flex items-center gap-2 bg-molveno-blue-500 hover:bg-molveno-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors duration-150">
+            <x-ui.page-header title="Dish Menu" subtitle="Molveno Lake Resort — Restaurant">
+                <x-slot:actions>
+                    <x-ui.button onclick="openCreateSheet()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 5v14M5 12h14"/>
                         </svg>
                         Add Dish
-                    </button>
-                </div>
+                    </x-ui.button>
+                </x-slot:actions>
+            </x-ui.page-header>
 
-                <!-- Legend -->
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Legend:</span>
-                    @foreach($allergenConfig as $key => $cfg)
-                        <div class="flex items-center gap-1.5">
-                            <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" />
-                            <span class="text-xs font-medium text-gray-600">{{ $cfg['label'] }}</span>
-                        </div>
-                    @endforeach
+            <!-- Legend -->
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Legend:</span>
+                @foreach($allergenConfig as $key => $cfg)
                     <div class="flex items-center gap-1.5">
-                        <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0">
-                            <svg viewBox="0 0 16 16" width="11" height="11"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
-                        </div>
-                        <span class="text-xs font-medium text-gray-600">Vegetarian</span>
+                        <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" />
+                        <span class="text-xs font-medium text-gray-600">{{ $cfg['label'] }}</span>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <div class="w-5 h-5 rounded-full bg-green-700 flex items-center justify-center shrink-0">
-                            <svg viewBox="0 0 16 16" width="11" height="11"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
-                        </div>
-                        <span class="text-xs font-medium text-gray-600">Vegan</span>
+                @endforeach
+                <div class="flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+                        <svg viewBox="0 0 16 16" width="11" height="11"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
                     </div>
+                    <span class="text-xs font-medium text-gray-600">Vegetarian</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded-full bg-green-700 flex items-center justify-center shrink-0">
+                        <svg viewBox="0 0 16 16" width="11" height="11"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600">Vegan</span>
                 </div>
             </div>
 
@@ -227,26 +222,15 @@
             <div class="flex flex-col gap-3">
 
                 <!-- Search -->
-                <div class="relative">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                         width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input id="search-input" type="text" placeholder="Search dishes…"
-                           class="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white shadow-sm text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-molveno-blue-300 focus:border-transparent"/>
-                </div>
+                <x-ui.search-input id="search-input" placeholder="Search dishes…" />
 
                 <!-- Category pills — scrollable on mobile -->
-                <div class="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
-                    <button class="filter-btn filter-active" data-filter="category" data-value="all"
-                            onclick="setCategory(this)">All</button>
+                <x-ui.tab-group class="overflow-x-auto pb-0.5 scrollbar-hide">
+                    <x-ui.tab :active="true" value="all" data-filter="category" data-value="all" onclick="setCategory(this)">All</x-ui.tab>
                     @foreach(['Starters','Mains','Desserts','Drinks','Sides'] as $cat)
-                        <button class="filter-btn" data-filter="category" data-value="{{ $cat }}"
-                                onclick="setCategory(this)">{{ $cat }}</button>
+                        <x-ui.tab :active="false" value="{{ $cat }}" data-filter="category" data-value="{{ $cat }}" onclick="setCategory(this)">{{ $cat }}</x-ui.tab>
                     @endforeach
-                </div>
+                </x-ui.tab-group>
 
                 <!-- Dietary + free-from -->
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -292,17 +276,20 @@
             </div>
 
             <!-- No results -->
-            <div id="no-results" class="hidden text-center py-16">
-                <svg class="mx-auto mb-3 text-gray-300" width="48" height="48" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <p class="text-gray-500 font-semibold">No dishes match your filters.</p>
-                <p class="text-gray-400 text-sm mt-1">Try adjusting your search or filters.</p>
-                <button onclick="resetFilters()"
-                        class="mt-4 text-sm font-semibold text-molveno-blue-500 hover:underline">
-                    Clear all filters
-                </button>
+            <div id="no-results" class="hidden">
+                <x-ui.empty-state title="No dishes match your filters." description="Try adjusting your search or filters.">
+                    <x-slot:icon>
+                        <svg class="w-10 h-10 text-gray-300 mb-3" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                    </x-slot:icon>
+                    <x-slot:action>
+                        <x-ui.button variant="ghost" onclick="resetFilters()" size="sm">
+                            Clear all filters
+                        </x-ui.button>
+                    </x-slot:action>
+                </x-ui.empty-state>
             </div>
 
         </div>
@@ -401,10 +388,23 @@
                 document.getElementById('no-results').classList.toggle('hidden', visible > 0);
             }
 
+            const TAB_ACTIVE   = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
+            const TAB_INACTIVE = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
+            const TAB_COUNT_ACTIVE   = ['bg-white/25', 'text-white'];
+            const TAB_COUNT_INACTIVE = ['bg-gray-100', 'text-gray-500'];
+
             function setCategory(btn) {
                 state.category = btn.dataset.value;
-                document.querySelectorAll('[data-filter="category"]')
-                        .forEach(b => b.classList.toggle('filter-active', b === btn));
+                document.querySelectorAll('[data-filter="category"]').forEach(b => {
+                    const isActive = b === btn;
+                    b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
+                    b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
+                    const countEl = b.querySelector('span');
+                    if (countEl) {
+                        countEl.classList.remove(...TAB_COUNT_ACTIVE, ...TAB_COUNT_INACTIVE);
+                        countEl.classList.add(...(isActive ? TAB_COUNT_ACTIVE : TAB_COUNT_INACTIVE));
+                    }
+                });
                 applyFilters();
             }
 
@@ -422,8 +422,11 @@
                 state.dietary  = [];
                 state.freefrom = [];
                 document.getElementById('search-input').value = '';
-                document.querySelectorAll('[data-filter="category"]')
-                        .forEach(b => b.classList.toggle('filter-active', b.dataset.value === 'all'));
+                document.querySelectorAll('[data-filter="category"]').forEach(b => {
+                    const isActive = b.dataset.value === 'all';
+                    b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
+                    b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
+                });
                 document.querySelectorAll('[data-filter="dietary"], [data-filter="freefrom"]')
                         .forEach(b => b.classList.remove('filter-active'));
                 applyFilters();

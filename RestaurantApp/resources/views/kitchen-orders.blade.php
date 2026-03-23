@@ -110,59 +110,41 @@
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
 
             <!-- ── Page header ───────────────────────────────── -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900">Kitchen Orders</h1>
-                    <p class="text-sm text-gray-500 mt-0.5">Live order queue &mdash; Molveno Lake Resort</p>
-                </div>
-                <div class="flex items-center gap-5 text-sm">
-                    <span class="flex items-center gap-1.5 text-gray-500">
-                        <span class="w-2 h-2 rounded-full bg-gray-300 shrink-0"></span>
-                        {{ $totalPending }} preparing
-                    </span>
-                    <span class="flex items-center gap-1.5 text-amber-600 font-medium">
-                        <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
-                        {{ $totalReady }} ready
-                    </span>
-                    <span class="flex items-center gap-1.5 text-green-600">
-                        <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
-                        {{ $countCompleted }} done
-                    </span>
-                </div>
-            </div>
+            <x-ui.page-header title="Kitchen Orders" subtitle="Live order queue — Molveno Lake Resort">
+                <x-slot:actions>
+                    <div class="flex items-center gap-5 text-sm">
+                        <span class="flex items-center gap-1.5 text-gray-500">
+                            <x-ui.badge variant="custom" :dot="true" dotColor="bg-gray-300" class="bg-transparent text-gray-500 px-0">{{ $totalPending }} preparing</x-ui.badge>
+                        </span>
+                        <span class="flex items-center gap-1.5 text-amber-600 font-medium">
+                            <x-ui.badge variant="custom" :dot="true" dotColor="bg-amber-400" class="bg-transparent text-amber-600 px-0">{{ $totalReady }} ready</x-ui.badge>
+                        </span>
+                        <span class="flex items-center gap-1.5 text-green-600">
+                            <x-ui.badge variant="custom" :dot="true" dotColor="bg-green-400" class="bg-transparent text-green-600 px-0">{{ $countCompleted }} done</x-ui.badge>
+                        </span>
+                    </div>
+                </x-slot:actions>
+            </x-ui.page-header>
 
             <!-- ── Filter tabs ────────────────────────────────── -->
-            <div class="flex items-center gap-2 flex-wrap">
-                @php
-                    $tabBtnClasses = 'tab-btn inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:border-sky-400 hover:text-sky-700 shadow-sm';
-                    $tabCountClasses = 'tab-count inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[0.65rem] font-bold bg-slate-100 text-slate-500';
-                @endphp
-                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="all" data-default="true" onclick="switchTab(this)">
-                    All
-                    <span class="{{ $tabCountClasses }}">{{ count($orders) }}</span>
-                </button>
-                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="active" onclick="switchTab(this)">
-                    Active
-                    <span class="{{ $tabCountClasses }}">{{ $countActive }}</span>
-                </button>
-                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="completed" onclick="switchTab(this)">
-                    Completed
-                    <span class="{{ $tabCountClasses }}">{{ $countCompleted }}</span>
-                </button>
-                <div class="w-px h-5 bg-gray-200 mx-1 hidden sm:block"></div>
-                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="restaurant" onclick="switchTab(this)">
+            <x-ui.tab-group>
+                <x-ui.tab :active="true" :count="count($orders)" value="all" data-tab="all" data-default="true" onclick="switchTab(this)">All</x-ui.tab>
+                <x-ui.tab :active="false" :count="$countActive" value="active" data-tab="active" onclick="switchTab(this)">Active</x-ui.tab>
+                <x-ui.tab :active="false" :count="$countCompleted" value="completed" data-tab="completed" onclick="switchTab(this)">Completed</x-ui.tab>
+                <x-ui.divider orientation="vertical" class="h-5 mx-1 hidden sm:block" />
+                <x-ui.tab :active="false" value="restaurant" data-tab="restaurant" onclick="switchTab(this)">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
                     </svg>
                     Restaurant
-                </button>
-                <button class="{{ $tabBtnClasses }} bg-white border-slate-200 text-slate-600" data-tab="room_service" onclick="switchTab(this)">
+                </x-ui.tab>
+                <x-ui.tab :active="false" value="room_service" data-tab="room_service" onclick="switchTab(this)">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 4v16"/><path d="M22 8H2"/><path d="M22 20V8l-8-4H2"/>
                     </svg>
                     Room Service
-                </button>
-            </div>
+                </x-ui.tab>
+            </x-ui.tab-group>
 
             <!-- ── KDS order grid ─────────────────────────────── -->
             <div class="grid gap-4 items-start xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 grid-cols-1" id="order-list">
@@ -172,25 +154,28 @@
             </div>
 
             <!-- Empty state -->
-            <div id="no-orders" class="hidden flex flex-col items-center py-16 text-center">
-                <svg class="text-gray-300 mb-3" width="44" height="44" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-                    <rect x="9" y="3" width="6" height="4" rx="1"/>
-                </svg>
-                <p class="text-sm font-semibold text-gray-500">No orders match this filter.</p>
+            <div id="no-orders" class="hidden">
+                <x-ui.empty-state title="No orders match this filter.">
+                    <x-slot:icon>
+                        <svg class="text-gray-300 mb-3" width="44" height="44" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                            <rect x="9" y="3" width="6" height="4" rx="1"/>
+                        </svg>
+                    </x-slot:icon>
+                </x-ui.empty-state>
             </div>
 
         </div>
 
         <script>
-            const TAB_ACTIVE_CLASSES = ['bg-sky-700', 'border-sky-700', 'text-white', 'shadow'];
-            const TAB_INACTIVE_CLASSES = ['bg-white', 'border-slate-200', 'text-slate-600', 'shadow-sm'];
-            const TAB_COUNT_ACTIVE_CLASSES = ['bg-white/30', 'text-white'];
-            const TAB_COUNT_INACTIVE_CLASSES = ['bg-slate-100', 'text-slate-500'];
+            const TAB_ACTIVE_CLASSES = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
+            const TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
+            const TAB_COUNT_ACTIVE_CLASSES = ['bg-white/25', 'text-white'];
+            const TAB_COUNT_INACTIVE_CLASSES = ['bg-gray-100', 'text-gray-500'];
 
             document.addEventListener('DOMContentLoaded', () => {
-                const defaultTab = document.querySelector('.tab-btn[data-default="true"]') || document.querySelector('.tab-btn');
+                const defaultTab = document.querySelector('button[data-default="true"]') || document.querySelector('button[data-tab]');
                 if (defaultTab) {
                     switchTab(defaultTab);
                 }
@@ -209,7 +194,7 @@
 
             function switchTab(btn) {
                 const tab = btn.dataset.tab;
-                document.querySelectorAll('.tab-btn').forEach(b => setTabAppearance(b, b === btn));
+                document.querySelectorAll('button[data-tab]').forEach(b => setTabAppearance(b, b === btn));
                 let visible = 0;
                 document.querySelectorAll('.order-card').forEach(card => {
                     const overall = card.dataset.overall;
@@ -304,7 +289,7 @@
                 button.classList.remove(...TAB_ACTIVE_CLASSES, ...TAB_INACTIVE_CLASSES);
                 button.classList.add(...(isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES));
 
-                const count = button.querySelector('.tab-count');
+                const count = button.querySelector('span');
                 if (count) {
                     count.classList.remove(...TAB_COUNT_ACTIVE_CLASSES, ...TAB_COUNT_INACTIVE_CLASSES);
                     count.classList.add(...(isActive ? TAB_COUNT_ACTIVE_CLASSES : TAB_COUNT_INACTIVE_CLASSES));

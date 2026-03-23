@@ -1,8 +1,5 @@
 <!-- ── Hidden delete form ─────────────────────────────────── -->
-<form id="delete-form" method="POST" class="hidden">
-    @csrf
-    @method('DELETE')
-</form>
+<x-ui.form id="delete-form" method="DELETE" class="hidden" />
 
 <!-- ── Delete overlay ──────────────────────────────────────── -->
 <div id="delete-overlay"
@@ -30,13 +27,11 @@
         </div>
     </div>
     <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeDelete()"
-                class="px-3 py-1.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+        <x-ui.button type="button" variant="secondary" size="sm" onclick="closeDelete()">
             Cancel
-        </button>
-        <button type="button" id="delete-confirm-btn"
-                class="px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+        </x-ui.button>
+        <x-ui.button type="button" variant="danger" size="sm" id="delete-confirm-btn">
             Delete
-        </button>
+        </x-ui.button>
     </div>
 </div>

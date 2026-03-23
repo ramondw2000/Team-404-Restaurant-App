@@ -9,26 +9,7 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,900&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>
-            /* ── Filter tabs ──────────────────────────────────────── */
-            .tab-btn {
-                display: inline-flex; align-items: center; gap: 0.375rem;
-                padding: 0.375rem 0.875rem; border-radius: 9999px;
-                font-size: 0.8125rem; font-weight: 600;
-                border: 1px solid #e5e7eb; background: #fff; color: #6b7280;
-                cursor: pointer; transition: border-color .15s, background .15s, color .15s;
-                font-family: inherit; white-space: nowrap;
-            }
-            .tab-btn:hover { border-color: #309bcf; color: #005693; }
-            .tab-btn.tab-active { background: #005693; border-color: #005693; color: #fff; }
-            .tab-count {
-                display: inline-flex; align-items: center; justify-content: center;
-                min-width: 1.125rem; height: 1.125rem; padding: 0 0.25rem;
-                border-radius: 9999px; font-size: 0.6875rem; font-weight: 700;
-                background: #e5e7eb; color: #4b5563;
-            }
-            .tab-active .tab-count { background: rgba(255,255,255,.25); color: #fff; }
-
-            /* ── Sheet ────────────────────────────────────────────── */
+            /* ── Sheet (legacy JS-driven open/close) ─────────────── */
             .sheet-overlay {
                 opacity: 0; pointer-events: none;
                 transition: opacity 0.3s ease;
@@ -40,22 +21,6 @@
                 height: 100vh; height: 100dvh;
             }
             .sheet-panel.open { transform: translateX(0); }
-
-            /* ── Form inputs ──────────────────────────────────────── */
-            .sheet-input, .sheet-select {
-                width: 100%;
-                border: 1px solid #e5e7eb; border-radius: 0.5rem;
-                padding: 0.5rem 0.75rem; font-size: 0.875rem;
-                color: #111827; background: #fff; outline: none;
-                transition: border-color 0.15s, box-shadow 0.15s;
-                font-family: inherit;
-            }
-            .sheet-input:focus, .sheet-select:focus {
-                border-color: #309bcf;
-                box-shadow: 0 0 0 3px rgba(48,155,207,0.2);
-            }
-            .sheet-input::placeholder { color: #9ca3af; }
-            .sheet-input.error, .sheet-select.error { border-color: #dc2626; }
         </style>
     </head>
     <body class="font-sans antialiased min-h-screen bg-[#eaf4fa]">
@@ -71,47 +36,41 @@
         ];
         @endphp
 
+        <x-ui.toast />
+
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
 
-            <!-- ── Flash message ─────────────────────────────── -->
-            @if(session('success'))
-                <x-flash-message :message="session('success')" />
-            @endif
-
             <!-- ── Page header ───────────────────────────────── -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900">Account Management</h1>
-                    <p class="text-sm text-gray-500 mt-0.5">Manage staff accounts &mdash; Molveno Lake Resort</p>
-                </div>
-                <button onclick="openSheet()"
-                        class="inline-flex items-center gap-2 bg-molveno-blue-500 hover:bg-molveno-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors duration-150 self-start sm:self-auto">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                    Add Account
-                </button>
-            </div>
+            <x-ui.page-header title="Account Management" subtitle="Manage staff accounts — Molveno Lake Resort">
+                <x-slot:actions>
+                    <x-ui.button onclick="openSheet()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Add Account
+                    </x-ui.button>
+                </x-slot:actions>
+            </x-ui.page-header>
 
             <!-- ── Role filter tabs ───────────────────────────── -->
-            <div class="flex items-center gap-2 flex-wrap">
-                <button class="tab-btn tab-active" data-role="all"           onclick="switchTab(this)">All          <span class="tab-count">{{ $counts['all'] }}</span></button>
-                <button class="tab-btn"            data-role="management"    onclick="switchTab(this)">Management   <span class="tab-count">{{ $counts['management'] }}</span></button>
-                <button class="tab-btn"            data-role="server"        onclick="switchTab(this)">Server       <span class="tab-count">{{ $counts['server'] }}</span></button>
-                <button class="tab-btn"            data-role="chef"          onclick="switchTab(this)">Chef         <span class="tab-count">{{ $counts['chef'] }}</span></button>
-                <button class="tab-btn"            data-role="receptionist"  onclick="switchTab(this)">Receptionist <span class="tab-count">{{ $counts['receptionist'] }}</span></button>
-            </div>
+            <x-ui.tab-group>
+                <x-ui.tab :active="true"  :count="$counts['all']"          value="all"          onclick="switchTab(this)" data-role="all">All</x-ui.tab>
+                <x-ui.tab :active="false" :count="$counts['management']"   value="management"   onclick="switchTab(this)" data-role="management">Management</x-ui.tab>
+                <x-ui.tab :active="false" :count="$counts['server']"       value="server"       onclick="switchTab(this)" data-role="server">Server</x-ui.tab>
+                <x-ui.tab :active="false" :count="$counts['chef']"         value="chef"         onclick="switchTab(this)" data-role="chef">Chef</x-ui.tab>
+                <x-ui.tab :active="false" :count="$counts['receptionist']" value="receptionist" onclick="switchTab(this)" data-role="receptionist">Receptionist</x-ui.tab>
+            </x-ui.tab-group>
 
             <!-- ── User table ─────────────────────────────────── -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table class="w-full text-sm">
+            <x-ui.card padding="none">
+                <x-ui.table>
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50 text-left">
-                            <th class="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">User</th>
-                            <th class="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden sm:table-cell">Email</th>
-                            <th class="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Role</th>
-                            <th class="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden md:table-cell">Since</th>
-                            <th class="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide text-right">Actions</th>
+                            <x-ui.th>User</x-ui.th>
+                            <x-ui.th class="hidden sm:table-cell">Email</x-ui.th>
+                            <x-ui.th>Role</x-ui.th>
+                            <x-ui.th class="hidden md:table-cell">Since</x-ui.th>
+                            <x-ui.th align="right">Actions</x-ui.th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,28 +78,34 @@
                             <x-accounts.user-row :user="$user" :roleConfig="$roleConfig" />
                         @empty
                             <tr>
-                                <td colspan="5" class="py-16 text-center">
-                                    <svg class="mx-auto text-gray-300 mb-3" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                        <circle cx="9" cy="7" r="4"/>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                                    </svg>
-                                    <p class="text-sm font-semibold text-gray-500">No accounts found.</p>
+                                <td colspan="5">
+                                    <x-ui.empty-state title="No accounts found.">
+                                        <x-slot:icon>
+                                            <svg class="w-10 h-10 text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                                <circle cx="9" cy="7" r="4"/>
+                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                                            </svg>
+                                        </x-slot:icon>
+                                    </x-ui.empty-state>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-ui.table>
                 <!-- Client-side empty state for tab filter -->
-                <div id="no-users" class="hidden py-16 text-center border-t border-gray-50">
-                    <svg class="mx-auto text-gray-300 mb-3" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                    <p class="text-sm font-semibold text-gray-500">No accounts match this filter.</p>
+                <div id="no-users" class="hidden border-t border-gray-50">
+                    <x-ui.empty-state title="No accounts match this filter.">
+                        <x-slot:icon>
+                            <svg class="w-10 h-10 text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </x-slot:icon>
+                    </x-ui.empty-state>
                 </div>
-            </div>
+            </x-ui.card>
 
         </div>
 
@@ -156,9 +121,23 @@
             };
 
             // ── Tab filter ────────────────────────────────────────
+            const TAB_ACTIVE   = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
+            const TAB_INACTIVE = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
+            const TAB_COUNT_ACTIVE   = ['bg-white/25', 'text-white'];
+            const TAB_COUNT_INACTIVE = ['bg-gray-100', 'text-gray-500'];
+
             function switchTab(btn) {
                 const role = btn.dataset.role;
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('tab-active', b === btn));
+                btn.closest('[class*="flex"]').querySelectorAll('button').forEach(b => {
+                    const isActive = b === btn;
+                    b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
+                    b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
+                    const countEl = b.querySelector('span');
+                    if (countEl) {
+                        countEl.classList.remove(...TAB_COUNT_ACTIVE, ...TAB_COUNT_INACTIVE);
+                        countEl.classList.add(...(isActive ? TAB_COUNT_ACTIVE : TAB_COUNT_INACTIVE));
+                    }
+                });
                 let visible = 0;
                 document.querySelectorAll('.user-row').forEach(row => {
                     const roles = JSON.parse(row.dataset.roles || '[]');

@@ -16,42 +16,31 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if(count($this->selectedOrders) > 0)
-                        <span class="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                        <x-ui.badge variant="primary">
                             {{ count($this->selectedOrders) }} selected
-                        </span>
-                        <button
-                            wire:click="batchPrint"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
+                        </x-ui.badge>
+                        <x-ui.button variant="outline" size="sm" wire:click="batchPrint">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                             Batch Print
-                        </button>
+                        </x-ui.button>
                     @endif
-                    <button
-                        wire:click="exportCsv"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
+                    <x-ui.button variant="outline" size="sm" wire:click="exportCsv">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Export CSV
-                    </button>
-                    <span class="text-xs font-semibold text-white bg-primary px-3 py-1 rounded-full">
+                    </x-ui.button>
+                    <x-ui.badge variant="primary" class="bg-primary text-white">
                         {{ $this->filteredOrders->count() }} orders
-                    </span>
+                    </x-ui.badge>
                 </div>
             </div>
 
             {{-- Search + Filter Toggle --}}
             <div class="flex flex-col sm:flex-row gap-3">
-                <div class="relative flex-1">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-                    </svg>
-                    <input
-                        type="text"
+                <div class="flex-1">
+                    <x-ui.search-input
                         wire:model.live.debounce.300ms="search"
                         placeholder="Search by order, customer, waiter, or location..."
-                        class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-                    >
+                    />
                 </div>
                 <button
                     @click="showFilters = !showFilters"
@@ -284,11 +273,12 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-12 text-center">
-                                <div class="flex flex-col items-center gap-2">
-                                    <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                    <p class="text-sm text-gray-400">No completed orders found for the selected criteria</p>
-                                </div>
+                            <td colspan="8">
+                                <x-ui.empty-state title="No completed orders found" description="No completed orders found for the selected criteria.">
+                                    <x-slot:icon>
+                                        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    </x-slot:icon>
+                                </x-ui.empty-state>
                             </td>
                         </tr>
                     @endforelse
@@ -434,21 +424,13 @@
 
                 {{-- Modal Actions --}}
                 <div class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex justify-end gap-2 rounded-b-2xl">
-                    <button
-                        wire:click="closeReceipt"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
+                    <x-ui.button variant="secondary" size="sm" wire:click="closeReceipt">
                         Close
-                    </button>
-                    <button
-                        wire:click="printReceipt('{{ $this->receiptOrder['id'] }}')"
-                        class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                        <span class="inline-flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                            Print
-                        </span>
-                    </button>
+                    </x-ui.button>
+                    <x-ui.button size="sm" wire:click="printReceipt('{{ $this->receiptOrder['id'] }}')">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        Print
+                    </x-ui.button>
                 </div>
             </div>
         </div>
