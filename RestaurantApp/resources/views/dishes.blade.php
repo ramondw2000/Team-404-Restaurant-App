@@ -8,109 +8,7 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,900&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <style>
-            /* ── Sheet ───────────────────────────────────────────── */
-            .sheet-overlay {
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.3s ease;
-            }
-            .sheet-overlay.open { opacity: 1; pointer-events: auto; }
-
-            .sheet-panel {
-                transform: translateX(100%);
-                transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-                height: 100vh;
-                height: 100dvh;
-            }
-            .sheet-panel.open { transform: translateX(0); }
-
-            .sheet-input {
-                width: 100%;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.5rem;
-                padding: 0.5rem 0.75rem;
-                font-size: 0.875rem;
-                color: #111827;
-                background: #fff;
-                outline: none;
-                transition: border-color 0.15s, box-shadow 0.15s;
-                font-family: inherit;
-            }
-            .sheet-input:focus {
-                border-color: #309bcf;
-                box-shadow: 0 0 0 3px rgba(48, 155, 207, 0.2);
-            }
-            .sheet-input::placeholder { color: #9ca3af; }
-
-            .allergen-checkbox { display: none; }
-            .allergen-label {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.4rem 0.75rem;
-                border: 1px solid #e5e7eb;
-                border-radius: 9999px;
-                font-size: 0.75rem;
-                font-weight: 600;
-                cursor: pointer;
-                user-select: none;
-                transition: border-color 0.15s, background 0.15s, color 0.15s;
-                color: #374151;
-                background: #f9fafb;
-            }
-            .allergen-checkbox:checked + .allergen-label {
-                border-color: #309bcf;
-                background: #eaf4fa;
-                color: #005693;
-            }
-
-            .upload-zone {
-                border: 2px dashed #d1d5db;
-                border-radius: 0.75rem;
-                padding: 1.75rem 1rem;
-                text-align: center;
-                cursor: pointer;
-                transition: border-color 0.15s, background 0.15s;
-            }
-            .upload-zone:hover { border-color: #309bcf; background: #f0f9ff; }
-
-            /* ── Filter pills ────────────────────────────────────── */
-            .filter-btn {
-                padding: 0.35rem 1rem;
-                border-radius: 9999px;
-                font-size: 0.75rem;
-                font-weight: 600;
-                border: 1px solid #e5e7eb;
-                background: #fff;
-                color: #374151;
-                cursor: pointer;
-                transition: border-color 0.15s, background 0.15s, color 0.15s;
-                white-space: nowrap;
-                font-family: inherit;
-            }
-            .filter-btn:hover { border-color: #309bcf; color: #005693; }
-            .filter-btn.filter-active {
-                background: #005693;
-                border-color: #005693;
-                color: #fff;
-            }
-
-            /* ── Dish grid ───────────────────────────────────────── */
-            .dish-grid { grid-template-columns: repeat(5, 200px); }
-            .dish-card  { width: 200px; height: 240px; box-sizing: border-box; }
-
-            @media (max-width: 1279px) {
-                .dish-grid { grid-template-columns: repeat(4, 1fr); }
-                .dish-card  { width: 100%; height: auto; aspect-ratio: 5 / 6; box-sizing: border-box; }
-            }
-            @media (max-width: 767px) {
-                .dish-grid { grid-template-columns: repeat(3, 1fr); }
-            }
-            @media (max-width: 639px) {
-                .dish-grid { grid-template-columns: repeat(2, 1fr); }
-            }
-        </style>
+        <x-dishes.styles />
     </head>
     <body class="font-sans antialiased min-h-screen bg-[#eaf4fa]">
         @include('layouts.navigation')
@@ -196,27 +94,7 @@
             </x-ui.page-header>
 
             <!-- Legend -->
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide w-full sm:w-auto">Legend:</span>
-                @foreach($allergenConfig as $key => $cfg)
-                    <div class="flex items-center gap-1.5">
-                        <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" />
-                        <span class="text-xs font-medium text-gray-600">{{ $cfg['label'] }}</span>
-                    </div>
-                @endforeach
-                <div class="flex items-center gap-1.5">
-                    <div class="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0">
-                        <svg viewBox="0 0 16 16" width="11" height="11"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
-                    </div>
-                    <span class="text-xs font-medium text-gray-600">Vegetarian</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <div class="w-5 h-5 rounded-full bg-green-700 flex items-center justify-center shrink-0">
-                        <svg viewBox="0 0 16 16" width="11" height="11"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
-                    </div>
-                    <span class="text-xs font-medium text-gray-600">Vegan</span>
-                </div>
-            </div>
+            <x-dishes.allergen-legend :allergenConfig="$allergenConfig" />
 
             <!-- ── Filters ───────────────────────────────────────── -->
             <div class="flex flex-col gap-3">
@@ -233,47 +111,15 @@
                 </x-ui.tab-group>
 
                 <!-- Dietary + free-from -->
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <span class="text-xs font-semibold text-gray-500 shrink-0">Dietary:</span>
-                    <button class="filter-btn" data-filter="dietary" data-value="vegetarian"
-                            onclick="toggleMulti(this, 'dietary')">
-                        <span class="inline-flex items-center gap-1">
-                            <span class="w-3.5 h-3.5 rounded-full bg-green-500 inline-flex items-center justify-center">
-                                <svg viewBox="0 0 16 16" width="8" height="8"><path fill="black" d="M3 14c0-5 4-11 10-12C13 7 11 11 8 13l4-3c-1 3-5 5-9 4z"/></svg>
-                            </span>
-                            Vegetarian
-                        </span>
-                    </button>
-                    <button class="filter-btn" data-filter="dietary" data-value="vegan"
-                            onclick="toggleMulti(this, 'dietary')">
-                        <span class="inline-flex items-center gap-1">
-                            <span class="w-3.5 h-3.5 rounded-full bg-green-700 inline-flex items-center justify-center">
-                                <svg viewBox="0 0 16 16" width="8" height="8"><path stroke="black" stroke-width="1.5" fill="none" stroke-linecap="round" d="M8 14V8M8 8C8 5 5 2 2 2C2 5 5 8 8 8M8 8C8 5 11 2 14 2C14 5 11 8 8 8"/></svg>
-                            </span>
-                            Vegan
-                        </span>
-                    </button>
-
-                    <span class="text-gray-300 hidden sm:inline">|</span>
-                    <span class="text-xs font-semibold text-gray-500 shrink-0">Free from:</span>
-                    @foreach($allergenConfig as $key => $cfg)
-                        <button class="filter-btn" data-filter="freefrom" data-value="{{ $key }}"
-                                onclick="toggleMulti(this, 'freefrom')">
-                            <span class="inline-flex items-center gap-1">
-                                <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" size="sm" />
-                                {{ $cfg['label'] }}-free
-                            </span>
-                        </button>
-                    @endforeach
-                </div>
+                <x-dishes.filter-bar :allergenConfig="$allergenConfig" />
             </div>
 
             <!-- ── Dish grid ─────────────────────────────────────── -->
-            <div id="dish-grid" class="grid gap-4 justify-center dish-grid">
+            <x-dishes.dish-grid>
                 @foreach($dishes as $dish)
                     <x-dishes.dish-card :dish="$dish" :allergenConfig="$allergenConfig" />
                 @endforeach
-            </div>
+            </x-dishes.dish-grid>
 
             <!-- No results -->
             <div id="no-results" class="hidden">
@@ -296,144 +142,7 @@
 
         <x-dishes.dish-sheet />
 
-        <script>
-            /* ── Sheet helpers ─────────────────────────────────── */
-            function openSheet() {
-                document.getElementById('sheet-overlay').classList.add('open');
-                document.getElementById('sheet-panel').classList.add('open');
-                document.body.style.overflow = 'hidden';
-            }
-            function closeSheet() {
-                document.getElementById('sheet-overlay').classList.remove('open');
-                document.getElementById('sheet-panel').classList.remove('open');
-                document.body.style.overflow = '';
-            }
-            document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
-
-            /* ── Create mode ───────────────────────────────────── */
-            function openCreateSheet() {
-                document.getElementById('sheet-title').textContent    = 'Add New Dish';
-                document.getElementById('sheet-subtitle').textContent = 'Fill in the details below to add a dish to the menu.';
-                document.getElementById('sheet-save-btn').textContent = 'Save Dish';
-                document.getElementById('sheet-delete-btn').classList.add('hidden');
-                document.getElementById('current-photo-preview').classList.add('hidden');
-                document.getElementById('upload-zone-wrapper').classList.remove('hidden');
-                // Clear form
-                document.getElementById('dish-name').value   = '';
-                document.getElementById('dish-desc').value   = '';
-                document.getElementById('dish-price').value  = '';
-                document.getElementById('dish-category').value = '';
-                document.querySelectorAll('.allergen-checkbox').forEach(cb => cb.checked = false);
-                openSheet();
-            }
-
-            /* ── Edit mode ─────────────────────────────────────── */
-            function openEditSheet(card) {
-                const name = card.querySelector('.font-bold').textContent.trim();
-
-                document.getElementById('sheet-title').textContent    = 'Edit Dish';
-                document.getElementById('sheet-subtitle').innerHTML   =
-                    'Editing: <span class="font-semibold text-gray-600">' + name + '</span>';
-                document.getElementById('sheet-save-btn').textContent = 'Update Dish';
-                document.getElementById('sheet-delete-btn').classList.remove('hidden');
-
-                // Photo preview
-                document.getElementById('upload-zone-wrapper').classList.add('hidden');
-                document.getElementById('current-photo-preview').classList.remove('hidden');
-                document.getElementById('preview-bg').style.backgroundColor = card.dataset.color || '#309bcf';
-
-                // Populate fields
-                document.getElementById('dish-name').value    = name;
-                document.getElementById('dish-desc').value    = '';   // no description data on cards
-                document.getElementById('dish-price').value   = card.dataset.price  || '';
-                document.getElementById('dish-category').value = card.dataset.category || '';
-
-                const allergens = (card.dataset.allergens || '').split(',').filter(Boolean);
-                document.getElementById('al-gluten').checked = allergens.includes('gluten');
-                document.getElementById('al-nuts').checked   = allergens.includes('nuts');
-                document.getElementById('al-milk').checked   = allergens.includes('milk');
-                document.getElementById('al-wheat').checked  = allergens.includes('wheat');
-
-                const dietary = (card.dataset.dietary || '').split(',').filter(Boolean);
-                document.getElementById('diet-veg').checked   = dietary.includes('vegetarian');
-                document.getElementById('diet-vegan').checked = dietary.includes('vegan');
-
-                openSheet();
-            }
-
-            /* ── Filtering ─────────────────────────────────────── */
-            const state = { category: 'all', dietary: [], freefrom: [] };
-
-            function applyFilters() {
-                const search  = document.getElementById('search-input').value.trim().toLowerCase();
-                const cards   = document.querySelectorAll('#dish-grid .dish-card');
-                let visible   = 0;
-
-                cards.forEach(card => {
-                    const name      = card.dataset.name      || '';
-                    const category  = card.dataset.category  || '';
-                    const allergens = card.dataset.allergens  ? card.dataset.allergens.split(',').filter(Boolean) : [];
-                    const dietary   = card.dataset.dietary    ? card.dataset.dietary.split(',').filter(Boolean)   : [];
-
-                    const passCategory = state.category === 'all' || category === state.category;
-                    const passSearch   = !search || name.includes(search);
-                    const passDietary  = state.dietary.every(d => dietary.includes(d));
-                    const passFree     = state.freefrom.every(a => !allergens.includes(a));
-
-                    const show = passCategory && passSearch && passDietary && passFree;
-                    card.style.display = show ? '' : 'none';
-                    if (show) visible++;
-                });
-
-                document.getElementById('no-results').classList.toggle('hidden', visible > 0);
-            }
-
-            const TAB_ACTIVE   = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
-            const TAB_INACTIVE = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
-            const TAB_COUNT_ACTIVE   = ['bg-white/25', 'text-white'];
-            const TAB_COUNT_INACTIVE = ['bg-gray-100', 'text-gray-500'];
-
-            function setCategory(btn) {
-                state.category = btn.dataset.value;
-                document.querySelectorAll('[data-filter="category"]').forEach(b => {
-                    const isActive = b === btn;
-                    b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
-                    b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
-                    const countEl = b.querySelector('span');
-                    if (countEl) {
-                        countEl.classList.remove(...TAB_COUNT_ACTIVE, ...TAB_COUNT_INACTIVE);
-                        countEl.classList.add(...(isActive ? TAB_COUNT_ACTIVE : TAB_COUNT_INACTIVE));
-                    }
-                });
-                applyFilters();
-            }
-
-            function toggleMulti(btn, key) {
-                const val = btn.dataset.value;
-                const idx = state[key].indexOf(val);
-                if (idx === -1) state[key].push(val);
-                else            state[key].splice(idx, 1);
-                btn.classList.toggle('filter-active', state[key].includes(val));
-                applyFilters();
-            }
-
-            function resetFilters() {
-                state.category = 'all';
-                state.dietary  = [];
-                state.freefrom = [];
-                document.getElementById('search-input').value = '';
-                document.querySelectorAll('[data-filter="category"]').forEach(b => {
-                    const isActive = b.dataset.value === 'all';
-                    b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
-                    b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
-                });
-                document.querySelectorAll('[data-filter="dietary"], [data-filter="freefrom"]')
-                        .forEach(b => b.classList.remove('filter-active'));
-                applyFilters();
-            }
-
-            document.getElementById('search-input').addEventListener('input', applyFilters);
-        </script>
+        <x-dishes.scripts />
     @livewireScripts
     </body>
 </html>
