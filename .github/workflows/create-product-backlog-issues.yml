@@ -34,7 +34,6 @@ jobs:
             gh label list --repo "$REPO" --json name --jq '.[].name' | grep -qxF "$name" || \
               gh label create "$name" --repo "$REPO" --color "$color" --description ""
           }
-          create_label_if_missing "Eigenaar"            "0075ca"
           create_label_if_missing "Onderhoudspersoneel" "e4e669"
           create_label_if_missing "Tafelbeheer"          "d93f0b"
           create_label_if_missing "Betalingen"           "0e8a16"
@@ -55,11 +54,6 @@ jobs:
               echo "Issue already exists (#$existing): $title"
             fi
           }
-
-          # Eigenaar
-          create_issue_if_missing \
-            "Als eigenaar wil ik toegang hebben tot alle onderdelen van de applicatie, zodat ik volledig beheer heb over het systeem." \
-            "Eigenaar"
 
           # Receptionist
           create_issue_if_missing \
@@ -116,6 +110,10 @@ jobs:
             "Barpersoneel"
 
           # Manager
+          create_issue_if_missing \
+            "Als manager wil ik toegang hebben tot alle onderdelen van de applicatie, zodat ik volledig beheer heb over het systeem." \
+            "Manager"
+
           create_issue_if_missing \
             "Als manager wil ik een overzicht zien van de meest en minst verkochte gerechten, zodat ik het menu kan optimaliseren op basis van populariteit." \
             "Manager"
