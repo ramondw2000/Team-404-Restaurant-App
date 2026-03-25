@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\DishController;
+use App\Http\Controllers\KitchenOrderController;
+use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
@@ -23,21 +26,15 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->middleware('role:management');
 
-    Route::get('/dishes', function () {
-        return view('dishes');
-    })->name('dishes');
+    Route::get('/dishes', [DishController::class, 'index'])->name('dishes');
 
     Route::get('/statistics', [StatisticsController::class, 'index'])
         ->middleware('role:management')
         ->name('statistics');
 
-    Route::get('/ordermanagement', function () {
-        return view('ordermanagement');
-    })->name('ordermanagement');
+    Route::get('/ordermanagement', [OrderManagementController::class, 'index'])->name('ordermanagement');
 
-    Route::get('/kitchenorders', function () {
-        return view('kitchen-orders');
-    })->name('kitchen-orders');
+    Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])->name('kitchen-orders');
 });
 
 require __DIR__.'/auth.php';

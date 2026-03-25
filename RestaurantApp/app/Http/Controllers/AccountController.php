@@ -22,9 +22,18 @@ class AccountController extends Controller
     {
         $users = User::query()->with('roles')->orderBy('name')->get();
 
+        $counts = [
+            'all'          => $users->count(),
+            'management'   => $users->filter(fn($u) => $u->hasRole('management'))->count(),
+            'server'       => $users->filter(fn($u) => $u->hasRole('server'))->count(),
+            'chef'         => $users->filter(fn($u) => $u->hasRole('chef'))->count(),
+            'receptionist' => $users->filter(fn($u) => $u->hasRole('receptionist'))->count(),
+        ];
+
         return view('accounts', [
             'users' => $users,
             'roleConfig' => $this->roleConfig,
+            'counts' => $counts,
         ]);
     }
 
