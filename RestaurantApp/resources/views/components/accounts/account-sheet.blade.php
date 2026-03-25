@@ -1,3 +1,5 @@
+@props(['roles'])
+
 <!-- ── Sheet overlay ──────────────────────────────────────── -->
 <div id="sheet-overlay"
      class="sheet-overlay fixed inset-0 bg-black/40 z-40"
@@ -40,11 +42,13 @@
             <div class="flex flex-col gap-2">
                 <label class="text-sm font-semibold text-gray-700">Roles</label>
                 <div class="flex flex-col gap-2">
-                    @foreach(['management' => 'Management', 'server' => 'Server', 'chef' => 'Chef', 'receptionist' => 'Receptionist', 'bar_staff' => 'Bar Staff', 'maintenance_crew' => 'Maintenance Crew'] as $value => $label)
+                    @foreach($roles as $role)
+                        @php $label = ucwords(str_replace(['_', '-'], ' ', $role->name)); @endphp
                         <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 cursor-pointer hover:border-molveno-blue-300 transition-colors">
-                            <input type="checkbox" name="roles[]" value="{{ $value }}"
+                            <input type="checkbox" name="roles[]" value="{{ $role->name }}"
                                    class="role-checkbox w-4 h-4 rounded accent-molveno-blue-500"
-                                   {{ in_array($value, $oldRoles) ? 'checked' : '' }}
+                                   data-role="{{ $role->name }}"
+                                   {{ in_array($role->name, $oldRoles) ? 'checked' : '' }}
                                    onchange="updateRoleDesc()">
                             <span class="text-sm font-medium text-gray-700">{{ $label }}</span>
                         </label>

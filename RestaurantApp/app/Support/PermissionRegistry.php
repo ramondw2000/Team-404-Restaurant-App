@@ -1,0 +1,154 @@
+<?php
+
+namespace App\Support;
+
+class PermissionRegistry
+{
+    /**
+     * Permission groups, each with a label, optional view gate, and list of permissions.
+     *
+     * The view_gate is the permission name that must be enabled before any other
+     * permission in the group can be granted. Groups with view_gate = null have no gate.
+     *
+     * @var array<int, array{key: string, label: string, view_gate: string|null, permissions: list<array{name: string, description: string}>}>
+     */
+    public const array GROUPS = [
+        [
+            'key' => 'dishes',
+            'label' => 'Dishes',
+            'view_gate' => 'View Dishes',
+            'permissions' => [
+                ['name' => 'View Dishes', 'description' => 'Access the Dishes page'],
+                ['name' => 'Add Dishes', 'description' => 'Create new dishes'],
+                ['name' => 'Edit Dishes', 'description' => 'Modify existing dishes'],
+                ['name' => 'Delete Dishes', 'description' => 'Remove dishes permanently'],
+            ],
+        ],
+        [
+            'key' => 'kitchen_orders',
+            'label' => 'Kitchen Orders',
+            'view_gate' => 'View Kitchen Orders',
+            'permissions' => [
+                ['name' => 'View Kitchen Orders', 'description' => 'Access the Kitchen Orders page'],
+                ['name' => 'Mark Orders Ready', 'description' => 'Mark a kitchen order or individual item as ready'],
+            ],
+        ],
+        [
+            'key' => 'orders',
+            'label' => 'Orders',
+            'view_gate' => 'View Orders',
+            'permissions' => [
+                ['name' => 'View Orders', 'description' => 'Access the Order Management page'],
+                ['name' => 'Create Order', 'description' => 'Start a new customer order'],
+                ['name' => 'Edit Order', 'description' => 'Modify items on an existing order'],
+                ['name' => 'Cancel Order', 'description' => 'Cancel an active order'],
+                ['name' => 'Process Payment', 'description' => 'Mark an order as paid / process checkout'],
+                ['name' => 'Assign Table', 'description' => 'Assign or reassign a table to an order'],
+            ],
+        ],
+        [
+            'key' => 'account_management',
+            'label' => 'Account Management',
+            'view_gate' => 'View Account Management',
+            'permissions' => [
+                ['name' => 'View Account Management', 'description' => 'Access the Account Management page'],
+                ['name' => 'Create User', 'description' => 'Add a new staff account'],
+                ['name' => 'Edit User', 'description' => 'Update an existing staff account'],
+                ['name' => 'Delete User', 'description' => 'Remove a staff account'],
+                ['name' => 'Manage Roles', 'description' => 'Access the Roles & Permissions tab; create, edit, delete roles and assign permissions'],
+            ],
+        ],
+        [
+            'key' => 'table_management',
+            'label' => 'Table Management',
+            'view_gate' => 'View Table Management',
+            'permissions' => [
+                ['name' => 'View Table Management', 'description' => 'Access the Table Management page'],
+                ['name' => 'Edit Table Layout', 'description' => 'Enter edit mode; place, move, resize, and delete floor plan elements'],
+                ['name' => 'Manage Floor Plans', 'description' => 'Create and delete floor plans; upload background images'],
+                ['name' => 'Update Table Status', 'description' => "Change a table's status (Available / Occupied / Reserved) outside of edit mode"],
+            ],
+        ],
+        [
+            'key' => 'statistics',
+            'label' => 'Statistics',
+            'view_gate' => 'View Statistics',
+            'permissions' => [
+                ['name' => 'View Statistics', 'description' => 'Access the Statistics page (read-only)'],
+            ],
+        ],
+        [
+            'key' => 'general',
+            'label' => 'General',
+            'view_gate' => null,
+            'permissions' => [
+                ['name' => 'Export Data', 'description' => 'Download CSV exports of orders or statistical data'],
+                ['name' => 'Manage Availability', 'description' => 'Toggle dish availability on the Dishes page; update table status on Table Management'],
+            ],
+        ],
+    ];
+
+    /**
+     * Returns all permission names as a flat list.
+     *
+     * @return list<string>
+     */
+    public static function allNames(): array
+    {
+        return array_values(array_merge(...array_map(
+            fn (array $group) => array_column($group['permissions'], 'name'),
+            self::GROUPS,
+        )));
+    }
+
+    /**
+     * Returns whether the given permission name is the view gate for a group.
+     */
+    public static function isViewGate(string $permissionName): bool
+    {
+        foreach (self::GROUPS as $group) {
+            if ($group['view_gate'] === $permissionName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns the view gate permission name that guards the given permission,
+     * or null if the permission is itself a view gate or has no gate.
+     */
+    public static function viewGateFor(string $permissionName): ?string
+    {
+        foreach (self::GROUPS as $group) {
+            $names = array_column($group['permissions'], 'name');
+
+            if (in_array($permissionName, $names, true) && $group['view_gate'] !== $permissionName) {
+                return $group['view_gate'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns all action permission names gated by the given view gate.
+     * The view gate itself is not included in the result.
+     *
+     * @return list<string>
+     */
+    public static function permissionsGatedBy(string $viewGateName): array
+    {
+        foreach (self::GROUPS as $group) {
+            if ($group['view_gate'] === $viewGateName) {
+                return array_values(array_filter(
+                    array_column($group['permissions'], 'name'),
+                    fn (string $name) => $name !== $viewGateName,
+                ));
+            }
+        }
+
+        return [];
+    }
+}

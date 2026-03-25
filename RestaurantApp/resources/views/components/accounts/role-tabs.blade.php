@@ -1,11 +1,18 @@
-@props(['counts'])
+@props(['counts', 'roles'])
 
-<x-ui.tab-group>
-    <x-ui.tab :active="true"  :count="$counts['all']"          value="all"          onclick="switchTab(this)" data-role="all">All</x-ui.tab>
-    <x-ui.tab :active="false" :count="$counts['management']"   value="management"   onclick="switchTab(this)" data-role="management">Management</x-ui.tab>
-    <x-ui.tab :active="false" :count="$counts['server']"       value="server"       onclick="switchTab(this)" data-role="server">Server</x-ui.tab>
-    <x-ui.tab :active="false" :count="$counts['chef']"         value="chef"         onclick="switchTab(this)" data-role="chef">Chef</x-ui.tab>
-    <x-ui.tab :active="false" :count="$counts['receptionist']" value="receptionist" onclick="switchTab(this)" data-role="receptionist">Receptionist</x-ui.tab>
-    <x-ui.tab :active="false" :count="$counts['bar_staff']"    value="bar_staff"    onclick="switchTab(this)" data-role="bar_staff">Bar Staff</x-ui.tab>
-    <x-ui.tab :active="false" :count="$counts['maintenance_crew']" value="maintenance_crew" onclick="switchTab(this)" data-role="maintenance_crew">Maintenance Crew</x-ui.tab>
-</x-ui.tab-group>
+<div class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+    <x-ui.tab-group class="flex-nowrap min-w-max sm:flex-wrap sm:min-w-0">
+        <x-ui.tab :active="true" :count="$counts['all']" value="all" onclick="switchTab(this)" data-role="all">All</x-ui.tab>
+        @foreach($roles as $role)
+            <x-ui.tab
+                :active="false"
+                :count="$counts[$role->name] ?? 0"
+                :value="$role->name"
+                onclick="switchTab(this)"
+                :data-role="$role->name"
+            >
+                {{ ucwords(str_replace(['_', '-'], ' ', $role->name)) }}
+            </x-ui.tab>
+        @endforeach
+    </x-ui.tab-group>
+</div>

@@ -14,7 +14,7 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified', 'role:management|receptionist|server|chef|bar_staff'])->name('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -23,26 +23,26 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('accounts', AccountController::class)
         ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:management');
+        ->middleware('permission:View Account Management');
 
     Route::get('/statistics', [StatisticsController::class, 'index'])
-        ->middleware('role:management')
+        ->middleware('permission:View Statistics')
         ->name('statistics');
 
     Route::livewire('/tablemanagement', TableManagement::class)
-        ->middleware('role:management|receptionist|server|maintenance_crew')
+        ->middleware('permission:View Table Management')
         ->name('tablemanagement');
 
     Route::get('/ordermanagement', [OrderManagementController::class, 'index'])
-        ->middleware('role:management|receptionist|server')
+        ->middleware('permission:View Orders')
         ->name('ordermanagement');
 
     Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
-        ->middleware('role:management|receptionist|chef|bar_staff')
+        ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders');
 
     Route::get('/dishes', [DishController::class, 'index'])
-        ->middleware('role:management|chef|bar_staff')
+        ->middleware('permission:View Dishes')
         ->name('dishes');
 });
 

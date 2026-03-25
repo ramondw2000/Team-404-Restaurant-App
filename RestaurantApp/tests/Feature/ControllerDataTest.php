@@ -1,10 +1,10 @@
 <?php
 
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use Database\Seeders\RoleSeeder;
 
 beforeEach(function () {
-    Role::findOrCreate('management', 'web');
+    (new RoleSeeder)->run();
     $this->user = User::factory()->create();
     $this->user->assignRole('management');
     $this->actingAs($this->user);
