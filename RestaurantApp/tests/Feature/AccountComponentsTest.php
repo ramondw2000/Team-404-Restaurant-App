@@ -39,6 +39,8 @@ it('renders the accounts role-tabs component with all role tabs', function () {
         'server' => 4,
         'chef' => 3,
         'receptionist' => 1,
+        'bar_staff' => 0,
+        'maintenance_crew' => 0,
     ];
 
     $html = Blade::render(
@@ -52,11 +54,15 @@ it('renders the accounts role-tabs component with all role tabs', function () {
         ->toContain('Server')
         ->toContain('Chef')
         ->toContain('Receptionist')
+        ->toContain('Bar Staff')
+        ->toContain('Maintenance Crew')
         ->toContain('data-role="all"')
         ->toContain('data-role="management"')
         ->toContain('data-role="server"')
         ->toContain('data-role="chef"')
         ->toContain('data-role="receptionist"')
+        ->toContain('data-role="bar_staff"')
+        ->toContain('data-role="maintenance_crew"')
         ->toContain('switchTab(this)');
 });
 

@@ -4,6 +4,8 @@
         server:       'Can view and manage orders, mark dishes as served, and access the KDS.',
         chef:         'Can view the kitchen order queue and update dish preparation status.',
         receptionist: 'Can manage table assignments, room service requests, and guest check-in.',
+        bar_staff:    'Can manage bar orders, prepare drinks, and track bar inventory.',
+        maintenance_crew: 'Can view and manage maintenance requests, facility upkeep, and equipment status.',
     };
 
     // ── Tab filter ────────────────────────────────────────

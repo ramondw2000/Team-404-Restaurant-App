@@ -14,10 +14,9 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'role:management|receptionist|server|chef|bar_staff'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::livewire('/tablemanagement', TableManagement::class)->name('tablemanagement');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -26,15 +25,25 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->middleware('role:management');
 
-    Route::get('/dishes', [DishController::class, 'index'])->name('dishes');
-
     Route::get('/statistics', [StatisticsController::class, 'index'])
         ->middleware('role:management')
         ->name('statistics');
 
-    Route::get('/ordermanagement', [OrderManagementController::class, 'index'])->name('ordermanagement');
+    Route::livewire('/tablemanagement', TableManagement::class)
+        ->middleware('role:management|receptionist|server|maintenance_crew')
+        ->name('tablemanagement');
 
-    Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])->name('kitchen-orders');
+    Route::get('/ordermanagement', [OrderManagementController::class, 'index'])
+        ->middleware('role:management|receptionist|server')
+        ->name('ordermanagement');
+
+    Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
+        ->middleware('role:management|receptionist|chef|bar_staff')
+        ->name('kitchen-orders');
+
+    Route::get('/dishes', [DishController::class, 'index'])
+        ->middleware('role:management|chef|bar_staff')
+        ->name('dishes');
 });
 
 require __DIR__.'/auth.php';
