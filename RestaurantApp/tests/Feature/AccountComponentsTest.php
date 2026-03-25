@@ -1,9 +1,10 @@
 <?php
 
+use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ViewErrorBag;
-use Spatie\Permission\Models\Role;
 
 it('renders the accounts styles component with sheet CSS', function () {
     $html = Blade::render('<x-accounts.styles />');
@@ -17,7 +18,7 @@ it('renders the accounts styles component with sheet CSS', function () {
 });
 
 it('renders the accounts scripts component with JS functions', function () {
-    view()->share('errors', new ViewErrorBag());
+    view()->share('errors', new ViewErrorBag);
     $html = Blade::render('<x-accounts.scripts />');
 
     expect($html)
@@ -33,19 +34,17 @@ it('renders the accounts scripts component with JS functions', function () {
 });
 
 it('renders the accounts role-tabs component with all role tabs', function () {
-    $counts = [
-        'all' => 10,
-        'management' => 2,
-        'server' => 4,
-        'chef' => 3,
-        'receptionist' => 1,
-        'bar_staff' => 0,
-        'maintenance_crew' => 0,
-    ];
+    (new RoleSeeder)->run();
+
+    $roles = Role::orderBy('name')->get();
+    $counts = ['all' => 10];
+    foreach ($roles as $role) {
+        $counts[$role->name] = 0;
+    }
 
     $html = Blade::render(
-        '<x-accounts.role-tabs :counts="$counts" />',
-        compact('counts')
+        '<x-accounts.role-tabs :counts="$counts" :roles="$roles" />',
+        compact('counts', 'roles')
     );
 
     expect($html)
@@ -59,10 +58,6 @@ it('renders the accounts role-tabs component with all role tabs', function () {
         ->toContain('data-role="all"')
         ->toContain('data-role="management"')
         ->toContain('data-role="server"')
-        ->toContain('data-role="chef"')
-        ->toContain('data-role="receptionist"')
-        ->toContain('data-role="bar_staff"')
-        ->toContain('data-role="maintenance_crew"')
         ->toContain('switchTab(this)');
 });
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -22,12 +23,14 @@ class StoreAccountRequest extends FormRequest
      */
     public function rules(): array
     {
+        $roleNames = Role::pluck('name')->all();
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)],
             'password' => ['required', 'string', Password::defaults()],
             'roles' => ['required', 'array', 'min:1'],
-            'roles.*' => ['string', Rule::in(['management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew'])],
+            'roles.*' => ['string', Rule::in($roleNames)],
         ];
     }
 }

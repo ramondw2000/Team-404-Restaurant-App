@@ -1,12 +1,11 @@
 <?php
 
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use Database\Seeders\RoleSeeder;
 
 beforeEach(function () {
-    foreach (['management', 'receptionist', 'server', 'chef', 'bar_staff', 'maintenance_crew'] as $role) {
-        Role::findOrCreate($role, 'web');
-    }
+    // Seed all roles and their permissions so permission-based routes work correctly
+    (new RoleSeeder)->run();
 });
 
 /**
@@ -20,7 +19,7 @@ function actingAsRole(string $role): mixed
     return test()->actingAs($user);
 }
 
-// ── Dashboard: management, receptionist, server, chef, bar_staff ──
+// ── Dashboard: all authenticated users ──────────────────────────
 
 it('allows management to access the dashboard', function () {
     actingAsRole('management')->get(route('dashboard'))->assertOk();
@@ -42,11 +41,11 @@ it('allows bar_staff to access the dashboard', function () {
     actingAsRole('bar_staff')->get(route('dashboard'))->assertOk();
 });
 
-it('denies maintenance_crew access to the dashboard', function () {
-    actingAsRole('maintenance_crew')->get(route('dashboard'))->assertForbidden();
+it('allows maintenance_crew to access the dashboard', function () {
+    actingAsRole('maintenance_crew')->get(route('dashboard'))->assertOk();
 });
 
-// ── Statistics: management only ──
+// ── Statistics: management only (Administrator bypass) ──
 
 it('allows management to access statistics', function () {
     actingAsRole('management')->get(route('statistics'))->assertOk();
@@ -64,7 +63,7 @@ it('denies chef access to statistics', function () {
     actingAsRole('chef')->get(route('statistics'))->assertForbidden();
 });
 
-// ── Account Management: management only ──
+// ── Account Management: management only (Administrator bypass) ──
 
 it('allows management to access account management', function () {
     actingAsRole('management')->get(route('accounts.index'))->assertOk();
@@ -78,18 +77,18 @@ it('denies receptionist access to account management', function () {
     actingAsRole('receptionist')->get(route('accounts.index'))->assertForbidden();
 });
 
-// ── Table Management: management, receptionist, server, maintenance_crew ──
+// ── Table Management: management, server, receptionist, maintenance_crew ──
 
 it('allows management to access table management', function () {
     actingAsRole('management')->get(route('tablemanagement'))->assertOk();
 });
 
-it('allows receptionist to access table management', function () {
-    actingAsRole('receptionist')->get(route('tablemanagement'))->assertOk();
-});
-
 it('allows server to access table management', function () {
     actingAsRole('server')->get(route('tablemanagement'))->assertOk();
+});
+
+it('allows receptionist to access table management', function () {
+    actingAsRole('receptionist')->get(route('tablemanagement'))->assertOk();
 });
 
 it('allows maintenance_crew to access table management', function () {
@@ -104,18 +103,18 @@ it('denies bar_staff access to table management', function () {
     actingAsRole('bar_staff')->get(route('tablemanagement'))->assertForbidden();
 });
 
-// ── Order Management: management, receptionist, server ──
+// ── Order Management: management, server, receptionist ──
 
 it('allows management to access order management', function () {
     actingAsRole('management')->get(route('ordermanagement'))->assertOk();
 });
 
-it('allows receptionist to access order management', function () {
-    actingAsRole('receptionist')->get(route('ordermanagement'))->assertOk();
-});
-
 it('allows server to access order management', function () {
     actingAsRole('server')->get(route('ordermanagement'))->assertOk();
+});
+
+it('allows receptionist to access order management', function () {
+    actingAsRole('receptionist')->get(route('ordermanagement'))->assertOk();
 });
 
 it('denies chef access to order management', function () {

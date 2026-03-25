@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DishController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
@@ -14,35 +15,43 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified', 'role:management|receptionist|server|chef|bar_staff'])->name('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Impersonation routes must be before the accounts resource to prevent route conflict
+    // with DELETE /accounts/{account}
+    Route::post('/accounts/impersonate/{target}', [ImpersonationController::class, 'start'])
+        ->name('impersonation.start');
+
+    Route::delete('/accounts/impersonate', [ImpersonationController::class, 'stop'])
+        ->name('impersonation.stop');
+
     Route::resource('accounts', AccountController::class)
         ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:management');
+        ->middleware('permission:View Account Management');
 
     Route::get('/statistics', [StatisticsController::class, 'index'])
-        ->middleware('role:management')
+        ->middleware('permission:View Statistics')
         ->name('statistics');
 
     Route::livewire('/tablemanagement', TableManagement::class)
-        ->middleware('role:management|receptionist|server|maintenance_crew')
+        ->middleware('permission:View Table Management')
         ->name('tablemanagement');
 
     Route::get('/ordermanagement', [OrderManagementController::class, 'index'])
-        ->middleware('role:management|receptionist|server')
+        ->middleware('permission:View Orders')
         ->name('ordermanagement');
 
     Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
-        ->middleware('role:management|receptionist|chef|bar_staff')
+        ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders');
 
     Route::get('/dishes', [DishController::class, 'index'])
-        ->middleware('role:management|chef|bar_staff')
+        ->middleware('permission:View Dishes')
         ->name('dishes');
 });
 
