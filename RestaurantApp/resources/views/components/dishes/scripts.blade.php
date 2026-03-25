@@ -52,6 +52,8 @@
         document.getElementById('al-nuts').checked   = allergens.includes('nuts');
         document.getElementById('al-milk').checked   = allergens.includes('milk');
         document.getElementById('al-wheat').checked  = allergens.includes('wheat');
+        document.getElementById('al-fish').checked   = allergens.includes('fish');
+        document.getElementById('al-egg').checked    = allergens.includes('egg');
 
         const dietary = (card.dataset.dietary || '').split(',').filter(Boolean);
         document.getElementById('diet-veg').checked   = dietary.includes('vegetarian');
