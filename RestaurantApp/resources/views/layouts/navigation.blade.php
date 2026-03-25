@@ -12,27 +12,41 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    @hasanyrole('management|receptionist|server|chef|bar_staff')
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('dishes')" :active="false">
+                    @endhasanyrole
+                    @hasanyrole('management|chef|bar_staff')
+                    <x-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
                         {{ __('Dishes') }}
                     </x-nav-link>
+                    @endhasanyrole
+                    @hasanyrole('management')
                     <x-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
                         {{ __('Statistics') }}
                     </x-nav-link>
+                    @endhasanyrole
+                    @hasanyrole('management|receptionist|chef|bar_staff')
                     <x-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
                         {{ __('Kitchen Orders') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('ordermanagement')" :active="false">
+                    @endhasanyrole
+                    @hasanyrole('management|receptionist|server')
+                    <x-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
                         {{ __('Order Management') }}
                     </x-nav-link>
+                    @endhasanyrole
+                    @hasanyrole('management|receptionist|server|maintenance_crew')
                     <x-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                         {{ __('Table Management') }}
                     </x-nav-link>
+                    @endhasanyrole
+                    @hasanyrole('management')
                     <x-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
                         {{ __('Account Management') }}
                     </x-nav-link>
+                    @endhasanyrole
                 </div>
             </div>
 
@@ -85,27 +99,41 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
+            @hasanyrole('management|receptionist|server|chef|bar_staff')
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @endhasanyrole
+            @hasanyrole('management|chef|bar_staff')
             <x-responsive-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
                 {{ __('Dishes') }}
             </x-responsive-nav-link>
+            @endhasanyrole
+            @hasanyrole('management')
             <x-responsive-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
                 {{ __('Statistics') }}
             </x-responsive-nav-link>
+            @endhasanyrole
+            @hasanyrole('management|receptionist|chef|bar_staff')
             <x-responsive-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
                 {{ __('Kitchen Orders') }}
             </x-responsive-nav-link>
+            @endhasanyrole
+            @hasanyrole('management|receptionist|server')
             <x-responsive-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
                 {{ __('Order Management') }}
             </x-responsive-nav-link>
+            @endhasanyrole
+            @hasanyrole('management|receptionist|server|maintenance_crew')
             <x-responsive-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                 {{ __('Table Management') }}
             </x-responsive-nav-link>
+            @endhasanyrole
+            @hasanyrole('management')
             <x-responsive-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
                 {{ __('Account Management') }}
             </x-responsive-nav-link>
+            @endhasanyrole
         </div>
 
         <!-- Responsive Settings Options -->

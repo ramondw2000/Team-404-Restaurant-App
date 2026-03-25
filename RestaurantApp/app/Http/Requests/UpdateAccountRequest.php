@@ -30,7 +30,7 @@ class UpdateAccountRequest extends FormRequest
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($account->id)],
             'password' => ['nullable', 'string', Password::defaults()],
             'roles' => ['required', 'array', 'min:1'],
-            'roles.*' => ['string', Rule::in(['management', 'server', 'chef', 'receptionist'])],
+            'roles.*' => ['string', Rule::in(['management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew'])],
         ];
     }
 }

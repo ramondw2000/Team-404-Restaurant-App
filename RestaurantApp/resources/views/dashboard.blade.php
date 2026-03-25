@@ -13,6 +13,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
             {{-- Kitchen Orders --}}
+            @hasanyrole('management|receptionist|chef|bar_staff')
             <a href="{{ route('kitchen-orders') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -29,8 +30,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
+            @endhasanyrole
 
             {{-- Order Management --}}
+            @hasanyrole('management|receptionist|server')
             <a href="{{ route('ordermanagement') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -49,8 +52,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
+            @endhasanyrole
 
             {{-- Dishes --}}
+            @hasanyrole('management|chef|bar_staff')
             <a href="{{ route('dishes') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -68,8 +73,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
+            @endhasanyrole
 
             {{-- Account Management --}}
+            @hasanyrole('management')
             <a href="{{ route('accounts.index') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -88,8 +95,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
+            @endhasanyrole
 
             {{-- Table Management --}}
+            @hasanyrole('management|receptionist|server|maintenance_crew')
             <a href="{{ route('tablemanagement') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -108,8 +117,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
+            @endhasanyrole
 
             {{-- Statistics --}}
+            @hasanyrole('management')
             <a href="{{ route('statistics') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -128,6 +139,7 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
+            @endhasanyrole
 
         </div>
     </div>

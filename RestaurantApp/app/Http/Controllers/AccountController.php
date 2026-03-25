@@ -16,6 +16,8 @@ class AccountController extends Controller
         'server' => ['label' => 'Server',       'bg' => 'bg-blue-100',   'text' => 'text-blue-700',   'dot' => 'bg-blue-500'],
         'chef' => ['label' => 'Chef',          'bg' => 'bg-orange-100', 'text' => 'text-orange-700', 'dot' => 'bg-orange-500'],
         'receptionist' => ['label' => 'Receptionist', 'bg' => 'bg-green-100',  'text' => 'text-green-700',  'dot' => 'bg-green-500'],
+        'bar_staff' => ['label' => 'Bar Staff', 'bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'dot' => 'bg-amber-500'],
+        'maintenance_crew' => ['label' => 'Maintenance Crew', 'bg' => 'bg-rose-100', 'text' => 'text-rose-700', 'dot' => 'bg-rose-500'],
     ];
 
     public function index(): View
@@ -28,6 +30,8 @@ class AccountController extends Controller
             'server'       => $users->filter(fn($u) => $u->hasRole('server'))->count(),
             'chef'         => $users->filter(fn($u) => $u->hasRole('chef'))->count(),
             'receptionist' => $users->filter(fn($u) => $u->hasRole('receptionist'))->count(),
+            'bar_staff'    => $users->filter(fn($u) => $u->hasRole('bar_staff'))->count(),
+            'maintenance_crew' => $users->filter(fn($u) => $u->hasRole('maintenance_crew'))->count(),
         ];
 
         return view('accounts', [

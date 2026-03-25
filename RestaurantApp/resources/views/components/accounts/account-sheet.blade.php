@@ -40,7 +40,7 @@
             <div class="flex flex-col gap-2">
                 <label class="text-sm font-semibold text-gray-700">Roles</label>
                 <div class="flex flex-col gap-2">
-                    @foreach(['management' => 'Management', 'server' => 'Server', 'chef' => 'Chef', 'receptionist' => 'Receptionist'] as $value => $label)
+                    @foreach(['management' => 'Management', 'server' => 'Server', 'chef' => 'Chef', 'receptionist' => 'Receptionist', 'bar_staff' => 'Bar Staff', 'maintenance_crew' => 'Maintenance Crew'] as $value => $label)
                         <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 cursor-pointer hover:border-molveno-blue-300 transition-colors">
                             <input type="checkbox" name="roles[]" value="{{ $value }}"
                                    class="role-checkbox w-4 h-4 rounded accent-molveno-blue-500"

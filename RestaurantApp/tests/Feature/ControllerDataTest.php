@@ -62,7 +62,7 @@ it('AccountController passes users, roleConfig, and counts', function () {
     $response->assertViewHas('counts');
 
     $counts = $response->viewData('counts');
-    expect($counts)->toBeArray()->toHaveKeys(['all', 'management', 'server', 'chef', 'receptionist']);
+    expect($counts)->toBeArray()->toHaveKeys(['all', 'management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew']);
 });
 
 it('allergenConfig is consistent across all controllers using shared config', function () {
