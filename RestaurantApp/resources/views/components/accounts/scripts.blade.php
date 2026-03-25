@@ -14,7 +14,7 @@
 
     function switchTab(btn) {
         const role = btn.dataset.role;
-        btn.closest('[class*="flex"]').querySelectorAll('button').forEach(b => {
+        btn.parentElement.querySelectorAll('button').forEach(b => {
             const isActive = b === btn;
             b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
             b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
