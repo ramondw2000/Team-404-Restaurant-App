@@ -3,7 +3,8 @@ name: Create Product Backlog Issues
 on:
   push:
     branches:
-      - copilot/add-user-stories-to-scrumboard
+      - development
+      - main
   workflow_dispatch:
 
 jobs:
@@ -13,6 +14,7 @@ jobs:
       issues: write
       contents: read
       repository-projects: write
+      projects: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       REPO: ${{ github.repository }}
@@ -32,22 +34,23 @@ jobs:
             gh label list --repo "$REPO" --json name --jq '.[].name' | grep -qxF "$name" || \
               gh label create "$name" --repo "$REPO" --color "$color" --description ""
           }
-          create_label_if_missing "Eigenaar"           "0075ca"
+          create_label_if_missing "Eigenaar"            "0075ca"
           create_label_if_missing "Onderhoudspersoneel" "e4e669"
-          create_label_if_missing "Tafelbeheer"         "d93f0b"
-          create_label_if_missing "Betalingen"          "0e8a16"
+          create_label_if_missing "Tafelbeheer"          "d93f0b"
+          create_label_if_missing "Betalingen"           "0e8a16"
 
       - name: Create new issues
-        id: create_issues
         run: |
           create_issue_if_missing() {
             local title="$1"
             local label="$2"
+            # Check both open and closed issues to avoid duplicates
             local existing
-            existing=$(gh issue list --repo "$REPO" --state open --search "$title" --json number,title --jq ".[] | select(.title == \"$title\") | .number")
+            existing=$(gh issue list --repo "$REPO" --state all --search "\"$title\"" \
+              --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -1)
             if [ -z "$existing" ]; then
-              number=$(gh issue create --repo "$REPO" --title "$title" --body "" --label "$label" | grep -oP '(?<=/issues/)\d+')
-              echo "Created issue #$number: $title"
+              issue_url=$(gh issue create --repo "$REPO" --title "$title" --body "" --label "$label")
+              echo "Created: $issue_url"
             else
               echo "Issue already exists (#$existing): $title"
             fi
@@ -107,7 +110,7 @@ jobs:
             "Als kok wil ik in het bestellingsoverzicht kunnen zien welke bestellingen voor room service zijn (inclusief kamernummer), zodat ik weet welke bestellingen op een kamer afgeleverd moeten worden." \
             "Koks"
 
-          # Bar
+          # Bar – label 'Barpersoneel' already exists in the repository (used by issues #25 and #26)
           create_issue_if_missing \
             "Als barmedewerker wil ik ook bestellingen van gasten aan de bar kunnen bekijken en verwerken, zodat ik bargasten goed kan bedienen." \
             "Barpersoneel"
@@ -125,7 +128,7 @@ jobs:
             "Als manager wil ik de prestaties van barmedewerkers kunnen bekijken (aantal verwerkte bestellingen), zodat ik inzicht heb in de productiviteit van het barpersoneel." \
             "Manager"
 
-      - name: Add all issues to project board
+      - name: Add all open issues to project board
         run: |
           # Find the project number for "Team 404 Scrumboard Test"
           PROJECT_NUMBER=$(gh project list --owner spectrum-capgemini --format json --jq \
@@ -145,3 +148,4 @@ jobs:
               --owner spectrum-capgemini \
               --url "$url" 2>/dev/null || echo "Warning: Could not add $url to project (may already be there)"
           done
+
