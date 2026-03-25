@@ -1,7 +1,13 @@
 @props(['user', 'roleConfig'])
 
 @php
-    $userRoles  = $user->getRoleNames()->all();
+    $userRoles = $user->getRoleNames()->all();
+    $originalAdminId = session('impersonation.original_user_id');
+    $actor = $originalAdminId ? \App\Models\User::find($originalAdminId) : Auth::user();
+    $canImpersonate = $actor
+        && $actor->roles()->where('is_administrator', true)->exists()
+        && ! $user->roles()->where('is_administrator', true)->exists()
+        && $user->id !== $actor->id;
 @endphp
 
 <tr class="user-row border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
@@ -32,6 +38,20 @@
     </x-ui.td>
     <x-ui.td>
         <div class="flex items-center justify-end gap-1">
+            @if($canImpersonate)
+                <form method="POST" action="{{ route('impersonation.start', $user) }}">
+                    @csrf
+                    <x-ui.button type="submit" variant="ghost" size="sm"
+                        title="Impersonate {{ $user->name }}"
+                        class="p-1.5 hover:text-amber-600 hover:bg-amber-50">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                            <path d="M23 11l-4 4-2-2"/>
+                        </svg>
+                    </x-ui.button>
+                </form>
+            @endif
             <x-ui.button variant="ghost" size="sm"
                 onclick="openEditSheet({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->email) }}', JSON.parse(this.closest('tr').dataset.roles))"
                 title="Edit"

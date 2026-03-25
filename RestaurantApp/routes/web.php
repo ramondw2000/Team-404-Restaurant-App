@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DishController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
@@ -20,6 +21,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Impersonation routes must be before the accounts resource to prevent route conflict
+    // with DELETE /accounts/{account}
+    Route::post('/accounts/impersonate/{target}', [ImpersonationController::class, 'start'])
+        ->name('impersonation.start');
+
+    Route::delete('/accounts/impersonate', [ImpersonationController::class, 'stop'])
+        ->name('impersonation.stop');
 
     Route::resource('accounts', AccountController::class)
         ->only(['index', 'store', 'update', 'destroy'])
