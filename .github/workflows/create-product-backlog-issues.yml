@@ -1,0 +1,147 @@
+name: Create Product Backlog Issues
+
+on:
+  push:
+    branches:
+      - copilot/add-user-stories-to-scrumboard
+  workflow_dispatch:
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+      repository-projects: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Update Issue #17 title
+        run: |
+          gh issue edit 17 \
+            --repo "$REPO" \
+            --title "Als onderhoudspersoneel wil ik opmerkingen kunnen toevoegen aan onderhoudsopdrachten, zodat ik relevante informatie kan doorgeven aan collega's."
+
+      - name: Ensure required labels exist
+        run: |
+          create_label_if_missing() {
+            local name="$1"
+            local color="$2"
+            gh label list --repo "$REPO" --json name --jq '.[].name' | grep -qxF "$name" || \
+              gh label create "$name" --repo "$REPO" --color "$color" --description ""
+          }
+          create_label_if_missing "Eigenaar"           "0075ca"
+          create_label_if_missing "Onderhoudspersoneel" "e4e669"
+          create_label_if_missing "Tafelbeheer"         "d93f0b"
+          create_label_if_missing "Betalingen"          "0e8a16"
+
+      - name: Create new issues
+        id: create_issues
+        run: |
+          create_issue_if_missing() {
+            local title="$1"
+            local label="$2"
+            local existing
+            existing=$(gh issue list --repo "$REPO" --state open --search "$title" --json number,title --jq ".[] | select(.title == \"$title\") | .number")
+            if [ -z "$existing" ]; then
+              number=$(gh issue create --repo "$REPO" --title "$title" --body "" --label "$label" | grep -oP '(?<=/issues/)\d+')
+              echo "Created issue #$number: $title"
+            else
+              echo "Issue already exists (#$existing): $title"
+            fi
+          }
+
+          # Eigenaar
+          create_issue_if_missing \
+            "Als eigenaar wil ik toegang hebben tot alle onderdelen van de applicatie, zodat ik volledig beheer heb over het systeem." \
+            "Eigenaar"
+
+          # Receptionist
+          create_issue_if_missing \
+            "Als receptionist wil ik reserveringen gesorteerd zien per tijdvak van een halfuur, zodat ik snel een overzicht heb van de bezetting op een dag." \
+            "Receptionist"
+
+          create_issue_if_missing \
+            "Als receptionist wil ik een specifieke datum kunnen selecteren om reserveringen op die dag te bekijken, zodat ik de bezetting vooruit kan inplannen." \
+            "Receptionist"
+
+          create_issue_if_missing \
+            "Als receptionist wil ik onderhoudsopdrachten kunnen toevoegen voor de onderhoudsploeg, zodat ik technische problemen of taken kan melden." \
+            "Receptionist"
+
+          # Bedienend personeel
+          create_issue_if_missing \
+            "Als bedienend personeel wil ik notities kunnen doorgeven aan de bar samen met een bestelling, zodat ik speciale wensen of instructies kan meesturen." \
+            "Bedienend personeel"
+
+          # Tafelbeheer
+          create_issue_if_missing \
+            "Als bedienend personeel wil ik een overzicht zien van alle tafels met hun huidige status (vrij, bezet, net vertrokken, gereserveerd), zodat ik snel kan zien welke tafels beschikbaar zijn." \
+            "Tafelbeheer"
+
+          create_issue_if_missing \
+            "Als bedienend personeel wil ik per tafel het aantal gasten en de resterende verblijfstijd kunnen zien, zodat ik de tafelroulatie goed kan beheren." \
+            "Tafelbeheer"
+
+          create_issue_if_missing \
+            "Als bedienend personeel wil ik een specifieke tafel kunnen selecteren en de geplaatste bestellingen en totaalprijs inzien, zodat ik de betaling correct kan afhandelen." \
+            "Tafelbeheer"
+
+          # Betalingen
+          create_issue_if_missing \
+            "Als bedienend personeel wil ik een betaling kunnen verwerken voor een geselecteerde tafel, zodat ik de rekening van de gasten kan afsluiten." \
+            "Betalingen"
+
+          # Koks
+          create_issue_if_missing \
+            "Als kok wil ik een overzicht zien van alle gerechten in het menu (naam, afbeelding, ingrediënten, instructies, allergenen), zodat ik het menu volledig kan beheren." \
+            "Koks"
+
+          create_issue_if_missing \
+            "Als kok wil ik gerechten kunnen verwijderen uit het menu, zodat ik verouderde of niet-beschikbare gerechten kan verwijderen." \
+            "Koks"
+
+          create_issue_if_missing \
+            "Als kok wil ik in het bestellingsoverzicht kunnen zien welke bestellingen voor room service zijn (inclusief kamernummer), zodat ik weet welke bestellingen op een kamer afgeleverd moeten worden." \
+            "Koks"
+
+          # Bar
+          create_issue_if_missing \
+            "Als barmedewerker wil ik ook bestellingen van gasten aan de bar kunnen bekijken en verwerken, zodat ik bargasten goed kan bedienen." \
+            "Barpersoneel"
+
+          # Manager
+          create_issue_if_missing \
+            "Als manager wil ik een overzicht zien van de meest en minst verkochte gerechten, zodat ik het menu kan optimaliseren op basis van populariteit." \
+            "Manager"
+
+          create_issue_if_missing \
+            "Als manager wil ik barmedewerkers kunnen toevoegen, verwijderen en beheren, zodat ik het barpersoneel en hun toegangsrechten efficiënt kan beheren." \
+            "Manager"
+
+          create_issue_if_missing \
+            "Als manager wil ik de prestaties van barmedewerkers kunnen bekijken (aantal verwerkte bestellingen), zodat ik inzicht heb in de productiviteit van het barpersoneel." \
+            "Manager"
+
+      - name: Add all issues to project board
+        run: |
+          # Find the project number for "Team 404 Scrumboard Test"
+          PROJECT_NUMBER=$(gh project list --owner spectrum-capgemini --format json --jq \
+            '.projects[] | select(.title == "Team 404 Scrumboard Test") | .number' 2>/dev/null || echo "")
+
+          if [ -z "$PROJECT_NUMBER" ]; then
+            echo "Warning: Could not find project 'Team 404 Scrumboard Test'. Skipping project board step."
+            exit 0
+          fi
+
+          echo "Found project number: $PROJECT_NUMBER"
+
+          # Get all open issues and add them to the project
+          gh issue list --repo "$REPO" --state open --json number,url --jq '.[] | .url' | while read -r url; do
+            echo "Adding $url to project..."
+            gh project item-add "$PROJECT_NUMBER" \
+              --owner spectrum-capgemini \
+              --url "$url" 2>/dev/null || echo "Warning: Could not add $url to project (may already be there)"
+          done
