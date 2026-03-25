@@ -25,16 +25,15 @@
                         <p class="text-white/70 mt-1 text-sm">Monitor channel performance, track top dishes, and review completed orders.</p>
                     </div>
                     <div class="shrink-0 flex items-center gap-3">
-                        {{-- Period selector --}}
-                        <form method="GET" action="{{ route('statistics') }}" class="flex items-center gap-2">
-                            <select name="period" onchange="this.form.submit()" 
-                                    class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/30 cursor-pointer">
-                                <option value="day" {{ $period === 'day' ? 'selected' : '' }} class="text-gray-900">Today</option>
-                                <option value="week" {{ $period === 'week' ? 'selected' : '' }} class="text-gray-900">This Week</option>
-                                <option value="month" {{ $period === 'month' ? 'selected' : '' }} class="text-gray-900">This Month</option>
-                                <option value="year" {{ $period === 'year' ? 'selected' : '' }} class="text-gray-900">This Year</option>
-                            </select>
-                        </form>
+                        {{-- Period selector buttons --}}
+                        <div class="bg-white/10 border border-white/20 rounded-xl p-1 flex items-center gap-1">
+                            @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year'] as $key => $label)
+                                <a href="{{ route('statistics', ['period' => $key]) }}" 
+                                   class="relative px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ease-out {{ $period === $key ? 'bg-white text-primary shadow-lg shadow-black/20 font-bold' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+                                    {{ $label }}
+                                </a>
+                            @endforeach
+                        </div>
                         <div class="bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium text-white/90 flex items-center gap-2">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 4-8"/>
