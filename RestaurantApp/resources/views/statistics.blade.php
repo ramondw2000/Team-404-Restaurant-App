@@ -24,11 +24,22 @@
                         <h1 class="text-2xl font-bold">Sales performance overview</h1>
                         <p class="text-white/70 mt-1 text-sm">Monitor channel performance, track top dishes, and review completed orders.</p>
                     </div>
-                    <div class="shrink-0 flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium text-white/90">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 4-8"/>
-                        </svg>
-                        Live &middot; {{ now()->format('M j, H:i') }}
+                    <div class="shrink-0 flex items-center gap-3">
+                        {{-- Period selector buttons --}}
+                        <div class="bg-white/10 border border-white/20 rounded-xl p-1 flex items-center gap-1">
+                            @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year'] as $key => $label)
+                                <a href="{{ route('statistics', ['period' => $key]) }}" 
+                                   class="relative px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ease-out {{ $period === $key ? 'bg-white text-primary shadow-lg shadow-black/20 font-bold' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
+                                    {{ $label }}
+                                </a>
+                            @endforeach
+                        </div>
+                        <div class="bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm font-medium text-white/90 flex items-center gap-2">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 4-8"/>
+                            </svg>
+                            Live &middot; {{ now()->format('M j, H:i') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -53,7 +64,7 @@
                     </div>
                     <p class="text-xs font-semibold text-white/60 uppercase tracking-widest">Average Order Value</p>
                     <p class="text-3xl font-bold text-white mt-1">€ {{ number_format($averageOrderValue, 2) }}</p>
-                    <p class="text-sm text-white/60 mt-1">Per order today</p>
+                    <p class="text-sm text-white/60 mt-1">Per order ({{ ucfirst($period) }})</p>
                 </div>
                 <div class="bg-molveno-blue-500 rounded-xl p-6 shadow-sm">
                     <div class="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-white mb-4">
