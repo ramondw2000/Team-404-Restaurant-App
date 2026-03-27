@@ -1,13 +1,14 @@
 @props(['filter', 'value', 'onclick' => null])
 
-<button {{ $attributes->merge([
-    'class' => 'filter-btn',
-    'data-filter' => $filter,
-    'data-value' => $value,
-]) }}
-    @if($onclick) onclick="{{ $onclick }}" @endif
+<x-ui.button
+    size="pill"
+    variant="outline"
+    {{ $attributes->merge([
+        'class' => 'filter-btn shadow-none',
+        'data-filter' => $filter,
+        'data-value' => $value,
+        'onclick' => $onclick,
+    ]) }}
 >
-    <span class="inline-flex items-center gap-1">
-        {{ $slot }}
-    </span>
-</button>
+    {{ $slot }}
+</x-ui.button>

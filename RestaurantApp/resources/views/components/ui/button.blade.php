@@ -18,6 +18,7 @@
     $sizeClasses = match ($size) {
         'sm'      => 'px-3 py-1.5 text-xs rounded-lg gap-1.5',
         'lg'      => 'px-5 py-2.5 text-base rounded-lg gap-2',
+        'pill'    => 'px-5 py-2 text-sm rounded-full gap-1.5',
         default   => 'px-4 py-2 text-sm rounded-lg gap-2',
     };
 

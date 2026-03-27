@@ -17,12 +17,12 @@
 <button
     type="button"
     @if($value) data-value="{{ $value }}" @endif
-    {{ $attributes->merge(['class' => "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition-colors duration-150 shadow-sm {$activeClasses}"]) }}
+    {{ $attributes->merge(['class' => "inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold border cursor-pointer transition-colors duration-150 shadow-sm {$activeClasses}"]) }}
 >
     {{ $slot }}
 
     @if(!is_null($count))
-        <span class="px-1.5 py-0.5 rounded-full text-[0.65rem] font-bold {{ $countClasses }}">
+        <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[0.65rem] font-bold {{ $countClasses }}">
             {{ $count }}
         </span>
     @endif
