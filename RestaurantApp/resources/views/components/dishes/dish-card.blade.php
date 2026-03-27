@@ -3,7 +3,9 @@
 <div class="dish-card rounded-2xl shadow-md overflow-hidden flex flex-col
             cursor-pointer select-none transition-all duration-150
             hover:shadow-xl hover:-translate-y-1"
+     data-id="{{ $dish['id'] }}"
      data-name="{{ strtolower($dish['name']) }}"
+     data-description="{{ $dish['description'] ?? '' }}"
      data-category="{{ $dish['category'] }}"
      data-allergens="{{ implode(',', $dish['allergens']) }}"
      data-dietary="{{ implode(',', $dish['dietary']) }}"

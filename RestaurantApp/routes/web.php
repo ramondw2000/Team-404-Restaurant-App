@@ -44,6 +44,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/dishes', [DishController::class, 'index'])
         ->middleware('role:management|chef|bar_staff')
         ->name('dishes');
+
+    Route::post('/dishes', [DishController::class, 'store'])
+        ->middleware('role:management|chef|bar_staff')
+        ->name('dishes.store');
+
+    Route::post('/dishes/{dish}/update', [DishController::class, 'update'])
+        ->middleware('role:management|chef|bar_staff')
+        ->name('dishes.update');
+
+    Route::delete('/dishes/{dish}', [DishController::class, 'destroy'])
+        ->middleware('role:management|chef|bar_staff')
+        ->name('dishes.destroy');
 });
 
 require __DIR__.'/auth.php';
