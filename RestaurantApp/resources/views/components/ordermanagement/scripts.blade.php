@@ -32,17 +32,15 @@
         applyFilters();
     }
 
-    function toggleDietary(btn) {
-        const val = btn.dataset.dietary;
-        activeDietary.has(val) ? activeDietary.delete(val) : activeDietary.add(val);
-        btn.classList.toggle('filter-active', activeDietary.has(val));
-        applyFilters();
-    }
-
-    function toggleFreefrom(btn) {
-        const val = btn.dataset.freefrom;
-        activeFreefrom.has(val) ? activeFreefrom.delete(val) : activeFreefrom.add(val);
-        btn.classList.toggle('filter-active', activeFreefrom.has(val));
+    function toggleMulti(btn, key) {
+        const val = btn.dataset.value;
+        if (key === 'dietary') {
+            activeDietary.has(val) ? activeDietary.delete(val) : activeDietary.add(val);
+            btn.classList.toggle('filter-active', activeDietary.has(val));
+        } else if (key === 'freefrom') {
+            activeFreefrom.has(val) ? activeFreefrom.delete(val) : activeFreefrom.add(val);
+            btn.classList.toggle('filter-active', activeFreefrom.has(val));
+        }
         applyFilters();
     }
 
@@ -74,7 +72,7 @@
             b.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
             b.classList.add(...(isActive ? TAB_ACTIVE : TAB_INACTIVE));
         });
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('filter-active'));
+        document.querySelectorAll('[data-filter="dietary"], [data-filter="freefrom"]').forEach(b => b.classList.remove('filter-active'));
         applyFilters();
     }
 

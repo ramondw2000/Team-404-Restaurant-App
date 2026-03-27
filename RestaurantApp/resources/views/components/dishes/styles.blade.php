@@ -66,25 +66,9 @@
     .upload-zone:hover { border-color: #309bcf; background: #f0f9ff; }
 
     /* ── Filter pills ────────────────────────────────────── */
-    .filter-btn {
-        padding: 0.35rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        border: 1px solid #e5e7eb;
-        background: #fff;
-        color: #374151;
-        cursor: pointer;
-        transition: border-color 0.15s, background 0.15s, color 0.15s;
-        white-space: nowrap;
-        font-family: inherit;
-    }
+    .filter-btn { white-space: nowrap; }
     .filter-btn:hover { border-color: #309bcf; color: #005693; }
-    .filter-btn.filter-active {
-        background: #005693;
-        border-color: #005693;
-        color: #fff;
-    }
+    .filter-btn.filter-active { background: #005693; border-color: #005693; color: #fff; }
 
     /* ── Dish grid ───────────────────────────────────────── */
     .dish-grid { grid-template-columns: repeat(5, 200px); }
