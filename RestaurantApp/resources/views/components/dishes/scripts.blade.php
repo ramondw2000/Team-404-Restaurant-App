@@ -15,6 +15,69 @@
     }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
+    /* ── Photo helpers ─────────────────────────────────── */
+    function resetPhotoInput() {
+        document.getElementById('dish-photo').value = '';
+    }
+
+    function setUploadZonePreview(src) {
+        const img = document.getElementById('upload-preview-img');
+        const placeholder = document.getElementById('upload-placeholder');
+        if (src) {
+            img.src = src;
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        } else {
+            img.src = '';
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
+
+    function setEditPhotoPreview(src, color) {
+        const previewBg = document.getElementById('preview-bg');
+        const img = document.getElementById('current-photo-img');
+        const placeholder = document.getElementById('preview-placeholder');
+        previewBg.style.backgroundColor = color || '#309bcf';
+        previewBg.dataset.color = color || '#309bcf';
+        if (src) {
+            img.src = src;
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        } else {
+            img.src = '';
+            img.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
+
+    document.getElementById('dish-photo').addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) { return; }
+        const objectUrl = URL.createObjectURL(file);
+        if (!document.getElementById('upload-zone-wrapper').classList.contains('hidden')) {
+            setUploadZonePreview(objectUrl);
+        } else {
+            setEditPhotoPreview(objectUrl, document.getElementById('preview-bg').dataset.color);
+        }
+    });
+
+    const uploadZone = document.querySelector('.upload-zone');
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor = '#309bcf'; uploadZone.style.background = '#f0f9ff'; });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = ''; uploadZone.style.background = ''; });
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.style.borderColor = '';
+        uploadZone.style.background = '';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById('dish-photo').files = dt.files;
+            document.getElementById('dish-photo').dispatchEvent(new Event('change'));
+        }
+    });
+
     /* ── Create mode ───────────────────────────────────── */
     function openCreateSheet() {
         currentDishId = null;
@@ -29,6 +92,8 @@
         document.getElementById('dish-price').value  = '';
         document.getElementById('dish-category').value = '';
         document.querySelectorAll('.allergen-checkbox').forEach(cb => cb.checked = false);
+        resetPhotoInput();
+        setUploadZonePreview(null);
         openSheet();
     }
 
@@ -46,9 +111,7 @@
 
         document.getElementById('upload-zone-wrapper').classList.add('hidden');
         document.getElementById('current-photo-preview').classList.remove('hidden');
-        const previewBg = document.getElementById('preview-bg');
-        previewBg.style.backgroundColor = card.dataset.color || '#309bcf';
-        previewBg.dataset.color = card.dataset.color || '#309bcf';
+        setEditPhotoPreview(card.dataset.photo || '', card.dataset.color || '#309bcf');
 
         document.getElementById('dish-name').value    = name;
         document.getElementById('dish-desc').value    = card.dataset.description || '';
@@ -67,6 +130,7 @@
         document.getElementById('diet-veg').checked   = dietary.includes('vegetarian');
         document.getElementById('diet-vegan').checked = dietary.includes('vegan');
 
+        resetPhotoInput();
         openSheet();
     }
 
@@ -172,32 +236,36 @@
             return;
         }
 
-        const data = {
-            name: name,
-            description: document.getElementById('dish-desc').value,
-            price: parseFloat(price),
-            category: category,
-            allergens: getSelectedAllergens(),
-            dietary: getSelectedDietary(),
-            color: currentDishId
-                ? (document.getElementById('preview-bg').dataset.color || '#309bcf')
-                : '#309bcf',
-            _token: document.querySelector('meta[name="csrf-token"]').content
-        };
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+        const formData = new FormData();
+        formData.append('_token', token);
+        formData.append('name', name);
+        formData.append('description', document.getElementById('dish-desc').value);
+        formData.append('price', parseFloat(price));
+        formData.append('category', category);
+        formData.append('color', currentDishId
+            ? (document.getElementById('preview-bg').dataset.color || '#309bcf')
+            : '#309bcf');
+
+        getSelectedAllergens().forEach(a => formData.append('allergens[]', a));
+        getSelectedDietary().forEach(d => formData.append('dietary[]', d));
+
+        const photoFile = document.getElementById('dish-photo').files[0];
+        if (photoFile) {
+            formData.append('photo', photoFile);
+        }
 
         const url = currentDishId
             ? '/dishes/' + currentDishId + '/update'
             : '/dishes';
-        const method = 'POST';
 
         fetch(url, {
-            method: method,
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': data._token,
+                'X-CSRF-TOKEN': token,
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify(data)
+            body: formData
         })
         .then(async response => {
             if (response.ok) {

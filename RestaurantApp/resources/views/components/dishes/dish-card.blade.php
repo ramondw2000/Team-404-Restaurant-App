@@ -11,18 +11,25 @@
      data-dietary="{{ implode(',', $dish['dietary']) }}"
      data-price="{{ $dish['price'] }}"
      data-color="{{ $dish['color'] }}"
+     data-photo="{{ $dish['photo_path'] ? asset('storage/' . $dish['photo_path']) : '' }}"
      onclick="openEditSheet(this)">
 
-    <!-- Image placeholder -->
-    <div class="flex-1 flex items-center justify-center"
+    <!-- Image / placeholder -->
+    <div class="flex-1 flex items-center justify-center overflow-hidden"
          style="background-color: {{ $dish['color'] }}">
-        <svg class="opacity-30" width="52" height="52" viewBox="0 0 24 24" fill="none"
-             stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="13" r="8"/>
-            <path d="M7 5v3M8 5v3M7.5 8v5"/>
-            <path d="M15 5c1 1 1.5 2 1.5 3v6"/>
-            <path d="M15 5c-1 1-1.5 2-1.5 3h3"/>
-        </svg>
+        @if($dish['photo_path'])
+            <img src="{{ asset('storage/' . $dish['photo_path']) }}"
+                 alt="{{ $dish['name'] }}"
+                 class="w-full h-full object-cover">
+        @else
+            <svg class="opacity-30" width="52" height="52" viewBox="0 0 24 24" fill="none"
+                 stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="13" r="8"/>
+                <path d="M7 5v3M8 5v3M7.5 8v5"/>
+                <path d="M15 5c1 1 1.5 2 1.5 3v6"/>
+                <path d="M15 5c-1 1-1.5 2-1.5 3h3"/>
+            </svg>
+        @endif
     </div>
 
     <!-- Info strip -->
