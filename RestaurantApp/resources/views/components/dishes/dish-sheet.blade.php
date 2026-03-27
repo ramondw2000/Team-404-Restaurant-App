@@ -141,6 +141,24 @@
                         Wheat
                     </label>
                 </div>
+                <div>
+                    <input type="checkbox" id="al-fish" class="allergen-checkbox"/>
+                    <label for="al-fish" class="allergen-label">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style="background:#0891B2">
+                            <svg viewBox="0 0 16 16" width="9" height="9"><path fill="white" d="M2 8c2-3 5-4 8-4s6 1 8 4c-2 3-5 4-8 4S4 11 2 8z"/><circle cx="13" cy="8" r="1.2" fill="#0891B2"/></svg>
+                        </span>
+                        Fish
+                    </label>
+                </div>
+                <div>
+                    <input type="checkbox" id="al-egg" class="allergen-checkbox"/>
+                    <label for="al-egg" class="allergen-label">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style="background:#7C3AED">
+                            <svg viewBox="0 0 16 16" width="9" height="9"><ellipse cx="8" cy="9" rx="5" ry="6" fill="white"/><ellipse cx="8" cy="10" rx="2.5" ry="3" fill="#7C3AED"/></svg>
+                        </span>
+                        Egg
+                    </label>
+                </div>
             </div>
         </div>
 

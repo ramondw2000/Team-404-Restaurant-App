@@ -1,5 +1,7 @@
 <script>
     /* ── Sheet helpers ─────────────────────────────────── */
+    let currentDishId = null;
+
     function openSheet() {
         document.getElementById('sheet-overlay').classList.add('open');
         document.getElementById('sheet-panel').classList.add('open');
@@ -9,11 +11,13 @@
         document.getElementById('sheet-overlay').classList.remove('open');
         document.getElementById('sheet-panel').classList.remove('open');
         document.body.style.overflow = '';
+        currentDishId = null;
     }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
     /* ── Create mode ───────────────────────────────────── */
     function openCreateSheet() {
+        currentDishId = null;
         document.getElementById('sheet-title').textContent    = 'Add New Dish';
         document.getElementById('sheet-subtitle').textContent = 'Fill in the details below to add a dish to the menu.';
         document.getElementById('sheet-save-btn').textContent = 'Save Dish';
@@ -31,20 +35,24 @@
     /* ── Edit mode ─────────────────────────────────────── */
     function openEditSheet(card) {
         const name = card.querySelector('.font-bold').textContent.trim();
+        currentDishId = card.dataset.id;
 
         document.getElementById('sheet-title').textContent    = 'Edit Dish';
         document.getElementById('sheet-subtitle').innerHTML   =
             'Editing: <span class="font-semibold text-gray-600">' + name + '</span>';
         document.getElementById('sheet-save-btn').textContent = 'Update Dish';
         document.getElementById('sheet-delete-btn').classList.remove('hidden');
+        document.getElementById('sheet-delete-btn').onclick = () => deleteDish(currentDishId);
 
         document.getElementById('upload-zone-wrapper').classList.add('hidden');
         document.getElementById('current-photo-preview').classList.remove('hidden');
-        document.getElementById('preview-bg').style.backgroundColor = card.dataset.color || '#309bcf';
+        const previewBg = document.getElementById('preview-bg');
+        previewBg.style.backgroundColor = card.dataset.color || '#309bcf';
+        previewBg.dataset.color = card.dataset.color || '#309bcf';
 
         document.getElementById('dish-name').value    = name;
-        document.getElementById('dish-desc').value    = '';
-        document.getElementById('dish-price').value   = card.dataset.price  || '';
+        document.getElementById('dish-desc').value    = card.dataset.description || '';
+        document.getElementById('dish-price').value   = parseFloat(card.dataset.price || 0).toFixed(2);
         document.getElementById('dish-category').value = card.dataset.category || '';
 
         const allergens = (card.dataset.allergens || '').split(',').filter(Boolean);
@@ -52,6 +60,8 @@
         document.getElementById('al-nuts').checked   = allergens.includes('nuts');
         document.getElementById('al-milk').checked   = allergens.includes('milk');
         document.getElementById('al-wheat').checked  = allergens.includes('wheat');
+        document.getElementById('al-fish').checked   = allergens.includes('fish');
+        document.getElementById('al-egg').checked    = allergens.includes('egg');
 
         const dietary = (card.dataset.dietary || '').split(',').filter(Boolean);
         document.getElementById('diet-veg').checked   = dietary.includes('vegetarian');
@@ -132,4 +142,103 @@
     }
 
     document.getElementById('search-input').addEventListener('input', applyFilters);
+
+    /* ── Save / Delete ─────────────────────────────────── */
+    function getSelectedAllergens() {
+        const allergens = [];
+        if (document.getElementById('al-gluten').checked) allergens.push('gluten');
+        if (document.getElementById('al-nuts').checked) allergens.push('nuts');
+        if (document.getElementById('al-milk').checked) allergens.push('milk');
+        if (document.getElementById('al-wheat').checked) allergens.push('wheat');
+        if (document.getElementById('al-fish').checked) allergens.push('fish');
+        if (document.getElementById('al-egg').checked) allergens.push('egg');
+        return allergens;
+    }
+
+    function getSelectedDietary() {
+        const dietary = [];
+        if (document.getElementById('diet-veg').checked) dietary.push('vegetarian');
+        if (document.getElementById('diet-vegan').checked) dietary.push('vegan');
+        return dietary;
+    }
+
+    function saveDish() {
+        const name = document.getElementById('dish-name').value.trim();
+        const price = document.getElementById('dish-price').value;
+        const category = document.getElementById('dish-category').value;
+
+        if (!name || !price || !category) {
+            alert('Please fill in all required fields (Name, Price, Category).');
+            return;
+        }
+
+        const data = {
+            name: name,
+            description: document.getElementById('dish-desc').value,
+            price: parseFloat(price),
+            category: category,
+            allergens: getSelectedAllergens(),
+            dietary: getSelectedDietary(),
+            color: currentDishId
+                ? (document.getElementById('preview-bg').dataset.color || '#309bcf')
+                : '#309bcf',
+            _token: document.querySelector('meta[name="csrf-token"]').content
+        };
+
+        const url = currentDishId
+            ? '/dishes/' + currentDishId + '/update'
+            : '/dishes';
+        const method = 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': data._token,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(async response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const text = await response.text();
+                console.error('Server error:', response.status, text);
+                alert('Error saving dish (HTTP ' + response.status + '). Check console for details.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving dish: ' + error.message);
+        });
+    }
+
+    function deleteDish(id) {
+        if (!confirm('Are you sure you want to delete this dish?')) return;
+
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+
+        fetch('/dishes/' + id, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Error deleting dish. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting dish. Please try again.');
+        });
+    }
+
+    document.getElementById('sheet-save-btn').addEventListener('click', saveDish);
 </script>
