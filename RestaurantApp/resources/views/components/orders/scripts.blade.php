@@ -81,8 +81,31 @@
         if (card) {
             card.dataset.overall = 'completed';
             hideOrderActions(card);
+            markAllDishesServed(card);
             syncCardVisualState(card);
         }
+    }
+
+    function markAllDishesServed(card) {
+        // Update every dish row to "served" state
+        card.querySelectorAll('[data-dish-wrapper]').forEach(wrapper => {
+            wrapper.dataset.dishStatus = 'served';
+
+            // Update status dot
+            const dot = wrapper.querySelector('[data-role="status-dot"]');
+            if (dot) setStatusDotAppearance(dot, 'served');
+
+            // Replace mark-ready button with served badge
+            const action = wrapper.querySelector('.dish-action');
+            if (action) {
+                action.dataset.dishStatus = 'served';
+                action.innerHTML = `
+                    <div class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 border border-green-200 px-2.5 py-1.5 rounded-lg">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        Served
+                    </div>`;
+            }
+        });
     }
 
     function updateOrderSendState(card) {
@@ -197,10 +220,42 @@
     function syncCardVisualState(card) {
         if (!card) return;
         card.classList.remove(...CARD_COMPLETED_CLASSES, ...CARD_DEFAULT_CLASSES);
-        if (card.dataset.overall === 'completed') {
+
+        const isCompleted = card.dataset.overall === 'completed';
+
+        if (isCompleted) {
             card.classList.add(...CARD_COMPLETED_CLASSES);
         } else {
             card.classList.add(...CARD_DEFAULT_CLASSES);
+        }
+
+        // Sync header background & summary text
+        const header = card.querySelector(':scope > div:first-child');
+        if (header) {
+            header.classList.remove('bg-sky-700', 'bg-amber-600', 'bg-emerald-600');
+            header.classList.add(isCompleted ? 'bg-emerald-600' : (card.dataset.overall === 'ready' ? 'bg-amber-600' : 'bg-sky-700'));
+
+            // Update the summary line (second <p> in the right side)
+            const rightP = header.querySelectorAll('.text-right p');
+            if (rightP.length >= 2) {
+                rightP[1].textContent = isCompleted ? 'All served' : rightP[1].textContent;
+            }
+        }
+
+        // Sync footer status label
+        const footerStatus = card.querySelector('.px-4.py-3.bg-gray-50 .inline-flex.items-center.gap-1.text-xs.font-semibold');
+        if (footerStatus) {
+            footerStatus.classList.remove('text-green-600', 'text-amber-600', 'text-gray-400');
+            if (isCompleted) {
+                footerStatus.classList.add('text-green-600');
+                footerStatus.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Completed`;
+            } else if (card.dataset.overall === 'ready') {
+                footerStatus.classList.add('text-amber-600');
+                footerStatus.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Ready to serve`;
+            } else {
+                footerStatus.classList.add('text-gray-400');
+                footerStatus.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 1.5"/></svg> Preparing`;
+            }
         }
     }
 
