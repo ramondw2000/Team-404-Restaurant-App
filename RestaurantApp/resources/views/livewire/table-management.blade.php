@@ -442,6 +442,7 @@
                             {{-- Is Table Toggle --}}
                             <div
                                 wire:key="element-props-{{ $el['id'] }}"
+                                wire:ignore
                                 x-data="{
                                     isTable: {{ $el['is_table'] ? 'true' : 'false' }},
                                     tableName: '{{ addslashes($el['table_name'] ?? '') }}',
@@ -615,7 +616,7 @@
                                 <div
                                     x-data="{ uploading: false, progress: 0 }"
                                     x-on:livewire-upload-start="uploading = true"
-                                    x-on:livewire-upload-finish="uploading = false; $wire.showCropModal = true"
+                                    x-on:livewire-upload-finish="uploading = false; $wire.openNewElementCropModal()"
                                     x-on:livewire-upload-progress="progress = $event.detail.progress"
                                 >
                                     <label

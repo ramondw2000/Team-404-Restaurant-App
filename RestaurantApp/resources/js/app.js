@@ -87,20 +87,20 @@ window.canvasApp = function () {
         },
 
         init() {
-            const imgW = parseInt(this.$el.dataset.imgWidth || 0);
-            const imgH = parseInt(this.$el.dataset.imgHeight || 0);
+            const ro = new ResizeObserver(() => this._recomputeInner());
+            ro.observe(this.$el);
+            this._recomputeInner();
 
-            if (imgW && imgH) {
-                const ro = new ResizeObserver(() => this._recomputeInner(imgW, imgH));
-                ro.observe(this.$el);
-                this._recomputeInner(imgW, imgH);
-            }
+            const mo = new MutationObserver(() => this._recomputeInner());
+            mo.observe(this.$el, { attributes: true, attributeFilter: ['data-img-width', 'data-img-height'] });
         },
 
-        _recomputeInner(imgW, imgH) {
+        _recomputeInner() {
+            const imgW = parseInt(this.$el.dataset.imgWidth || 0);
+            const imgH = parseInt(this.$el.dataset.imgHeight || 0);
             const cw = this.$el.offsetWidth;
             const ch = this.$el.offsetHeight;
-            if (!cw || !ch) return;
+            if (!cw || !ch || !imgW || !imgH) return;
             const imgAspect = imgW / imgH;
             const containerAspect = cw / ch;
             if (imgAspect > containerAspect) {
