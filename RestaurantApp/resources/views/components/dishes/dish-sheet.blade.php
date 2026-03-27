@@ -26,12 +26,16 @@
     <!-- Body -->
     <div class="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
 
+        <input type="file" id="dish-photo" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+
         <!-- Edit mode: current photo preview -->
         <div id="current-photo-preview" class="hidden">
-            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Current Photo</label>
-            <div class="relative w-full rounded-xl overflow-hidden group cursor-pointer" style="aspect-ratio:16/9">
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Photo</label>
+            <div class="relative w-full rounded-xl overflow-hidden group cursor-pointer" style="aspect-ratio:16/9"
+                 onclick="document.getElementById('dish-photo').click()">
                 <div id="preview-bg" class="w-full h-full flex items-center justify-center">
-                    <svg class="opacity-30" width="52" height="52" viewBox="0 0 24 24" fill="none"
+                    <img id="current-photo-img" class="hidden absolute inset-0 w-full h-full object-cover" alt="">
+                    <svg id="preview-placeholder" class="opacity-30" width="52" height="52" viewBox="0 0 24 24" fill="none"
                          stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="13" r="8"/>
                         <path d="M7 5v3M8 5v3M7.5 8v5"/>
@@ -53,15 +57,18 @@
         <!-- Create mode: upload zone -->
         <div id="upload-zone-wrapper">
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Photo</label>
-            <div class="upload-zone">
-                <svg class="mx-auto mb-2 text-gray-300" width="36" height="36" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                    <rect x="3" y="3" width="18" height="18" rx="3"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <path d="M21 15l-5-5L5 21"/>
-                </svg>
-                <p class="text-sm font-medium text-gray-500">Click to upload or drag &amp; drop</p>
-                <p class="text-xs text-gray-400 mt-0.5">PNG, JPG up to 5 MB</p>
+            <div class="upload-zone" onclick="document.getElementById('dish-photo').click()">
+                <img id="upload-preview-img" class="hidden w-full rounded-lg object-cover mb-2" style="max-height:160px" alt="Preview">
+                <div id="upload-placeholder">
+                    <svg class="mx-auto mb-2 text-gray-300" width="36" height="36" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                    <p class="text-sm font-medium text-gray-500">Click to upload or drag &amp; drop</p>
+                    <p class="text-xs text-gray-400 mt-0.5">PNG, JPG up to 5 MB</p>
+                </div>
             </div>
         </div>
 
@@ -85,7 +92,7 @@
                 </label>
                 <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">&euro;</span>
-                    <input id="dish-price" type="number" min="0" step="0.01" class="sheet-input pl-7" placeholder="0.00"/>
+                    <input id="dish-price" type="number" min="0" step="0.01" class="sheet-input !pl-7" placeholder="0.00"/>
                 </div>
             </div>
             <div>
