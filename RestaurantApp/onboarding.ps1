@@ -26,6 +26,11 @@ npm install
 Write-Host "Running composer install..."
 composer install
 
+Write-Host "Migrating database and seeding..."
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan storage:link
+
 # ─── Start dev server ─────────────────────────────────────────────────────────
 Write-Host "Starting development server..."
 composer run dev
