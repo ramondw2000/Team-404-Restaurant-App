@@ -57,7 +57,7 @@ class Image extends Model
 
     public function isInUse(): bool
     {
-        return $this->floorPlanElements()->withTrashed()->exists()
-            || $this->floorPlans()->withTrashed()->exists();
+        return $this->floorPlanElements()->exists()
+            || $this->floorPlans()->exists();
     }
 }
