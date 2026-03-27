@@ -28,20 +28,6 @@ $markReadyClasses   = 'bg-sky-600 border border-sky-700 text-white shadow-lg sha
                 <span class="text-sm font-semibold text-gray-800 leading-snug">{{ $dish['name'] }}</span>
                 <span class="text-xs text-gray-400 font-medium shrink-0">&times;{{ $dish['qty'] }}</span>
             </div>
-
-            @if(!empty($dish['allergens']))
-                <div class="flex items-center gap-1 flex-wrap mt-1">
-                    @foreach($dish['allergens'] as $allergen)
-                        @if(isset($allergenConfig[$allergen]))
-                            <x-dishes.allergen-icon
-                                :bg="$allergenConfig[$allergen]['bg']"
-                                :icon="$allergenConfig[$allergen]['icon']"
-                                :title="$allergenConfig[$allergen]['label']"
-                                size="md" />
-                        @endif
-                    @endforeach
-                </div>
-            @endif
         </div>
     </div>
 
