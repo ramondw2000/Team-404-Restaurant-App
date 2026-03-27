@@ -615,7 +615,7 @@
                                 <div
                                     x-data="{ uploading: false, progress: 0 }"
                                     x-on:livewire-upload-start="uploading = true"
-                                    x-on:livewire-upload-finish="uploading = false; $wire.showCropModal = true"
+                                    x-on:livewire-upload-finish="uploading = false; $wire.openNewElementCropModal()"
                                     x-on:livewire-upload-progress="progress = $event.detail.progress"
                                 >
                                     <label

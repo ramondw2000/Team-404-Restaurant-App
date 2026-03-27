@@ -435,6 +435,11 @@ class TableManagement extends Component
         $this->unsetComputed();
     }
 
+    public function openNewElementCropModal(): void
+    {
+        $this->showCropModal = true;
+    }
+
     public function openCropEditor(int $imageId): void
     {
         $this->cropEditImageId = $imageId;
