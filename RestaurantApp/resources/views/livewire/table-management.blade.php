@@ -442,6 +442,7 @@
                             {{-- Is Table Toggle --}}
                             <div
                                 wire:key="element-props-{{ $el['id'] }}"
+                                wire:ignore
                                 x-data="{
                                     isTable: {{ $el['is_table'] ? 'true' : 'false' }},
                                     tableName: '{{ addslashes($el['table_name'] ?? '') }}',
