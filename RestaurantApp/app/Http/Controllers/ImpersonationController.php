@@ -30,6 +30,7 @@ class ImpersonationController extends Controller
     {
         abort_if(! session()->has('impersonation.original_user_id'), 403);
 
+        $request->attributes->set('impersonation_stopped', true);
         session()->forget(['impersonation.original_user_id', 'impersonation.user_id']);
 
         return redirect()->route('accounts.index');

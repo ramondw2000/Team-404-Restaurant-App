@@ -95,6 +95,7 @@ class DishController extends Controller
                     'allergens' => $dish->allergens ?? [],
                     'dietary' => $dish->dietary ?? [],
                     'color' => $dish->color,
+                    'photo_path' => $dish->photo_path,
                 ];
             })->toArray();
         }
