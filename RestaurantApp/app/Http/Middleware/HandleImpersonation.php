@@ -49,7 +49,11 @@ class HandleImpersonation
     public function terminate(Request $request, Response $response): void
     {
         if ($request->attributes->get('impersonation_active')) {
-            DB::rollBack();
+            if ($request->attributes->get('impersonation_stopped')) {
+                DB::commit();
+            } else {
+                DB::rollBack();
+            }
         }
     }
 
