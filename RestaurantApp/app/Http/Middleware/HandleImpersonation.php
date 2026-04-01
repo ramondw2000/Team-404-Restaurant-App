@@ -23,6 +23,10 @@ class HandleImpersonation
             return $next($request);
         }
 
+        if ($request->routeIs('impersonation.stop')) {
+            return $next($request);
+        }
+
         $originalAdmin = User::find($originalUserId);
 
         if (! $this->isValidAdmin($originalAdmin)) {
