@@ -18,9 +18,10 @@
 
 ===== Sprint 3 Doelen =====
 
-- Onderhoudspersoneel pagina
+- Onderhoudspersoneel pagina -- design
+- Barmedewerkers pagina -- design
 - Functionaliteit Order management & Kitchen orders.
-- Barmedewerkers pagina -- mockup 
+- Ingredienten CRUD toevoegen aan de dishes pagina.
 - Barmedewerkers bon genereren
 - Table management verder uitbreiden.
 
