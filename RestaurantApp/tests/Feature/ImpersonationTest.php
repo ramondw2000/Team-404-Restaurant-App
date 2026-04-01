@@ -136,6 +136,58 @@ it('rejects stopping impersonation when no session is active', function () {
         ->assertForbidden();
 });
 
+it('allows stopping impersonation when the impersonated user was deleted', function () {
+    $admin = makeAdmin();
+    $target = makeRegularUser();
+    $deletedTargetId = $target->id;
+
+    $target->delete();
+
+    $this->actingAs($admin)
+        ->withSession([
+            'impersonation.original_user_id' => $admin->id,
+            'impersonation.user_id' => $deletedTargetId,
+        ])
+        ->delete(route('impersonation.stop'))
+        ->assertRedirect(route('accounts.index'))
+        ->assertSessionMissing('impersonation.original_user_id')
+        ->assertSessionMissing('impersonation.user_id');
+});
+
+it('allows stopping impersonation when the impersonated user became an admin', function () {
+    $admin = makeAdmin();
+    $target = makeRegularUser();
+
+    $target->syncRoles(['management']);
+
+    $this->actingAs($admin)
+        ->withSession([
+            'impersonation.original_user_id' => $admin->id,
+            'impersonation.user_id' => $target->id,
+        ])
+        ->delete(route('impersonation.stop'))
+        ->assertRedirect(route('accounts.index'))
+        ->assertSessionMissing('impersonation.original_user_id')
+        ->assertSessionMissing('impersonation.user_id');
+});
+
+it('allows stopping impersonation when the original admin lost their admin role', function () {
+    $admin = makeAdmin();
+    $target = makeRegularUser();
+
+    $admin->syncRoles(['chef']);
+
+    $this->actingAs($admin)
+        ->withSession([
+            'impersonation.original_user_id' => $admin->id,
+            'impersonation.user_id' => $target->id,
+        ])
+        ->delete(route('impersonation.stop'))
+        ->assertRedirect(route('accounts.index'))
+        ->assertSessionMissing('impersonation.original_user_id')
+        ->assertSessionMissing('impersonation.user_id');
+});
+
 // ── Middleware safety checks ─────────────────────────────────────
 
 it('clears the session and continues as the real user when the original admin no longer exists', function () {
