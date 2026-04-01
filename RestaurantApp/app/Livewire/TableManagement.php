@@ -407,6 +407,8 @@ class TableManagement extends Component
         $this->pendingDeletes = [];
         $this->pendingNewElements = [];
         $this->hasUnsavedChanges = false;
+        $this->showDiscardConfirm = false;
+        $this->editMode = false;
         $this->selectedElementId = null;
         $this->unsetComputed();
     }

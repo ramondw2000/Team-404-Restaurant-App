@@ -1072,8 +1072,8 @@
 
     {{-- ===== DISCARD CHANGES CONFIRM ===== --}}
     @if($showDiscardConfirm)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div wire:key="discard-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="$set('showDiscardConfirm', false)"></div>
             <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" @click.stop>
                 <div class="flex items-start gap-4 mb-5">
                     <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 shrink-0">
