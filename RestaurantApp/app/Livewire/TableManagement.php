@@ -477,6 +477,9 @@ class TableManagement extends Component
             return;
         }
 
+        $image->floorPlanElements()->withTrashed()->forceDelete();
+        $image->floorPlans()->withTrashed()->forceDelete();
+
         Storage::delete($image->path);
         $image->delete();
         $this->unsetComputed();
