@@ -11,45 +11,67 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex items-stretch">
+
+                    {{-- Dashboard --}}
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    @can('View Dishes')
-                    <x-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
-                        {{ __('Dishes') }}
-                    </x-nav-link>
-                    @endcan
+
+                    {{-- Floor Operations --}}
+                    @canany(['View Orders', 'View Table Management', 'View Reservations'])
+                    <x-nav-dropdown label="Floor Operations" :active="request()->routeIs('ordermanagement') || request()->routeIs('tablemanagement') || request()->routeIs('reservations.*')">
+                        @can('View Orders')
+                        <x-nav-dropdown-item
+                            :href="route('ordermanagement')"
+                            title="Order Management"
+                            description="Oversee all active guest checks and orders."
+                            :active="request()->routeIs('ordermanagement')" />
+                        @endcan
+                        @can('View Table Management')
+                        <x-nav-dropdown-item
+                            :href="route('tablemanagement')"
+                            title="Table Management"
+                            description="Real-time floor plan, seating, and table status."
+                            :active="request()->routeIs('tablemanagement')" />
+                        @endcan
+                        @can('View Reservations')
+                        <x-nav-dropdown-item
+                            :href="route('reservations.index')"
+                            title="Reservations"
+                            description="Handle future bookings and guest lists."
+                            :active="request()->routeIs('reservations.*')" />
+                        @endcan
+                    </x-nav-dropdown>
+                    @endcanany
+
+                    {{-- Production Units --}}
+                    @canany(['View Kitchen Orders', 'View Dishes'])
+                    <x-nav-dropdown label="Production Units" :active="request()->routeIs('kitchen-orders') || request()->routeIs('dishes')">
+                        @can('View Kitchen Orders')
+                        <x-nav-dropdown-item
+                            :href="route('kitchen-orders')"
+                            title="Kitchen Orders"
+                            description="Dedicated view for the chef and line cooks."
+                            :active="request()->routeIs('kitchen-orders')" />
+                        @endcan
+                        @can('View Dishes')
+                        <x-nav-dropdown-item
+                            :href="route('dishes')"
+                            title="Dishes"
+                            description="Manage menu items, ingredients, and pricing."
+                            :active="request()->routeIs('dishes')" />
+                        @endcan
+                    </x-nav-dropdown>
+                    @endcanany
+
+                    {{-- Statistics --}}
                     @can('View Statistics')
                     <x-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
                         {{ __('Statistics') }}
                     </x-nav-link>
                     @endcan
-                    @can('View Kitchen Orders')
-                    <x-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
-                        {{ __('Kitchen Orders') }}
-                    </x-nav-link>
-                    @endcan
-                    @can('View Orders')
-                    <x-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
-                        {{ __('Order Management') }}
-                    </x-nav-link>
-                    @endcan
-                    @can('View Table Management')
-                    <x-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
-                        {{ __('Table Management') }}
-                    </x-nav-link>
-                    @endcan
-                    @can('View Reservations')
-                    <x-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
-                        {{ __('Reservations') }}
-                    </x-nav-link>
-                    @endcan
-                    @can('View Account Management')
-                    <x-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
-                        {{ __('Account Management') }}
-                    </x-nav-link>
-                    @endcan
+
                 </div>
             </div>
 
@@ -99,6 +121,12 @@
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
+                        @can('View Account Management')
+                        <x-dropdown-link :href="route('accounts.index')">
+                            {{ __('Accounts') }}
+                        </x-dropdown-link>
+                        @endcan
+
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -128,24 +156,15 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
+
+            {{-- Dashboard --}}
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            @can('View Dishes')
-            <x-responsive-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
-                {{ __('Dishes') }}
-            </x-responsive-nav-link>
-            @endcan
-            @can('View Statistics')
-            <x-responsive-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
-                {{ __('Statistics') }}
-            </x-responsive-nav-link>
-            @endcan
-            @can('View Kitchen Orders')
-            <x-responsive-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
-                {{ __('Kitchen Orders') }}
-            </x-responsive-nav-link>
-            @endcan
+
+            {{-- Floor Operations --}}
+            @canany(['View Orders', 'View Table Management', 'View Reservations'])
+            <div class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Floor Operations</div>
             @can('View Orders')
             <x-responsive-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
                 {{ __('Order Management') }}
@@ -161,11 +180,30 @@
                 {{ __('Reservations') }}
             </x-responsive-nav-link>
             @endcan
-            @can('View Account Management')
-            <x-responsive-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
-                {{ __('Account Management') }}
+            @endcanany
+
+            {{-- Production Units --}}
+            @canany(['View Kitchen Orders', 'View Dishes'])
+            <div class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Production Units</div>
+            @can('View Kitchen Orders')
+            <x-responsive-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
+                {{ __('Kitchen Orders') }}
             </x-responsive-nav-link>
             @endcan
+            @can('View Dishes')
+            <x-responsive-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
+                {{ __('Dishes') }}
+            </x-responsive-nav-link>
+            @endcan
+            @endcanany
+
+            {{-- Statistics --}}
+            @can('View Statistics')
+            <x-responsive-nav-link :href="route('statistics')" :active="request()->routeIs('statistics')">
+                {{ __('Statistics') }}
+            </x-responsive-nav-link>
+            @endcan
+
         </div>
 
         <!-- Responsive Settings Options -->
@@ -195,6 +233,12 @@
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
+
+                @can('View Account Management')
+                <x-responsive-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
+                    {{ __('Accounts') }}
+                </x-responsive-nav-link>
+                @endcan
 
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">
