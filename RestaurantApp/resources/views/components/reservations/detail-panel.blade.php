@@ -45,11 +45,6 @@
                             x-text="reservations[selectedReservation].status.replace('_', ' ').charAt(0).toUpperCase() + reservations[selectedReservation].status.replace('_', ' ').slice(1)">
                         </span>
                     </div>
-
-                    <div x-show="reservations[selectedReservation].allergies_or_dietary" class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500">Allergies</span>
-                        <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">Yes</span>
-                    </div>
                 </div>
             </div>
 
@@ -158,7 +153,7 @@
 
             {{-- Edit Button --}}
             <div class="mt-4">
-                <button @click="editingReservation = selectedReservation; showEditModal = true" class="w-full inline-flex items-center justify-center bg-molveno-blue-500 hover:bg-molveno-blue-700 text-white font-semibold shadow-sm px-4 py-2 text-sm rounded-lg transition-colors duration-150">
+                <button @click="editingReservation = selectedReservation; $dispatch('open-sheet', 'edit-reservation')" class="w-full inline-flex items-center justify-center bg-molveno-blue-500 hover:bg-molveno-blue-700 text-white font-semibold shadow-sm px-4 py-2 text-sm rounded-lg transition-colors duration-150">
                     Edit Reservation
                 </button>
             </div>

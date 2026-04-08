@@ -16,7 +16,6 @@ class Reservation extends Model
         'room_number',
         'status',
         'internal_notes',
-        'allergies_or_dietary',
         'deposit_amount',
         'deposit_status',
         'reservation_id_external',
@@ -25,7 +24,6 @@ class Reservation extends Model
     protected $casts = [
         'reservation_datetime' => 'datetime',
         'party_size' => 'integer',
-        'allergies_or_dietary' => 'boolean',
         'deposit_amount' => 'decimal:2',
     ];
 }

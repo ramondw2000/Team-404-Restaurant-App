@@ -33,10 +33,8 @@ class ReservationController extends Controller
             'table_number' => 'nullable|string|max:50',
             'room_number' => 'nullable|string|max:50',
             'internal_notes' => 'nullable|string|max:1000',
-            'allergies_or_dietary' => 'nullable|boolean',
         ]);
 
-        $validated['allergies_or_dietary'] = $request->has('allergies_or_dietary');
         $validated['status'] = 'scheduled';
 
         Reservation::create($validated);
@@ -57,10 +55,7 @@ class ReservationController extends Controller
             'room_number' => 'nullable|string|max:50',
             'status' => 'required|string|in:scheduled,arrived,departed,cancelled,late,optional,no_show',
             'internal_notes' => 'nullable|string|max:1000',
-            'allergies_or_dietary' => 'nullable|boolean',
         ]);
-
-        $validated['allergies_or_dietary'] = $request->has('allergies_or_dietary');
 
         $reservation->update($validated);
 

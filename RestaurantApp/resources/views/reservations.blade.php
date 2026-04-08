@@ -2,8 +2,6 @@
     <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5" x-data="{
         selectedReservation: null,
         reservations: @js($dinnerReservations->flatten(1)->keyBy('id')->toArray()),
-        showCreateModal: false,
-        showEditModal: false,
         editingReservation: null
     }">
         <!-- Page Header -->
@@ -14,7 +12,7 @@
                         onchange="this.form.submit()"
                         class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white placeholder-gray-400 outline-none transition-[border-color,box-shadow] duration-150 focus:border-molveno-blue-500 focus:ring-2 focus:ring-molveno-blue-300">
                 </form>
-                <x-ui.button @click="showCreateModal = true">
+                <x-ui.button @click="$dispatch('open-sheet', 'create-reservation')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 5v14M5 12h14"/>
