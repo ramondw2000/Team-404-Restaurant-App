@@ -43,6 +43,7 @@ class RoleSeeder extends Seeder
                 'View Orders', 'Create Order', 'Edit Order', 'Assign Table',
                 'View Kitchen Orders',
                 'View Table Management', 'Update Table Status',
+                'View Reservations', 'Create Reservation', 'Edit Reservation', 'Cancel Reservation',
             ],
         ],
         'bar_staff' => [
