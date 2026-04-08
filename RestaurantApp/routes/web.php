@@ -6,6 +6,7 @@ use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +50,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
         ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders');
+
+    Route::get('/reservations', [ReservationController::class, 'index'])
+        ->middleware('permission:View Reservations')
+        ->name('reservations.index');
+
+    Route::post('/reservations', [ReservationController::class, 'store'])
+        ->middleware('permission:Create Reservation')
+        ->name('reservations.store');
+
+    Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])
+        ->middleware('permission:Edit Reservation')
+        ->name('reservations.update');
+
+    Route::patch('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus'])
+        ->middleware('permission:Edit Reservation')
+        ->name('reservations.updateStatus');
 
     Route::get('/dishes', [DishController::class, 'index'])
         ->middleware('permission:View Dishes')

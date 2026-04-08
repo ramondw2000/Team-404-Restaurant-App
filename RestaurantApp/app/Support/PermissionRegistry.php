@@ -70,6 +70,17 @@ class PermissionRegistry
             ],
         ],
         [
+            'key' => 'reservations',
+            'label' => 'Reservations',
+            'view_gate' => 'View Reservations',
+            'permissions' => [
+                ['name' => 'View Reservations', 'description' => 'Access the Reservations page'],
+                ['name' => 'Create Reservation', 'description' => 'Create a new reservation'],
+                ['name' => 'Edit Reservation', 'description' => 'Modify an existing reservation'],
+                ['name' => 'Cancel Reservation', 'description' => 'Cancel a reservation'],
+            ],
+        ],
+        [
             'key' => 'statistics',
             'label' => 'Statistics',
             'view_gate' => 'View Statistics',

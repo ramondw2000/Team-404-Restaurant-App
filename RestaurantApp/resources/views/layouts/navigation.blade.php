@@ -40,6 +40,11 @@
                         {{ __('Table Management') }}
                     </x-nav-link>
                     @endcan
+                    @can('View Reservations')
+                    <x-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
+                        {{ __('Reservations') }}
+                    </x-nav-link>
+                    @endcan
                     @can('View Account Management')
                     <x-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
                         {{ __('Account Management') }}
@@ -149,6 +154,11 @@
             @can('View Table Management')
             <x-responsive-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                 {{ __('Table Management') }}
+            </x-responsive-nav-link>
+            @endcan
+            @can('View Reservations')
+            <x-responsive-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')">
+                {{ __('Reservations') }}
             </x-responsive-nav-link>
             @endcan
             @can('View Account Management')
