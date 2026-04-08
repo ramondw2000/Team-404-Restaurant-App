@@ -96,10 +96,6 @@
                         <span class="text-sm text-gray-500">Created</span>
                         <span class="text-sm font-semibold text-gray-900" x-text="reservations[selectedReservation].created_at ? new Date(reservations[selectedReservation].created_at).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'"></span>
                     </div>
-                    <div x-show="reservations[selectedReservation].reservation_id_external" class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500">Reservation ID</span>
-                        <span class="text-sm font-mono font-semibold text-gray-900" x-text="reservations[selectedReservation].reservation_id_external"></span>
-                    </div>
                 </div>
             </div>
 

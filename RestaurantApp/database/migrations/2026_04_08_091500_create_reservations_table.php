@@ -22,7 +22,6 @@ return new class extends Migration
             $table->boolean('allergies_or_dietary')->default(false);
             $table->decimal('deposit_amount', 8, 2)->nullable();
             $table->string('deposit_status')->nullable();
-            $table->string('reservation_id_external')->nullable();
             $table->timestamps();
 
             $table->index('reservation_datetime');

@@ -18,7 +18,6 @@ class Reservation extends Model
         'internal_notes',
         'deposit_amount',
         'deposit_status',
-        'reservation_id_external',
     ];
 
     protected $casts = [
