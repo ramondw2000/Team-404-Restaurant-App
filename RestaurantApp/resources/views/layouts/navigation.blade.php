@@ -72,6 +72,11 @@
                     </x-nav-link>
                     @endcan
 
+                    {{-- Maintenance --}}
+                    <x-nav-link :href="route('maintenance')" :active="request()->routeIs('maintenance')">
+                        {{ __('Onderhoud') }}
+                    </x-nav-link>
+
                 </div>
             </div>
 
@@ -204,6 +209,10 @@
             </x-responsive-nav-link>
             @endcan
 
+            {{-- Maintenance --}}
+            <x-responsive-nav-link :href="route('maintenance')" :active="request()->routeIs('maintenance')">
+                {{ __('Onderhoud') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->

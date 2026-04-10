@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\KitchenOrderController;
+use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
@@ -82,6 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/dishes/{dish}', [DishController::class, 'destroy'])
         ->middleware('role:management|chef|bar_staff')
         ->name('dishes.destroy');
+
+    Route::get('/maintenance', [MaintenanceController::class, 'index'])
+        ->name('maintenance');
 });
 
 require __DIR__.'/auth.php';
