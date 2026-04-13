@@ -74,7 +74,7 @@
 
                     {{-- Maintenance --}}
                     <x-nav-link :href="route('maintenance')" :active="request()->routeIs('maintenance')">
-                        {{ __('Onderhoud') }}
+                        {{ __('Maintenance') }}
                     </x-nav-link>
 
                 </div>
@@ -211,7 +211,7 @@
 
             {{-- Maintenance --}}
             <x-responsive-nav-link :href="route('maintenance')" :active="request()->routeIs('maintenance')">
-                {{ __('Onderhoud') }}
+                {{ __('Maintenance') }}
             </x-responsive-nav-link>
         </div>
 

@@ -86,6 +86,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/maintenance', [MaintenanceController::class, 'index'])
         ->name('maintenance');
+
+    Route::patch('/maintenance/{task}/done', [MaintenanceController::class, 'markAsDone'])
+        ->name('maintenance.markAsDone');
 });
 
 require __DIR__.'/auth.php';
