@@ -34,6 +34,15 @@ class PermissionRegistry
             ],
         ],
         [
+            'key' => 'bar_orders',
+            'label' => 'Bar Orders',
+            'view_gate' => 'View Bar Orders',
+            'permissions' => [
+                ['name' => 'View Bar Orders', 'description' => 'Access the Bar Orders page'],
+                ['name' => 'Send Bar Orders', 'description' => 'Mark a bar ticket as ready and send it out'],
+            ],
+        ],
+        [
             'key' => 'orders',
             'label' => 'Orders',
             'view_gate' => 'View Orders',
