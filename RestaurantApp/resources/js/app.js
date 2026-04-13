@@ -42,12 +42,65 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
-// ─── Snap guide system ─────────────────────────────────────────────────────
+// ─── Inline SVG loader ─────────────────────────────────────────────────────
+// Fetches an SVG file and injects it as inline markup so pointer-events can
+// target only the painted (non-transparent) areas of the graphic.
+
+const svgCache = new Map();
 
 /**
- * Edge alignment snap logic. Compares a dragging element's four edges against
- * all other elements' edges and returns snap deltas + guide line positions.
+ * Load an SVG from a URL and inject it inline into the given container.
+ * The resulting <svg> element gets pointer-events: visiblePainted so only
+ * the drawn shapes respond to clicks — transparent areas pass through.
+ *
+ * @param {HTMLElement} container - Element to inject SVG into
+ * @param {string} src           - URL of the SVG file
  */
+/**
+ * Load an SVG from a URL and inject it inline into the given container.
+ * Returns the viewBox aspect ratio so callers can resize their container
+ * to match, ensuring the SVG fills it with no letterboxing or distortion.
+ *
+ * @param {HTMLElement} container
+ * @param {string} src
+ * @returns {Promise<{aspectRatio: number}|null>}
+ */
+async function loadInlineSvg(container, src) {
+    if (!src) return null;
+
+    try {
+        let svgText;
+        if (svgCache.has(src)) {
+            svgText = svgCache.get(src);
+        } else {
+            const response = await fetch(src);
+            svgText = await response.text();
+            svgCache.set(src, svgText);
+        }
+
+        container.innerHTML = svgText;
+        const svg = container.querySelector('svg');
+        if (svg) {
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.pointerEvents = 'visiblePainted';
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
+
+            const vb = svg.viewBox.baseVal;
+            if (vb && vb.width > 0 && vb.height > 0) {
+                return { aspectRatio: vb.width / vb.height };
+            }
+        }
+    } catch {
+        container.innerHTML = `<img src="${src}" class="w-full h-full object-contain" style="pointer-events:none" draggable="false">`;
+    }
+    return null;
+}
+
+// ─── Snap guide system ─────────────────────────────────────────────────────
+
 const SNAP_THRESHOLD_PX = 5;
 
 /**
@@ -60,7 +113,6 @@ function computeSnap(moving, movingId, canvas) {
     const canvasRect = canvas.getBoundingClientRect();
     const result = { dx: 0, dy: 0, guides: [] };
 
-    // Collect edges of all other elements
     const others = canvas.querySelectorAll('[data-element-id]');
     const otherEdges = { x: [], y: [] };
 
@@ -68,7 +120,6 @@ function computeSnap(moving, movingId, canvas) {
         const id = el.dataset.elementId;
         if (id == movingId) return;
 
-        // Read percentages from the Alpine component's position style
         const style = el.style;
         const left = parseFloat(style.left) || 0;
         const top = parseFloat(style.top) || 0;
@@ -79,20 +130,12 @@ function computeSnap(moving, movingId, canvas) {
         otherEdges.y.push(top, top + height);
     });
 
-    // Moving element edges
-    const movingLeft = moving.x;
-    const movingRight = moving.x + moving.width;
-    const movingTop = moving.y;
-    const movingBottom = moving.y + moving.height;
+    const movingEdgesX = [moving.x, moving.x + moving.width];
+    const movingEdgesY = [moving.y, moving.y + moving.height];
 
-    const movingEdgesX = [movingLeft, movingRight];
-    const movingEdgesY = [movingTop, movingBottom];
-
-    // Convert threshold from px to % of canvas
     const thresholdX = (SNAP_THRESHOLD_PX / canvasRect.width) * 100;
     const thresholdY = (SNAP_THRESHOLD_PX / canvasRect.height) * 100;
 
-    // Find closest X snap
     let bestDx = Infinity;
     let snapGuideX = null;
     for (const me of movingEdgesX) {
@@ -109,7 +152,6 @@ function computeSnap(moving, movingId, canvas) {
         result.guides.push({ axis: 'x', position: snapGuideX });
     }
 
-    // Find closest Y snap
     let bestDy = Infinity;
     let snapGuideY = null;
     for (const me of movingEdgesY) {
@@ -129,11 +171,6 @@ function computeSnap(moving, movingId, canvas) {
     return result;
 }
 
-/**
- * Render snap guide lines into the [data-snap-guides] container.
- * @param {HTMLElement} container
- * @param {Array<{axis:'x'|'y', position:number}>} guides
- */
 function renderGuides(container, guides) {
     if (!container) return;
     container.innerHTML = '';
@@ -141,7 +178,7 @@ function renderGuides(container, guides) {
     for (const guide of guides) {
         const line = document.createElement('div');
         line.style.position = 'absolute';
-        line.style.backgroundColor = '#22d3ee'; // cyan-400
+        line.style.backgroundColor = '#22d3ee';
         line.style.zIndex = '9000';
 
         if (guide.axis === 'x') {
@@ -168,28 +205,23 @@ function clearGuides(canvas) {
 // ─── Canvas pan & zoom Alpine component ────────────────────────────────────
 window.canvasApp = function () {
     return {
-        // Pan state
         panX: 0,
         panY: 0,
         isPanning: false,
         panStartX: 0,
         panStartY: 0,
 
-        // Zoom state
         scale: 1,
         minScale: 0.2,
         maxScale: 4,
 
-        // Touch state
         lastTouchDistance: null,
 
-        // Context menu state
         menuShow: false,
         menuX: 0,
         menuY: 0,
         menuTargetId: null,
 
-        // Canvas inner dimensions (computed to match image aspect ratio)
         canvasInnerW: 0,
         canvasInnerH: 0,
         canvasInnerLeft: 0,
@@ -335,6 +367,14 @@ window.canvasElement = function (elementData) {
         imagePath: elementData.image_path || '',
         isDirty: false,
 
+        // Raw (unsnapped) position — tracks the cursor exactly.
+        // The display x/y snap to edges; rawX/rawY do not.
+        // This prevents the "sticky snap" problem where applying snap
+        // corrections to the already-snapped position makes it impossible
+        // to drag away without overshooting the threshold.
+        rawX: elementData.x,
+        rawY: elementData.y,
+
         get positionStyle() {
             return `left:${this.x}%;top:${this.y}%;width:${this.width}%;height:${this.height}%;transform:rotate(${this.rotation}deg);z-index:${this.zIndex};`;
         },
@@ -349,6 +389,7 @@ window.canvasElement = function (elementData) {
         },
 
         init() {
+            this.loadSvg();
             this.setupInteract();
             window.addEventListener('element-properties-updated', (event) => {
                 if (event.detail.id == this.elementId) {
@@ -359,12 +400,50 @@ window.canvasElement = function (elementData) {
                     if (event.detail.height != null) this.height = event.detail.height;
                     if (event.detail.imagePath) {
                         this.imagePath = event.detail.imagePath;
-                        // Swap the image src
-                        const img = this.$el.querySelector('img');
-                        if (img) img.src = event.detail.imagePath;
+                        this.loadSvg();
                     }
                 }
             });
+        },
+
+        async loadSvg() {
+            const container = this.$el.querySelector('[data-svg-container]');
+            if (!container || !this.imagePath) return;
+
+            const result = await loadInlineSvg(container, this.imagePath);
+            if (result?.aspectRatio) {
+                this.matchAspectRatio(result.aspectRatio);
+            }
+        },
+
+        /**
+         * Adjust element height so the container matches the SVG's
+         * natural aspect ratio — eliminates letterboxing and distortion.
+         */
+        matchAspectRatio(svgRatio) {
+            const canvas = this.$el.closest('[data-canvas-inner]');
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+
+            const wPx = (this.width / 100) * rect.width;
+            const hPx = (this.height / 100) * rect.height;
+            const containerRatio = wPx / hPx;
+
+            if (Math.abs(containerRatio - svgRatio) < 0.05) return;
+
+            const newHPx = wPx / svgRatio;
+            const newH = (newHPx / rect.height) * 100;
+
+            this.y += (this.height - newH) / 2;
+            this.height = newH;
+        },
+
+        /**
+         * Check whether a click event originated from visible SVG content
+         * (as opposed to transparent space around the graphic).
+         */
+        hitsSvgContent(event) {
+            return !!event.target.closest('svg');
         },
 
         setupInteract() {
@@ -382,88 +461,50 @@ window.canvasElement = function (elementData) {
                     mouseButtons: 1,
                     ignoreFrom: '[data-rotate-handle]',
                     listeners: {
+                        start() {
+                            // Sync raw position to current display position at drag start
+                            self.rawX = self.x;
+                            self.rawY = self.y;
+                        },
                         move(event) {
                             const canvas = getCanvas();
                             if (!canvas) return;
                             const canvasRect = canvas.getBoundingClientRect();
                             const dx = (event.dx / canvasRect.width) * 100;
                             const dy = (event.dy / canvasRect.height) * 100;
-                            self.x = Math.max(0, Math.min(100 - self.width, self.x + dx));
-                            self.y = Math.max(0, Math.min(100 - self.height, self.y + dy));
 
-                            // Snap
+                            // Always advance the raw (unsnapped) position by the cursor delta
+                            self.rawX = Math.max(0, Math.min(100 - self.width, self.rawX + dx));
+                            self.rawY = Math.max(0, Math.min(100 - self.height, self.rawY + dy));
+
                             if (isSnapEnabled()) {
+                                // Snap is computed against the raw position, so the
+                                // cursor must actually move past the threshold to escape.
                                 const snap = computeSnap(
-                                    { x: self.x, y: self.y, width: self.width, height: self.height },
+                                    { x: self.rawX, y: self.rawY, width: self.width, height: self.height },
                                     self.elementId,
                                     canvas,
                                 );
-                                self.x = Math.max(0, Math.min(100 - self.width, self.x + snap.dx));
-                                self.y = Math.max(0, Math.min(100 - self.height, self.y + snap.dy));
+                                self.x = Math.max(0, Math.min(100 - self.width, self.rawX + snap.dx));
+                                self.y = Math.max(0, Math.min(100 - self.height, self.rawY + snap.dy));
                                 renderGuides(canvas.querySelector('[data-snap-guides]'), snap.guides);
+                            } else {
+                                self.x = self.rawX;
+                                self.y = self.rawY;
                             }
 
                             self.isDirty = true;
                         },
                         end() {
                             clearGuides(getCanvas());
+                            // Reconcile raw position with snapped position for next drag
+                            self.rawX = self.x;
+                            self.rawY = self.y;
                             if (self.isDirty) {
                                 self.syncToLivewire();
                             }
                         },
                     },
-                })
-                .resizable({
-                    mouseButtons: 1,
-                    ignoreFrom: '[data-rotate-handle]',
-                    edges: { left: true, right: true, bottom: true, top: true },
-                    margin: 8,
-                    listeners: {
-                        move(event) {
-                            const canvas = getCanvas();
-                            if (!canvas) return;
-                            const canvasRect = canvas.getBoundingClientRect();
-                            const dw = (event.deltaRect.width / canvasRect.width) * 100;
-                            const dh = (event.deltaRect.height / canvasRect.height) * 100;
-                            const dleft = (event.deltaRect.left / canvasRect.width) * 100;
-                            const dtop = (event.deltaRect.top / canvasRect.height) * 100;
-
-                            self.width = Math.max(2, self.width + dw);
-                            self.height = Math.max(2, self.height + dh);
-                            self.x += dleft;
-                            self.y += dtop;
-
-                            // Snap during resize
-                            if (isSnapEnabled()) {
-                                const snap = computeSnap(
-                                    { x: self.x, y: self.y, width: self.width, height: self.height },
-                                    self.elementId,
-                                    canvas,
-                                );
-                                // Apply snap to whichever edge is being resized
-                                if (snap.dx !== 0) {
-                                    self.width = Math.max(2, self.width + snap.dx);
-                                }
-                                if (snap.dy !== 0) {
-                                    self.height = Math.max(2, self.height + snap.dy);
-                                }
-                                renderGuides(canvas.querySelector('[data-snap-guides]'), snap.guides);
-                            }
-
-                            self.isDirty = true;
-                        },
-                        end() {
-                            clearGuides(getCanvas());
-                            if (self.isDirty) {
-                                self.syncToLivewire();
-                            }
-                        },
-                    },
-                    modifiers: [
-                        interact.modifiers.restrictSize({
-                            min: { width: 20, height: 20 },
-                        }),
-                    ],
                 });
         },
 
@@ -520,6 +561,50 @@ window.canvasElement = function (elementData) {
 
             document.addEventListener('pointermove', onMove);
             document.addEventListener('pointerup', onUp);
+        },
+    };
+};
+
+// ─── View-mode inline SVG loader ───────────────────────────────────────────
+// Used on view-mode elements (which don't have the canvasElement Alpine data).
+window.viewElementSvg = function (src) {
+    return {
+        async init() {
+            const container = this.$el.querySelector('[data-svg-container]');
+            if (!container || !src) return;
+
+            const result = await loadInlineSvg(container, src);
+            if (result?.aspectRatio) {
+                this.matchAspectRatio(result.aspectRatio);
+            }
+        },
+
+        /**
+         * Adjust the element's inline style so its height matches the
+         * SVG's natural aspect ratio — no letterboxing, no distortion.
+         */
+        matchAspectRatio(svgRatio) {
+            const canvas = this.$el.closest('[data-canvas-inner]');
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+
+            const w = parseFloat(this.$el.style.width);
+            const h = parseFloat(this.$el.style.height);
+            const wPx = (w / 100) * rect.width;
+            const hPx = (h / 100) * rect.height;
+            const containerRatio = wPx / hPx;
+
+            if (Math.abs(containerRatio - svgRatio) < 0.05) return;
+
+            const newHPx = wPx / svgRatio;
+            const newH = (newHPx / rect.height) * 100;
+
+            this.$el.style.top = `${parseFloat(this.$el.style.top) + (h - newH) / 2}%`;
+            this.$el.style.height = `${newH}%`;
+        },
+
+        hitsSvgContent(event) {
+            return !!event.target.closest('svg');
         },
     };
 };

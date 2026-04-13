@@ -169,14 +169,14 @@ it('can update element properties', function () {
 it('proportionally scales element when seat count changes', function () {
     $user = tableManagementUser();
     $plan = FloorPlan::factory()->create();
-    // Round 4-seat default: 8x8, Round 8-seat default: 12x12
-    // Scale factor: 12/8 = 1.5
+    // Round 4-seat default: 5.4x5.4, Round 8-seat default: 8.0x8.0
+    // Scale factor: 8.0/5.4 ≈ 1.481
     $element = FloorPlanElement::factory()->create([
         'floor_plan_id' => $plan->id,
         'shape' => 'round',
         'seat_count' => 4,
-        'width' => 8.0,
-        'height' => 8.0,
+        'width' => 5.4,
+        'height' => 5.4,
         'table_name' => 'Table 1',
     ]);
 
@@ -187,9 +187,9 @@ it('proportionally scales element when seat count changes', function () {
         ->call('saveChanges');
 
     $element->refresh();
-    // 8 * (12/8) = 12
-    expect($element->width)->toBe(12.0);
-    expect($element->height)->toBe(12.0);
+    // 5.4 * (8.0/5.4) = 8.0
+    expect($element->width)->toBe(8.0);
+    expect($element->height)->toBe(8.0);
     expect($element->seat_count)->toBe(8);
 });
 

@@ -4,21 +4,21 @@ return [
     'round' => [
         'label' => 'Round Table',
         'variants' => [
-            2 => ['width' => 6.0, 'height' => 6.0],
-            4 => ['width' => 8.0, 'height' => 8.0],
-            6 => ['width' => 10.0, 'height' => 10.0],
-            8 => ['width' => 12.0, 'height' => 12.0],
-            10 => ['width' => 14.0, 'height' => 14.0],
+            2 => ['width' => 2.8, 'height' => 4.0],
+            4 => ['width' => 5.4, 'height' => 5.4],
+            6 => ['width' => 6.8, 'height' => 6.8],
+            8 => ['width' => 8.0, 'height' => 8.0],
+            10 => ['width' => 9.2, 'height' => 9.2],
         ],
     ],
     'rectangular' => [
         'label' => 'Rectangular Table',
         'variants' => [
-            2 => ['width' => 8.0, 'height' => 5.0],
-            4 => ['width' => 10.0, 'height' => 6.0],
-            6 => ['width' => 12.0, 'height' => 6.0],
-            8 => ['width' => 14.0, 'height' => 7.0],
-            10 => ['width' => 16.0, 'height' => 7.0],
+            2 => ['width' => 4.9, 'height' => 3.4],
+            4 => ['width' => 6.1, 'height' => 4.2],
+            6 => ['width' => 7.4, 'height' => 5.1],
+            8 => ['width' => 11.2, 'height' => 6.0],
+            10 => ['width' => 12.8, 'height' => 6.8],
         ],
     ],
 ];

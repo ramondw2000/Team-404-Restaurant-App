@@ -269,21 +269,21 @@
                                 class="absolute select-none group"
                                 :class="{ 'ring-2 ring-blue-500 ring-offset-1': $wire.selectedElementId == elementId }"
                                 :style="positionStyle"
-                                @click="$wire.selectElement({{ $elementId }})"
+                                @click="hitsSvgContent($event) && $wire.selectElement({{ $elementId }})"
                                 @element-zindex-updated.window="if ($event.detail.id == elementId) zIndex = $event.detail.zIndex"
                                 @else
-                                    x-data="{{ json_encode(['el' => ['table_name' => $element['table_name'], 'status' => $element['status'] ?? null, 'seat_count' => $element['seat_count'] ?? null]]) }}"
+                                    x-data="{ ...viewElementSvg('{{ $element['image_path'] }}'), el: {{ json_encode(['table_name' => $element['table_name'], 'status' => $element['status'] ?? null, 'seat_count' => $element['seat_count'] ?? null]) }} }"
                                 class="absolute select-none group transition-opacity cursor-pointer"
                                 style="left:{{ $element['x'] }}%;top:{{ $element['y'] }}%;width:{{ $element['width'] }}%;height:{{ $element['height'] }}%;transform:rotate({{ $element['rotation'] }}deg);z-index:{{ $element['z_index'] }};"
                                 :class="{
                                         'opacity-20': $store.filters.active && !$store.filters.matches(el),
                                         'ring-2 ring-cyan-400 ring-offset-1': $store.filters.active && $store.filters.matches(el)
                                     }"
-                                @click.stop="$wire.openTableSheet({{ $element['id'] }})"
+                                @click.stop="hitsSvgContent($event) && $wire.openTableSheet({{ $element['id'] }})"
                                 @endif
                             >
-                                {{-- Element Image (direct render — no crop needed) --}}
-                                <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                                {{-- Element SVG (loaded inline for pixel-precise hit testing) --}}
+                                <div class="absolute inset-0 overflow-hidden pointer-events-none" data-svg-container wire:ignore>
                                     <img
                                         src="{{ $element['image_path'] }}"
                                         alt="{{ $element['table_name'] ?? 'Table' }}"
