@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Dishes\DishesPage;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 
@@ -10,18 +11,10 @@ beforeEach(function () {
     $this->actingAs($this->user);
 });
 
-it('DishController passes dishes and allergenConfig to the dishes view', function () {
+it('dishes page renders as Livewire component', function () {
     $response = $this->get(route('dishes'));
-
     $response->assertOk();
-    $response->assertViewHas('dishes');
-    $response->assertViewHas('allergenConfig');
-
-    $dishes = $response->viewData('dishes');
-    $allergenConfig = $response->viewData('allergenConfig');
-
-    expect($dishes)->toBeArray()->not->toBeEmpty();
-    expect($allergenConfig)->toBeArray()->toHaveKeys(['gluten', 'nuts', 'milk', 'wheat', 'fish', 'egg']);
+    $response->assertSeeLivewire(DishesPage::class);
 });
 
 it('OrderManagementController passes dishes, allergenConfig, tables, and categories', function () {
@@ -65,12 +58,10 @@ it('AccountController passes users, roleConfig, and counts', function () {
     expect($counts)->toBeArray()->toHaveKeys(['all', 'management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew']);
 });
 
-it('allergenConfig is consistent across all controllers using shared config', function () {
-    $dishResponse = $this->get(route('dishes'));
+it('allergenConfig is consistent across controllers using shared config', function () {
     $orderMgmtResponse = $this->get(route('ordermanagement'));
     $kitchenResponse = $this->get(route('kitchen-orders'));
 
-    expect($dishResponse->viewData('allergenConfig'))
-        ->toBe($orderMgmtResponse->viewData('allergenConfig'))
+    expect($orderMgmtResponse->viewData('allergenConfig'))
         ->toBe($kitchenResponse->viewData('allergenConfig'));
 });
