@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="53 33 94 134">
+  <!-- Table -->
+  <circle cx="100" cy="100" r="45" fill="#8B6914" />
+  <!-- Chair top -->
+  <path d="M 80,45 A 20,10 0 0,1 120,45" fill="#6B7280" />
+  <!-- Chair bottom -->
+  <path d="M 80,155 A 20,10 0 0,0 120,155" fill="#6B7280" />
+</svg>

@@ -4,7 +4,7 @@ import interact from 'interactjs';
 
 window.interact = interact;
 
-// Table filter store — shared state across the canvas
+// ─── Table filter store — shared state across the canvas ───────────────────
 document.addEventListener('alpine:init', () => {
     window.Alpine.store('filters', {
         statuses: [],
@@ -25,7 +25,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         matches(el) {
-            if (!el.is_table) return false;
             const nameOk = this.name === ''
                 || (el.table_name || '').toLowerCase().includes(this.name.toLowerCase());
             const statusOk = this.statuses.length === 0
@@ -43,33 +42,186 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
-// Canvas pan & zoom Alpine component
+// ─── Inline SVG loader ─────────────────────────────────────────────────────
+// Fetches an SVG file and injects it as inline markup so pointer-events can
+// target only the painted (non-transparent) areas of the graphic.
+
+const svgCache = new Map();
+
+/**
+ * Load an SVG from a URL and inject it inline into the given container.
+ * The resulting <svg> element gets pointer-events: visiblePainted so only
+ * the drawn shapes respond to clicks — transparent areas pass through.
+ *
+ * @param {HTMLElement} container - Element to inject SVG into
+ * @param {string} src           - URL of the SVG file
+ */
+/**
+ * Load an SVG from a URL and inject it inline into the given container.
+ * Returns the viewBox aspect ratio so callers can resize their container
+ * to match, ensuring the SVG fills it with no letterboxing or distortion.
+ *
+ * @param {HTMLElement} container
+ * @param {string} src
+ * @returns {Promise<{aspectRatio: number}|null>}
+ */
+async function loadInlineSvg(container, src) {
+    if (!src) return null;
+
+    try {
+        let svgText;
+        if (svgCache.has(src)) {
+            svgText = svgCache.get(src);
+        } else {
+            const response = await fetch(src);
+            svgText = await response.text();
+            svgCache.set(src, svgText);
+        }
+
+        container.innerHTML = svgText;
+        const svg = container.querySelector('svg');
+        if (svg) {
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.pointerEvents = 'visiblePainted';
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
+
+            const vb = svg.viewBox.baseVal;
+            if (vb && vb.width > 0 && vb.height > 0) {
+                return { aspectRatio: vb.width / vb.height };
+            }
+        }
+    } catch {
+        container.innerHTML = `<img src="${src}" class="w-full h-full object-contain" style="pointer-events:none" draggable="false">`;
+    }
+    return null;
+}
+
+// ─── Snap guide system ─────────────────────────────────────────────────────
+
+const SNAP_THRESHOLD_PX = 5;
+
+/**
+ * @param {object} moving      - { x, y, width, height } in % of canvas
+ * @param {string} movingId    - element ID of the moving element
+ * @param {HTMLElement} canvas - [data-canvas-inner] element
+ * @returns {{ dx: number, dy: number, guides: Array<{axis:'x'|'y', position:number}> }}
+ */
+function computeSnap(moving, movingId, canvas) {
+    const canvasRect = canvas.getBoundingClientRect();
+    const result = { dx: 0, dy: 0, guides: [] };
+
+    const others = canvas.querySelectorAll('[data-element-id]');
+    const otherEdges = { x: [], y: [] };
+
+    others.forEach(el => {
+        const id = el.dataset.elementId;
+        if (id == movingId) return;
+
+        const style = el.style;
+        const left = parseFloat(style.left) || 0;
+        const top = parseFloat(style.top) || 0;
+        const width = parseFloat(style.width) || 0;
+        const height = parseFloat(style.height) || 0;
+
+        otherEdges.x.push(left, left + width);
+        otherEdges.y.push(top, top + height);
+    });
+
+    const movingEdgesX = [moving.x, moving.x + moving.width];
+    const movingEdgesY = [moving.y, moving.y + moving.height];
+
+    const thresholdX = (SNAP_THRESHOLD_PX / canvasRect.width) * 100;
+    const thresholdY = (SNAP_THRESHOLD_PX / canvasRect.height) * 100;
+
+    let bestDx = Infinity;
+    let snapGuideX = null;
+    for (const me of movingEdgesX) {
+        for (const oe of otherEdges.x) {
+            const diff = oe - me;
+            if (Math.abs(diff) < Math.abs(bestDx) && Math.abs(diff) <= thresholdX) {
+                bestDx = diff;
+                snapGuideX = oe;
+            }
+        }
+    }
+    if (snapGuideX !== null) {
+        result.dx = bestDx;
+        result.guides.push({ axis: 'x', position: snapGuideX });
+    }
+
+    let bestDy = Infinity;
+    let snapGuideY = null;
+    for (const me of movingEdgesY) {
+        for (const oe of otherEdges.y) {
+            const diff = oe - me;
+            if (Math.abs(diff) < Math.abs(bestDy) && Math.abs(diff) <= thresholdY) {
+                bestDy = diff;
+                snapGuideY = oe;
+            }
+        }
+    }
+    if (snapGuideY !== null) {
+        result.dy = bestDy;
+        result.guides.push({ axis: 'y', position: snapGuideY });
+    }
+
+    return result;
+}
+
+function renderGuides(container, guides) {
+    if (!container) return;
+    container.innerHTML = '';
+
+    for (const guide of guides) {
+        const line = document.createElement('div');
+        line.style.position = 'absolute';
+        line.style.backgroundColor = '#22d3ee';
+        line.style.zIndex = '9000';
+
+        if (guide.axis === 'x') {
+            line.style.left = `${guide.position}%`;
+            line.style.top = '0';
+            line.style.width = '1px';
+            line.style.height = '100%';
+        } else {
+            line.style.top = `${guide.position}%`;
+            line.style.left = '0';
+            line.style.height = '1px';
+            line.style.width = '100%';
+        }
+
+        container.appendChild(line);
+    }
+}
+
+function clearGuides(canvas) {
+    const container = canvas?.querySelector('[data-snap-guides]');
+    if (container) container.innerHTML = '';
+}
+
+// ─── Canvas pan & zoom Alpine component ────────────────────────────────────
 window.canvasApp = function () {
     return {
-        // Pan state
         panX: 0,
         panY: 0,
         isPanning: false,
         panStartX: 0,
         panStartY: 0,
-        lastPanX: 0,
-        lastPanY: 0,
 
-        // Zoom state
         scale: 1,
         minScale: 0.2,
         maxScale: 4,
 
-        // Touch state
         lastTouchDistance: null,
 
-        // Context menu state
         menuShow: false,
         menuX: 0,
         menuY: 0,
         menuTargetId: null,
 
-        // Canvas inner dimensions (computed to match image aspect ratio)
         canvasInnerW: 0,
         canvasInnerH: 0,
         canvasInnerLeft: 0,
@@ -119,7 +271,6 @@ window.canvasApp = function () {
             const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
             const newScale = Math.min(this.maxScale, Math.max(this.minScale, this.scale * zoomFactor));
 
-            // Zoom towards cursor position using correct formula for translate+scale(origin:top-left)
             const rect = this.$el.getBoundingClientRect();
             const mouseX = event.clientX - rect.left;
             const mouseY = event.clientY - rect.top;
@@ -130,7 +281,6 @@ window.canvasApp = function () {
         },
 
         onMouseDown(event) {
-            // Only pan on empty canvas (middle click or left click on background)
             if (event.button === 1 || event.target === event.currentTarget || event.target.dataset.pannable === 'true') {
                 this.isPanning = true;
                 this.panStartX = event.clientX - this.panX;
@@ -201,7 +351,7 @@ window.canvasApp = function () {
     };
 };
 
-// Canvas element (draggable/resizable/rotatable) Alpine component
+// ─── Canvas element (draggable/resizable/rotatable) Alpine component ───────
 window.canvasElement = function (elementData) {
     return {
         elementId: elementData.id,
@@ -211,10 +361,19 @@ window.canvasElement = function (elementData) {
         height: elementData.height,
         rotation: elementData.rotation,
         zIndex: elementData.z_index,
-        isTable: elementData.is_table,
         tableName: elementData.table_name || '',
+        seatCount: elementData.seat_count,
         statusValue: elementData.status || '',
+        imagePath: elementData.image_path || '',
         isDirty: false,
+
+        // Raw (unsnapped) position — tracks the cursor exactly.
+        // The display x/y snap to edges; rawX/rawY do not.
+        // This prevents the "sticky snap" problem where applying snap
+        // corrections to the already-snapped position makes it impossible
+        // to drag away without overshooting the threshold.
+        rawX: elementData.x,
+        rawY: elementData.y,
 
         get positionStyle() {
             return `left:${this.x}%;top:${this.y}%;width:${this.width}%;height:${this.height}%;transform:rotate(${this.rotation}deg);z-index:${this.zIndex};`;
@@ -230,14 +389,61 @@ window.canvasElement = function (elementData) {
         },
 
         init() {
+            this.loadSvg();
             this.setupInteract();
             window.addEventListener('element-properties-updated', (event) => {
-                if (event.detail.id === this.elementId) {
-                    this.isTable = event.detail.isTable;
+                if (event.detail.id == this.elementId) {
                     this.tableName = event.detail.tableName || '';
+                    this.seatCount = event.detail.seatCount;
                     this.statusValue = event.detail.status || '';
+                    if (event.detail.width != null) this.width = event.detail.width;
+                    if (event.detail.height != null) this.height = event.detail.height;
+                    if (event.detail.imagePath) {
+                        this.imagePath = event.detail.imagePath;
+                        this.loadSvg();
+                    }
                 }
             });
+        },
+
+        async loadSvg() {
+            const container = this.$el.querySelector('[data-svg-container]');
+            if (!container || !this.imagePath) return;
+
+            const result = await loadInlineSvg(container, this.imagePath);
+            if (result?.aspectRatio) {
+                this.matchAspectRatio(result.aspectRatio);
+            }
+        },
+
+        /**
+         * Adjust element height so the container matches the SVG's
+         * natural aspect ratio — eliminates letterboxing and distortion.
+         */
+        matchAspectRatio(svgRatio) {
+            const canvas = this.$el.closest('[data-canvas-inner]');
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+
+            const wPx = (this.width / 100) * rect.width;
+            const hPx = (this.height / 100) * rect.height;
+            const containerRatio = wPx / hPx;
+
+            if (Math.abs(containerRatio - svgRatio) < 0.05) return;
+
+            const newHPx = wPx / svgRatio;
+            const newH = (newHPx / rect.height) * 100;
+
+            this.y += (this.height - newH) / 2;
+            this.height = newH;
+        },
+
+        /**
+         * Check whether a click event originated from visible SVG content
+         * (as opposed to transparent space around the graphic).
+         */
+        hitsSvgContent(event) {
+            return !!event.target.closest('svg');
         },
 
         setupInteract() {
@@ -245,61 +451,60 @@ window.canvasElement = function (elementData) {
             const self = this;
 
             const getCanvas = () => el.closest('[data-canvas-inner]');
+            const isSnapEnabled = () => {
+                const canvasOuter = el.closest('[data-snap-enabled]');
+                return canvasOuter?.dataset.snapEnabled === 'true';
+            };
 
             interact(el)
                 .draggable({
-                    mouseButtons: 1, // left-click only
+                    mouseButtons: 1,
                     ignoreFrom: '[data-rotate-handle]',
                     listeners: {
+                        start() {
+                            // Sync raw position to current display position at drag start
+                            self.rawX = self.x;
+                            self.rawY = self.y;
+                        },
                         move(event) {
                             const canvas = getCanvas();
                             if (!canvas) return;
                             const canvasRect = canvas.getBoundingClientRect();
                             const dx = (event.dx / canvasRect.width) * 100;
                             const dy = (event.dy / canvasRect.height) * 100;
-                            self.x = Math.max(0, Math.min(100 - self.width, self.x + dx));
-                            self.y = Math.max(0, Math.min(100 - self.height, self.y + dy));
-                            self.isDirty = true;
-                        },
-                        end() {
-                            if (self.isDirty) {
-                                self.syncToLivewire();
-                            }
-                        },
-                    },
-                })
-                .resizable({
-                    mouseButtons: 1, // left-click only
-                    ignoreFrom: '[data-rotate-handle]',
-                    edges: { left: true, right: true, bottom: true, top: true },
-                    margin: 8,
-                    listeners: {
-                        move(event) {
-                            const canvas = getCanvas();
-                            if (!canvas) return;
-                            const canvasRect = canvas.getBoundingClientRect();
-                            const dw = (event.deltaRect.width / canvasRect.width) * 100;
-                            const dh = (event.deltaRect.height / canvasRect.height) * 100;
-                            const dleft = (event.deltaRect.left / canvasRect.width) * 100;
-                            const dtop = (event.deltaRect.top / canvasRect.height) * 100;
 
-                            self.width = Math.max(2, self.width + dw);
-                            self.height = Math.max(2, self.height + dh);
-                            self.x += dleft;
-                            self.y += dtop;
+                            // Always advance the raw (unsnapped) position by the cursor delta
+                            self.rawX = Math.max(0, Math.min(100 - self.width, self.rawX + dx));
+                            self.rawY = Math.max(0, Math.min(100 - self.height, self.rawY + dy));
+
+                            if (isSnapEnabled()) {
+                                // Snap is computed against the raw position, so the
+                                // cursor must actually move past the threshold to escape.
+                                const snap = computeSnap(
+                                    { x: self.rawX, y: self.rawY, width: self.width, height: self.height },
+                                    self.elementId,
+                                    canvas,
+                                );
+                                self.x = Math.max(0, Math.min(100 - self.width, self.rawX + snap.dx));
+                                self.y = Math.max(0, Math.min(100 - self.height, self.rawY + snap.dy));
+                                renderGuides(canvas.querySelector('[data-snap-guides]'), snap.guides);
+                            } else {
+                                self.x = self.rawX;
+                                self.y = self.rawY;
+                            }
+
                             self.isDirty = true;
                         },
                         end() {
+                            clearGuides(getCanvas());
+                            // Reconcile raw position with snapped position for next drag
+                            self.rawX = self.x;
+                            self.rawY = self.y;
                             if (self.isDirty) {
                                 self.syncToLivewire();
                             }
                         },
                     },
-                    modifiers: [
-                        interact.modifiers.restrictSize({
-                            min: { width: 20, height: 20 },
-                        }),
-                    ],
                 });
         },
 
@@ -321,10 +526,6 @@ window.canvasElement = function (elementData) {
 
             const freeRotate = event.shiftKey || event.altKey;
 
-            // Compute element center from canvas-relative percentages so rotation is
-            // stable regardless of the element's current CSS transform (bounding rect
-            // of a rotated element still returns the same center, but this avoids
-            // any ambiguity and works correctly when the canvas is panned/zoomed).
             const canvasInner = this.$el.closest('[data-canvas-inner]');
             const canvasRect = canvasInner
                 ? canvasInner.getBoundingClientRect()
@@ -337,7 +538,6 @@ window.canvasElement = function (elementData) {
                 ? canvasRect.top + (this.y + this.height / 2) / 100 * canvasRect.height
                 : canvasRect.top + canvasRect.height / 2;
 
-            // Capture the angle at drag start so rotation is delta-based (no jump).
             const startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI);
             const startRotation = this.rotation;
 
@@ -365,78 +565,51 @@ window.canvasElement = function (elementData) {
     };
 };
 
-// Crop tool Alpine component
-window.cropTool = function (initialCrop) {
+// ─── View-mode inline SVG loader ───────────────────────────────────────────
+// Used on view-mode elements (which don't have the canvasElement Alpine data).
+window.viewElementSvg = function (src) {
     return {
-        cropX: initialCrop?.x ?? 0,
-        cropY: initialCrop?.y ?? 0,
-        cropW: initialCrop?.w ?? 100,
-        cropH: initialCrop?.h ?? 100,
+        async init() {
+            const container = this.$el.querySelector('[data-svg-container]');
+            if (!container || !src) return;
 
-        get cropStyle() {
-            return `left:${this.cropX}%;top:${this.cropY}%;width:${this.cropW}%;height:${this.cropH}%;`;
+            const result = await loadInlineSvg(container, src);
+            if (result?.aspectRatio) {
+                this.matchAspectRatio(result.aspectRatio);
+            }
         },
 
-        get overlayStyle() {
-            return `left:${this.cropX}%;top:${this.cropY}%;width:${this.cropW}%;height:${this.cropH}%;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);`;
+        /**
+         * Adjust the element's inline style so its height matches the
+         * SVG's natural aspect ratio — no letterboxing, no distortion.
+         */
+        matchAspectRatio(svgRatio) {
+            const canvas = this.$el.closest('[data-canvas-inner]');
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+
+            const w = parseFloat(this.$el.style.width);
+            const h = parseFloat(this.$el.style.height);
+            const wPx = (w / 100) * rect.width;
+            const hPx = (h / 100) * rect.height;
+            const containerRatio = wPx / hPx;
+
+            if (Math.abs(containerRatio - svgRatio) < 0.05) return;
+
+            const newHPx = wPx / svgRatio;
+            const newH = (newHPx / rect.height) * 100;
+
+            this.$el.style.top = `${parseFloat(this.$el.style.top) + (h - newH) / 2}%`;
+            this.$el.style.height = `${newH}%`;
         },
 
-        startDrag(handle, event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            // Capture image rect once at drag start — avoids needing $el in move handler
-            const preview = event.target.closest('[data-crop-preview-container]')?.querySelector('[data-crop-preview]')
-                ?? document.querySelector('[data-crop-preview]');
-            if (!preview) return;
-
-            const previewRect = preview.getBoundingClientRect();
-            const startX = event.clientX;
-            const startY = event.clientY;
-            const startCrop = { x: this.cropX, y: this.cropY, w: this.cropW, h: this.cropH };
-            const MIN = 5;
-
-            const onMove = (e) => {
-                const dx = (e.clientX - startX) / previewRect.width * 100;
-                const dy = (e.clientY - startY) / previewRect.height * 100;
-                const { x: ox, y: oy, w: ow, h: oh } = startCrop;
-
-                if (handle === 'move') {
-                    this.cropX = Math.max(0, Math.min(100 - ow, ox + dx));
-                    this.cropY = Math.max(0, Math.min(100 - oh, oy + dy));
-                    return;
-                }
-
-                let x = ox, y = oy, w = ow, h = oh;
-                if (handle.includes('e')) { w = Math.max(MIN, Math.min(100 - x, ow + dx)); }
-                if (handle.includes('s')) { h = Math.max(MIN, Math.min(100 - y, oh + dy)); }
-                if (handle.includes('w')) {
-                    const nx = Math.max(0, Math.min(ox + ow - MIN, ox + dx));
-                    w = ow + ox - nx; x = nx;
-                }
-                if (handle.includes('n')) {
-                    const ny = Math.max(0, Math.min(oy + oh - MIN, oy + dy));
-                    h = oh + oy - ny; y = ny;
-                }
-                this.cropX = x; this.cropY = y; this.cropW = w; this.cropH = h;
-            };
-
-            const onUp = () => {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-            };
-
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-        },
-
-        reset() {
-            this.cropX = 0; this.cropY = 0; this.cropW = 100; this.cropH = 100;
+        hitsSvgContent(event) {
+            return !!event.target.closest('svg');
         },
     };
 };
 
-// Context menu Alpine component
+// ─── Context menu Alpine component ─────────────────────────────────────────
 window.contextMenu = function () {
     return {
         show: false,
@@ -456,15 +629,4 @@ window.contextMenu = function () {
             this.targetElementId = null;
         },
     };
-};
-
-// Drag from library to canvas
-window.setupLibraryDrag = function (imageId, wireComponent) {
-    const thumbnails = document.querySelectorAll(`[data-image-id="${imageId}"]`);
-    thumbnails.forEach(thumbnail => {
-        thumbnail.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('image-id', imageId);
-            e.dataTransfer.effectAllowed = 'copy';
-        });
-    });
 };

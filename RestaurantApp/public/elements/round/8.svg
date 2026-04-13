@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="33 33 134 134">
+  <!-- Table -->
+  <circle cx="100" cy="100" r="45" fill="#8B6914" />
+  <!-- 8 chairs evenly spaced at 45 degree intervals -->
+  <g transform="rotate(0, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(45, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(90, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(135, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(180, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(225, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(270, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(315, 100, 100)">
+    <path d="M 87,42 A 13,7 0 0,1 113,42" fill="#6B7280" />
+  </g>
+</svg>
