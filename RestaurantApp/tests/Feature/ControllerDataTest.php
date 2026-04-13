@@ -1,6 +1,10 @@
 <?php
 
 use App\Livewire\Dishes\DishesPage;
+use App\Models\Dish;
+use App\Models\FloorPlanElement;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 
@@ -31,6 +35,11 @@ it('OrderManagementController passes dishes, allergenConfig, tables, and categor
 });
 
 it('KitchenOrderController passes orders and computed counts', function () {
+    $element = FloorPlanElement::factory()->create();
+    $dish    = Dish::factory()->create();
+    $order   = Order::factory()->active()->create(['floor_plan_element_id' => $element->id]);
+    OrderItem::factory()->create(['order_id' => $order->id, 'dish_id' => $dish->id]);
+
     $response = $this->get(route('kitchen-orders'));
 
     $response->assertOk();

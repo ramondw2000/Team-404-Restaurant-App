@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
 use App\Livewire\Dishes\DishesPage;
+use App\Livewire\Orders\OrderPage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -51,6 +52,14 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders');
 
+    Route::patch('/kitchenorders/items/{orderItem}/ready', [KitchenOrderController::class, 'markDishReady'])
+        ->middleware('permission:Mark Orders Ready')
+        ->name('kitchen-orders.dish.ready');
+
+    Route::patch('/kitchenorders/orders/{order}/complete', [KitchenOrderController::class, 'completeOrder'])
+        ->middleware('permission:Mark Orders Ready')
+        ->name('kitchen-orders.order.complete');
+
     Route::get('/reservations', [ReservationController::class, 'index'])
         ->middleware('permission:View Reservations')
         ->name('reservations.index');
@@ -70,6 +79,10 @@ Route::middleware('auth')->group(function () {
     Route::livewire('/dishes', DishesPage::class)
         ->middleware('permission:View Dishes')
         ->name('dishes');
+
+    Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
+        ->middleware('permission:Create Order')
+        ->name('orders.create');
 });
 
 require __DIR__.'/auth.php';

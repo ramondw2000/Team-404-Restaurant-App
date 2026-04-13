@@ -754,8 +754,55 @@
                 </div>
 
                 {{-- Sheet Footer --}}
-                <div class="p-5 border-t border-gray-100">
-                    <p class="text-xs text-gray-400 text-center">Changes are saved automatically</p>
+                <div class="p-5 border-t border-gray-100 flex flex-col gap-3">
+                    @can('Create Order')
+                        <x-ui.button
+                            wire:click="acceptOrder({{ $tableEl['id'] }})"
+                            class="w-full justify-center"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            Accept Order
+                        </x-ui.button>
+                    @endcan
+                    <p class="text-xs text-gray-400 text-center">Status changes are saved automatically</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== RESUME / NEW ORDER CONFIRMATION ===== --}}
+    @if($showResumeOrderConfirm)
+        <div wire:key="resume-order-confirm" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="dismissResumeConfirm"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" @click.stop>
+                <div class="flex items-start gap-4 mb-5">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 shrink-0">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-900">Existing Draft Order</h3>
+                        <p class="mt-1 text-sm text-gray-500">A draft order already exists for this table — resume it or start a new one?</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <x-ui.button wire:click="resumeOrder" class="w-full justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Resume Draft Order
+                    </x-ui.button>
+                    <x-ui.button variant="danger" wire:click="startNewOrder" class="w-full justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                        Start New Order
+                    </x-ui.button>
+                    <x-ui.button variant="secondary" wire:click="dismissResumeConfirm" class="w-full justify-center">
+                        Cancel
+                    </x-ui.button>
                 </div>
             </div>
         </div>
