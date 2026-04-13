@@ -10,23 +10,23 @@ class MaintenanceTaskSeeder extends Seeder
     public function run(): void
     {
         $pending = [
-            'Reparatie koelkast in keuken',
-            'Vervanging lamp boven tafel 12',
-            'Controle brandmelders restaurant',
-            'Reparatie deurslot personeelsingang',
-            'Onderhoud espressomachine',
-            'Onderhoud vaatwasser',
-            'Reparatie terrasverwarming',
-            'Vervanging tafelkleed tafel 5',
-            'Reparatie wijnkoeler',
+            'Repair kitchen fridge',
+            'Replace lamp above table 12',
+            'Inspect restaurant fire alarms',
+            'Repair staff entrance door lock',
+            'Service espresso machine',
+            'Service dishwasher',
+            'Repair terrace heater',
+            'Replace tablecloth table 5',
+            'Repair wine cooler',
         ];
 
         $completed = [
-            ['name' => 'Lekkage kraan bij bar', 'notes' => 'Kraan vervangen, probleem opgelost'],
-            ['name' => 'Schoonmaak afzuigkap keuken', 'notes' => 'Afzuigkap gereinigd en filters vervangen'],
-            ['name' => 'Reparatie stoel tafel 8', 'notes' => 'Stoel poot vastgezet'],
-            ['name' => 'Controle nooduitgang restaurant', 'notes' => 'Nooduitgang gecontroleerd, werkt correct'],
-            ['name' => 'Schoonmaak vloer keuken', 'notes' => 'Vloer grondig gereinigd en ontsmet'],
+            ['name' => 'Fix leaking tap at bar', 'notes' => 'Tap replaced, problem resolved'],
+            ['name' => 'Clean kitchen exhaust hood', 'notes' => 'Hood cleaned and filters replaced'],
+            ['name' => 'Repair chair at table 8', 'notes' => 'Chair leg tightened'],
+            ['name' => 'Inspect restaurant emergency exit', 'notes' => 'Emergency exit checked, working correctly'],
+            ['name' => 'Clean kitchen floor', 'notes' => 'Floor thoroughly cleaned and disinfected'],
         ];
 
         foreach ($pending as $name) {

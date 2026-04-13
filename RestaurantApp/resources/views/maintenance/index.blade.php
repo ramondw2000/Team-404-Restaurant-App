@@ -8,6 +8,7 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,900&display=swap" rel="stylesheet" />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
         <style>
             [x-cloak] { display: none !important; }
         </style>
@@ -59,8 +60,22 @@
                                     <td class="px-3 py-2 whitespace-nowrap">
                                         <span class="text-sm text-slate-600">{{ $task->created_at->format('M d, Y') }}</span>
                                     </td>
-                                    <td class="px-3 py-2">
-                                        <span class="text-sm text-slate-600">{{ $task->notes ?? '—' }}</span>
+                                    <td class="px-3 py-2" x-data="{ editing: false, notes: '{{ addslashes($task->notes ?? '') }}' }">
+                                        <div x-show="!editing" class="flex items-center gap-1 cursor-pointer group" @click="editing = true">
+                                            <span class="text-sm text-slate-600">{{ $task->notes ?? '—' }}</span>
+                                            <svg class="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                            </svg>
+                                        </div>
+                                        <form x-show="editing" x-cloak method="POST" action="{{ route('maintenance.updateNotes', $task) }}" class="flex items-center gap-1">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="text" name="notes" x-model="notes" x-ref="notesInput" @keydown.escape="editing = false"
+                                                class="w-full text-sm border border-slate-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-slate-600"
+                                                x-init="$watch('editing', v => { if (v) $nextTick(() => $refs.notesInput.focus()) })">
+                                            <button type="submit" class="px-2 py-1 text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 rounded transition">Save</button>
+                                            <button type="button" @click="editing = false" class="px-2 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition">Cancel</button>
+                                        </form>
                                     </td>
                                     <td class="px-3 py-2">
                                         <div class="flex items-center gap-2">
@@ -112,8 +127,22 @@
                                     <td class="px-3 py-2 whitespace-nowrap">
                                         <span class="text-sm text-slate-600">{{ $task->updated_at->format('M d, Y') }}</span>
                                     </td>
-                                    <td class="px-3 py-2">
-                                        <span class="text-sm text-slate-600">{{ $task->notes ?? '—' }}</span>
+                                    <td class="px-3 py-2" x-data="{ editing: false, notes: '{{ addslashes($task->notes ?? '') }}' }">
+                                        <div x-show="!editing" class="flex items-center gap-1 cursor-pointer group" @click="editing = true">
+                                            <span class="text-sm text-slate-600">{{ $task->notes ?? '—' }}</span>
+                                            <svg class="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                            </svg>
+                                        </div>
+                                        <form x-show="editing" x-cloak method="POST" action="{{ route('maintenance.updateNotes', $task) }}" class="flex items-center gap-1">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="text" name="notes" x-model="notes" x-ref="notesInput" @keydown.escape="editing = false"
+                                                class="w-full text-sm border border-slate-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-400 focus:border-blue-400 text-slate-600"
+                                                x-init="$watch('editing', v => { if (v) $nextTick(() => $refs.notesInput.focus()) })">
+                                            <button type="submit" class="px-2 py-1 text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 rounded transition">Save</button>
+                                            <button type="button" @click="editing = false" class="px-2 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition">Cancel</button>
+                                        </form>
                                     </td>
                                     <td class="px-3 py-2">
                                         <span class="px-2 py-1 text-xs font-medium rounded text-green-700 bg-green-50">Done</span>
@@ -126,5 +155,6 @@
             </div>
 
         </div>
+        @livewireScripts
     </body>
 </html>
