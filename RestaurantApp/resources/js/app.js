@@ -4,7 +4,7 @@ import interact from 'interactjs';
 
 window.interact = interact;
 
-// Table filter store — shared state across the canvas
+// ─── Table filter store — shared state across the canvas ───────────────────
 document.addEventListener('alpine:init', () => {
     window.Alpine.store('filters', {
         statuses: [],
@@ -25,7 +25,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         matches(el) {
-            if (!el.is_table) return false;
             const nameOk = this.name === ''
                 || (el.table_name || '').toLowerCase().includes(this.name.toLowerCase());
             const statusOk = this.statuses.length === 0
@@ -43,7 +42,130 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
-// Canvas pan & zoom Alpine component
+// ─── Snap guide system ─────────────────────────────────────────────────────
+
+/**
+ * Edge alignment snap logic. Compares a dragging element's four edges against
+ * all other elements' edges and returns snap deltas + guide line positions.
+ */
+const SNAP_THRESHOLD_PX = 5;
+
+/**
+ * @param {object} moving      - { x, y, width, height } in % of canvas
+ * @param {string} movingId    - element ID of the moving element
+ * @param {HTMLElement} canvas - [data-canvas-inner] element
+ * @returns {{ dx: number, dy: number, guides: Array<{axis:'x'|'y', position:number}> }}
+ */
+function computeSnap(moving, movingId, canvas) {
+    const canvasRect = canvas.getBoundingClientRect();
+    const result = { dx: 0, dy: 0, guides: [] };
+
+    // Collect edges of all other elements
+    const others = canvas.querySelectorAll('[data-element-id]');
+    const otherEdges = { x: [], y: [] };
+
+    others.forEach(el => {
+        const id = el.dataset.elementId;
+        if (id == movingId) return;
+
+        // Read percentages from the Alpine component's position style
+        const style = el.style;
+        const left = parseFloat(style.left) || 0;
+        const top = parseFloat(style.top) || 0;
+        const width = parseFloat(style.width) || 0;
+        const height = parseFloat(style.height) || 0;
+
+        otherEdges.x.push(left, left + width);
+        otherEdges.y.push(top, top + height);
+    });
+
+    // Moving element edges
+    const movingLeft = moving.x;
+    const movingRight = moving.x + moving.width;
+    const movingTop = moving.y;
+    const movingBottom = moving.y + moving.height;
+
+    const movingEdgesX = [movingLeft, movingRight];
+    const movingEdgesY = [movingTop, movingBottom];
+
+    // Convert threshold from px to % of canvas
+    const thresholdX = (SNAP_THRESHOLD_PX / canvasRect.width) * 100;
+    const thresholdY = (SNAP_THRESHOLD_PX / canvasRect.height) * 100;
+
+    // Find closest X snap
+    let bestDx = Infinity;
+    let snapGuideX = null;
+    for (const me of movingEdgesX) {
+        for (const oe of otherEdges.x) {
+            const diff = oe - me;
+            if (Math.abs(diff) < Math.abs(bestDx) && Math.abs(diff) <= thresholdX) {
+                bestDx = diff;
+                snapGuideX = oe;
+            }
+        }
+    }
+    if (snapGuideX !== null) {
+        result.dx = bestDx;
+        result.guides.push({ axis: 'x', position: snapGuideX });
+    }
+
+    // Find closest Y snap
+    let bestDy = Infinity;
+    let snapGuideY = null;
+    for (const me of movingEdgesY) {
+        for (const oe of otherEdges.y) {
+            const diff = oe - me;
+            if (Math.abs(diff) < Math.abs(bestDy) && Math.abs(diff) <= thresholdY) {
+                bestDy = diff;
+                snapGuideY = oe;
+            }
+        }
+    }
+    if (snapGuideY !== null) {
+        result.dy = bestDy;
+        result.guides.push({ axis: 'y', position: snapGuideY });
+    }
+
+    return result;
+}
+
+/**
+ * Render snap guide lines into the [data-snap-guides] container.
+ * @param {HTMLElement} container
+ * @param {Array<{axis:'x'|'y', position:number}>} guides
+ */
+function renderGuides(container, guides) {
+    if (!container) return;
+    container.innerHTML = '';
+
+    for (const guide of guides) {
+        const line = document.createElement('div');
+        line.style.position = 'absolute';
+        line.style.backgroundColor = '#22d3ee'; // cyan-400
+        line.style.zIndex = '9000';
+
+        if (guide.axis === 'x') {
+            line.style.left = `${guide.position}%`;
+            line.style.top = '0';
+            line.style.width = '1px';
+            line.style.height = '100%';
+        } else {
+            line.style.top = `${guide.position}%`;
+            line.style.left = '0';
+            line.style.height = '1px';
+            line.style.width = '100%';
+        }
+
+        container.appendChild(line);
+    }
+}
+
+function clearGuides(canvas) {
+    const container = canvas?.querySelector('[data-snap-guides]');
+    if (container) container.innerHTML = '';
+}
+
+// ─── Canvas pan & zoom Alpine component ────────────────────────────────────
 window.canvasApp = function () {
     return {
         // Pan state
@@ -52,8 +174,6 @@ window.canvasApp = function () {
         isPanning: false,
         panStartX: 0,
         panStartY: 0,
-        lastPanX: 0,
-        lastPanY: 0,
 
         // Zoom state
         scale: 1,
@@ -119,7 +239,6 @@ window.canvasApp = function () {
             const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
             const newScale = Math.min(this.maxScale, Math.max(this.minScale, this.scale * zoomFactor));
 
-            // Zoom towards cursor position using correct formula for translate+scale(origin:top-left)
             const rect = this.$el.getBoundingClientRect();
             const mouseX = event.clientX - rect.left;
             const mouseY = event.clientY - rect.top;
@@ -130,7 +249,6 @@ window.canvasApp = function () {
         },
 
         onMouseDown(event) {
-            // Only pan on empty canvas (middle click or left click on background)
             if (event.button === 1 || event.target === event.currentTarget || event.target.dataset.pannable === 'true') {
                 this.isPanning = true;
                 this.panStartX = event.clientX - this.panX;
@@ -201,7 +319,7 @@ window.canvasApp = function () {
     };
 };
 
-// Canvas element (draggable/resizable/rotatable) Alpine component
+// ─── Canvas element (draggable/resizable/rotatable) Alpine component ───────
 window.canvasElement = function (elementData) {
     return {
         elementId: elementData.id,
@@ -211,9 +329,10 @@ window.canvasElement = function (elementData) {
         height: elementData.height,
         rotation: elementData.rotation,
         zIndex: elementData.z_index,
-        isTable: elementData.is_table,
         tableName: elementData.table_name || '',
+        seatCount: elementData.seat_count,
         statusValue: elementData.status || '',
+        imagePath: elementData.image_path || '',
         isDirty: false,
 
         get positionStyle() {
@@ -232,10 +351,18 @@ window.canvasElement = function (elementData) {
         init() {
             this.setupInteract();
             window.addEventListener('element-properties-updated', (event) => {
-                if (event.detail.id === this.elementId) {
-                    this.isTable = event.detail.isTable;
+                if (event.detail.id == this.elementId) {
                     this.tableName = event.detail.tableName || '';
+                    this.seatCount = event.detail.seatCount;
                     this.statusValue = event.detail.status || '';
+                    if (event.detail.width != null) this.width = event.detail.width;
+                    if (event.detail.height != null) this.height = event.detail.height;
+                    if (event.detail.imagePath) {
+                        this.imagePath = event.detail.imagePath;
+                        // Swap the image src
+                        const img = this.$el.querySelector('img');
+                        if (img) img.src = event.detail.imagePath;
+                    }
                 }
             });
         },
@@ -245,10 +372,14 @@ window.canvasElement = function (elementData) {
             const self = this;
 
             const getCanvas = () => el.closest('[data-canvas-inner]');
+            const isSnapEnabled = () => {
+                const canvasOuter = el.closest('[data-snap-enabled]');
+                return canvasOuter?.dataset.snapEnabled === 'true';
+            };
 
             interact(el)
                 .draggable({
-                    mouseButtons: 1, // left-click only
+                    mouseButtons: 1,
                     ignoreFrom: '[data-rotate-handle]',
                     listeners: {
                         move(event) {
@@ -259,9 +390,23 @@ window.canvasElement = function (elementData) {
                             const dy = (event.dy / canvasRect.height) * 100;
                             self.x = Math.max(0, Math.min(100 - self.width, self.x + dx));
                             self.y = Math.max(0, Math.min(100 - self.height, self.y + dy));
+
+                            // Snap
+                            if (isSnapEnabled()) {
+                                const snap = computeSnap(
+                                    { x: self.x, y: self.y, width: self.width, height: self.height },
+                                    self.elementId,
+                                    canvas,
+                                );
+                                self.x = Math.max(0, Math.min(100 - self.width, self.x + snap.dx));
+                                self.y = Math.max(0, Math.min(100 - self.height, self.y + snap.dy));
+                                renderGuides(canvas.querySelector('[data-snap-guides]'), snap.guides);
+                            }
+
                             self.isDirty = true;
                         },
                         end() {
+                            clearGuides(getCanvas());
                             if (self.isDirty) {
                                 self.syncToLivewire();
                             }
@@ -269,7 +414,7 @@ window.canvasElement = function (elementData) {
                     },
                 })
                 .resizable({
-                    mouseButtons: 1, // left-click only
+                    mouseButtons: 1,
                     ignoreFrom: '[data-rotate-handle]',
                     edges: { left: true, right: true, bottom: true, top: true },
                     margin: 8,
@@ -287,9 +432,28 @@ window.canvasElement = function (elementData) {
                             self.height = Math.max(2, self.height + dh);
                             self.x += dleft;
                             self.y += dtop;
+
+                            // Snap during resize
+                            if (isSnapEnabled()) {
+                                const snap = computeSnap(
+                                    { x: self.x, y: self.y, width: self.width, height: self.height },
+                                    self.elementId,
+                                    canvas,
+                                );
+                                // Apply snap to whichever edge is being resized
+                                if (snap.dx !== 0) {
+                                    self.width = Math.max(2, self.width + snap.dx);
+                                }
+                                if (snap.dy !== 0) {
+                                    self.height = Math.max(2, self.height + snap.dy);
+                                }
+                                renderGuides(canvas.querySelector('[data-snap-guides]'), snap.guides);
+                            }
+
                             self.isDirty = true;
                         },
                         end() {
+                            clearGuides(getCanvas());
                             if (self.isDirty) {
                                 self.syncToLivewire();
                             }
@@ -321,10 +485,6 @@ window.canvasElement = function (elementData) {
 
             const freeRotate = event.shiftKey || event.altKey;
 
-            // Compute element center from canvas-relative percentages so rotation is
-            // stable regardless of the element's current CSS transform (bounding rect
-            // of a rotated element still returns the same center, but this avoids
-            // any ambiguity and works correctly when the canvas is panned/zoomed).
             const canvasInner = this.$el.closest('[data-canvas-inner]');
             const canvasRect = canvasInner
                 ? canvasInner.getBoundingClientRect()
@@ -337,7 +497,6 @@ window.canvasElement = function (elementData) {
                 ? canvasRect.top + (this.y + this.height / 2) / 100 * canvasRect.height
                 : canvasRect.top + canvasRect.height / 2;
 
-            // Capture the angle at drag start so rotation is delta-based (no jump).
             const startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX) * (180 / Math.PI);
             const startRotation = this.rotation;
 
@@ -365,78 +524,7 @@ window.canvasElement = function (elementData) {
     };
 };
 
-// Crop tool Alpine component
-window.cropTool = function (initialCrop) {
-    return {
-        cropX: initialCrop?.x ?? 0,
-        cropY: initialCrop?.y ?? 0,
-        cropW: initialCrop?.w ?? 100,
-        cropH: initialCrop?.h ?? 100,
-
-        get cropStyle() {
-            return `left:${this.cropX}%;top:${this.cropY}%;width:${this.cropW}%;height:${this.cropH}%;`;
-        },
-
-        get overlayStyle() {
-            return `left:${this.cropX}%;top:${this.cropY}%;width:${this.cropW}%;height:${this.cropH}%;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);`;
-        },
-
-        startDrag(handle, event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            // Capture image rect once at drag start — avoids needing $el in move handler
-            const preview = event.target.closest('[data-crop-preview-container]')?.querySelector('[data-crop-preview]')
-                ?? document.querySelector('[data-crop-preview]');
-            if (!preview) return;
-
-            const previewRect = preview.getBoundingClientRect();
-            const startX = event.clientX;
-            const startY = event.clientY;
-            const startCrop = { x: this.cropX, y: this.cropY, w: this.cropW, h: this.cropH };
-            const MIN = 5;
-
-            const onMove = (e) => {
-                const dx = (e.clientX - startX) / previewRect.width * 100;
-                const dy = (e.clientY - startY) / previewRect.height * 100;
-                const { x: ox, y: oy, w: ow, h: oh } = startCrop;
-
-                if (handle === 'move') {
-                    this.cropX = Math.max(0, Math.min(100 - ow, ox + dx));
-                    this.cropY = Math.max(0, Math.min(100 - oh, oy + dy));
-                    return;
-                }
-
-                let x = ox, y = oy, w = ow, h = oh;
-                if (handle.includes('e')) { w = Math.max(MIN, Math.min(100 - x, ow + dx)); }
-                if (handle.includes('s')) { h = Math.max(MIN, Math.min(100 - y, oh + dy)); }
-                if (handle.includes('w')) {
-                    const nx = Math.max(0, Math.min(ox + ow - MIN, ox + dx));
-                    w = ow + ox - nx; x = nx;
-                }
-                if (handle.includes('n')) {
-                    const ny = Math.max(0, Math.min(oy + oh - MIN, oy + dy));
-                    h = oh + oy - ny; y = ny;
-                }
-                this.cropX = x; this.cropY = y; this.cropW = w; this.cropH = h;
-            };
-
-            const onUp = () => {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-            };
-
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-        },
-
-        reset() {
-            this.cropX = 0; this.cropY = 0; this.cropW = 100; this.cropH = 100;
-        },
-    };
-};
-
-// Context menu Alpine component
+// ─── Context menu Alpine component ─────────────────────────────────────────
 window.contextMenu = function () {
     return {
         show: false,
@@ -456,15 +544,4 @@ window.contextMenu = function () {
             this.targetElementId = null;
         },
     };
-};
-
-// Drag from library to canvas
-window.setupLibraryDrag = function (imageId, wireComponent) {
-    const thumbnails = document.querySelectorAll(`[data-image-id="${imageId}"]`);
-    thumbnails.forEach(thumbnail => {
-        thumbnail.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('image-id', imageId);
-            e.dataTransfer.effectAllowed = 'copy';
-        });
-    });
 };

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Table -->
+  <circle cx="100" cy="100" r="45" fill="#8B6914" />
+  <!-- 10 chairs evenly spaced at 36 degree intervals -->
+  <g transform="rotate(0, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(36, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(72, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(108, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(144, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(180, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(216, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(252, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(288, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+  <g transform="rotate(324, 100, 100)">
+    <path d="M 88,42 A 12,6 0 0,1 112,42" fill="#6B7280" />
+  </g>
+</svg>

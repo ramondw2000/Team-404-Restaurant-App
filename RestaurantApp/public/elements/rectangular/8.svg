@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <!-- Table -->
+  <rect x="60" y="60" width="180" height="80" rx="8" fill="#8B6914" />
+  <!-- Top chairs (3) -->
+  <rect x="78" y="38" width="36" height="16" rx="6" fill="#6B7280" />
+  <rect x="132" y="38" width="36" height="16" rx="6" fill="#6B7280" />
+  <rect x="186" y="38" width="36" height="16" rx="6" fill="#6B7280" />
+  <!-- Bottom chairs (3) -->
+  <rect x="78" y="146" width="36" height="16" rx="6" fill="#6B7280" />
+  <rect x="132" y="146" width="36" height="16" rx="6" fill="#6B7280" />
+  <rect x="186" y="146" width="36" height="16" rx="6" fill="#6B7280" />
+  <!-- Left end chair -->
+  <rect x="32" y="82" width="16" height="36" rx="6" fill="#6B7280" />
+  <!-- Right end chair -->
+  <rect x="252" y="82" width="16" height="36" rx="6" fill="#6B7280" />
+</svg>
