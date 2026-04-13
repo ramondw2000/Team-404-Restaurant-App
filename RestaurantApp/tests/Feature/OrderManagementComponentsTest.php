@@ -22,7 +22,7 @@ it('renders the ordermanagement styles component with CSS rules', function () {
 it('renders the ordermanagement filter-bar component with dietary and free-from buttons', function () {
     $allergenConfig = [
         'gluten' => ['label' => 'Gluten', 'bg' => '#D97706', 'icon' => '<path/>'],
-        'milk'   => ['label' => 'Milk',   'bg' => '#0284C7', 'icon' => '<path/>'],
+        'milk' => ['label' => 'Milk',   'bg' => '#0284C7', 'icon' => '<path/>'],
     ];
 
     $html = Blade::render(
@@ -32,11 +32,11 @@ it('renders the ordermanagement filter-bar component with dietary and free-from 
 
     expect($html)
         ->toContain('Dietary:')
-        ->toContain('data-dietary="vegetarian"')
-        ->toContain('data-dietary="vegan"')
+        ->toContain('data-value="vegetarian"')
+        ->toContain('data-value="vegan"')
         ->toContain('Free from:')
-        ->toContain('data-freefrom="gluten"')
-        ->toContain('data-freefrom="milk"')
+        ->toContain('data-value="gluten"')
+        ->toContain('data-value="milk"')
         ->toContain('Gluten-free')
         ->toContain('Milk-free');
 });
@@ -85,8 +85,7 @@ it('renders the ordermanagement scripts component with JS functions', function (
         ->toContain('const MENU')
         ->toContain('const ALLERGEN')
         ->toContain('setCategory')
-        ->toContain('toggleDietary')
-        ->toContain('toggleFreefrom')
+        ->toContain('toggleMulti')
         ->toContain('applyFilters')
         ->toContain('resetFilters')
         ->toContain('addDish')

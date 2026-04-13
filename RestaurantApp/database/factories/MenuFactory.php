@@ -2,13 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Models\Dish;
+use App\Models\Menu;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Dish>
+ * @extends Factory<Menu>
  */
-class DishFactory extends Factory
+class MenuFactory extends Factory
 {
     /**
      * @return array<string, mixed>
@@ -16,11 +16,14 @@ class DishFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->words(3, true),
+            'name' => fake()->words(2, true),
             'description' => fake()->optional()->sentence(),
-            'price' => fake()->randomFloat(2, 3, 30),
-            'color' => '#309bcf',
-            'photo_path' => null,
+            'status' => 'draft',
         ];
+    }
+
+    public function published(): static
+    {
+        return $this->state(['status' => 'published']);
     }
 }
