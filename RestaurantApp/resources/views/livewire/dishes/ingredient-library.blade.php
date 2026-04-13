@@ -34,7 +34,7 @@
                         @foreach($allergenConfig as $key => $cfg)
                             <label class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium cursor-pointer transition-colors
                                 {{ in_array($key, $formAllergens) ? 'bg-molveno-blue-500/10 border-molveno-blue-500 text-molveno-blue-700' : 'border-gray-200 text-gray-600 hover:border-gray-300' }}">
-                                <input type="checkbox" wire:model="formAllergens" value="{{ $key }}" class="hidden">
+                                <input type="checkbox" wire:model.live="formAllergens" value="{{ $key }}" class="hidden">
                                 <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" size="sm" />
                                 {{ $cfg['label'] }}
                             </label>
@@ -47,7 +47,7 @@
                         @foreach(['vegetarian', 'vegan'] as $d)
                             <label class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium cursor-pointer transition-colors
                                 {{ in_array($d, $formDietary) ? 'bg-green-50 border-green-500 text-green-700' : 'border-gray-200 text-gray-600 hover:border-gray-300' }}">
-                                <input type="checkbox" wire:model="formDietary" value="{{ $d }}" class="hidden">
+                                <input type="checkbox" wire:model.live="formDietary" value="{{ $d }}" class="hidden">
                                 <x-dishes.dietary-icon :type="$d" size="sm" />
                                 {{ ucfirst($d) }}
                             </label>
