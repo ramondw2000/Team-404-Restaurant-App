@@ -62,6 +62,7 @@ final readonly class OrderService
             'id' => $order->id,
             'order_number' => 'ORD-'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
             'status' => $order->status->value,
+            'paid' => (bool) $order->paid,
             'table_name' => $order->floorPlanElement?->table_name ?? 'Unknown',
             'guest_name' => $order->reservation?->guest_name,
             'created_at' => $order->created_at?->format('d M Y H:i'),

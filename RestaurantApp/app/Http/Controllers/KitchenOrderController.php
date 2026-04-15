@@ -19,6 +19,7 @@ class KitchenOrderController extends Controller
 
         $dbOrders = Order::with(['items.dish.ingredients', 'floorPlanElement'])
             ->whereIn('status', [OrderStatus::Active->value, OrderStatus::Completed->value])
+            ->where('paid', false)
             ->latest()
             ->get();
 

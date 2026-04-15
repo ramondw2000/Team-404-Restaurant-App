@@ -9,6 +9,7 @@ use App\Models\FloorPlanElement;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * Service responsible for reservation operations.
@@ -89,8 +90,9 @@ final readonly class ReservationService
             'status' => 'scheduled',
         ]);
 
-        // If reservation is for now (within 30 min), set table to Reserved
-        if (Carbon::parse($data['reservation_datetime'])->diffInMinutes(now()) <= 30) {
+        // Mark table as Reserved only when the reservation is imminent (≤ 30 min away)
+        $reservationTime = Carbon::parse($data['reservation_datetime']);
+        if ($reservationTime->isFuture() && $reservationTime->diffInMinutes(now()) <= 30) {
             $element->update(['status' => TableStatus::Reserved]);
         }
 
@@ -146,7 +148,43 @@ final readonly class ReservationService
             ->where('reservation_datetime', '<', now())
             ->update(['status' => 'late']);
 
+        $this->resetStaleTableStatuses();
+
         return $count;
+    }
+
+    /**
+     * Reset floor plan element status to Available for any table whose
+     * persisted status is Reserved but has no active (scheduled/arrived)
+     * reservation for today.
+     */
+    private function resetStaleTableStatuses(): void
+    {
+        $staleElementIds = FloorPlanElement::where('status', TableStatus::Reserved)
+            ->whereDoesntHave('reservations', function ($query) {
+                $query->whereIn('status', ['scheduled', 'arrived'])
+                    ->whereDate('reservation_datetime', today());
+            })
+            ->pluck('id');
+
+        if ($staleElementIds->isNotEmpty()) {
+            FloorPlanElement::whereIn('id', $staleElementIds)
+                ->update(['status' => TableStatus::Available]);
+        }
+    }
+
+    /**
+     * Get all FloorPlanElements that are available at a given datetime for a given party size.
+     *
+     * @return SupportCollection<int, FloorPlanElement>
+     */
+    public function getAvailableTablesAt(Carbon $dateTime, int $partySize): SupportCollection
+    {
+        return FloorPlanElement::whereNotNull('table_name')
+            ->where('seat_count', '>=', $partySize)
+            ->get()
+            ->filter(fn (FloorPlanElement $element) => $this->isTableAvailableAt($element->id, $dateTime))
+            ->values();
     }
 
     /**
@@ -156,10 +194,23 @@ final readonly class ReservationService
      */
     public function getReservationMapForFloorPlan(int $floorPlanId): array
     {
+        return $this->getReservationMapForFloorPlanAt($floorPlanId, now());
+    }
+
+    /**
+     * Reservation map for a floor plan at a specific datetime (±2-hour window).
+     *
+     * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, status: string}>
+     */
+    public function getReservationMapForFloorPlanAt(int $floorPlanId, Carbon $datetime): array
+    {
+        $windowStart = $datetime->copy()->subHours(2);
+        $windowEnd   = $datetime->copy()->addHours(2);
+
         $reservations = Reservation::whereHas('floorPlanElement', function ($query) use ($floorPlanId) {
             $query->where('floor_plan_id', $floorPlanId);
         })
-            ->whereDate('reservation_datetime', today())
+            ->whereBetween('reservation_datetime', [$windowStart, $windowEnd])
             ->whereNotIn('status', ['cancelled', 'no_show', 'departed'])
             ->get();
 

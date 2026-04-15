@@ -60,6 +60,33 @@
         <div class="flex items-center gap-3">
             @if($this->activeFloorPlan && $this->floorPlans->isNotEmpty())
                 @if(!$editMode)
+                    {{-- Datetime availability preview --}}
+                    <div class="flex items-center gap-1.5 hidden sm:flex">
+                        <div class="relative">
+                            <svg class="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <input
+                                type="datetime-local"
+                                wire:model.live="previewDatetime"
+                                class="pl-6 pr-2 py-1 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0 transition-colors {{ $previewDatetime ? 'border-amber-400 bg-amber-50 text-amber-800 ring-amber-400 focus:ring-amber-400' : 'border-gray-200 focus:ring-cyan-400' }}"
+                                title="Preview table availability at a specific date & time"
+                            >
+                        </div>
+                        @if($previewDatetime)
+                            <button
+                                type="button"
+                                wire:click="$set('previewDatetime', '')"
+                                class="text-xs text-amber-600 hover:text-amber-800 transition-colors font-medium"
+                                title="Clear preview"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+
                     {{-- Name search --}}
                     <div class="relative hidden sm:block">
                         <svg class="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none"
@@ -144,6 +171,29 @@
             @endif
         </div>
     </header>
+
+    {{-- ===== PREVIEW MODE BANNER ===== --}}
+    @if($previewDatetime && !$editMode)
+        <div class="flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 border-b border-amber-200 shrink-0 z-10">
+            <div class="flex items-center gap-2 text-sm text-amber-800">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span>
+                    Viewing availability at
+                    <strong>{{ \Carbon\Carbon::parse($previewDatetime)->format('D j M Y, H:i') }}</strong>
+                    — reservations within ±2 hours are shown. Click any table to book it at this time.
+                </span>
+            </div>
+            <button
+                type="button"
+                wire:click="$set('previewDatetime', '')"
+                class="text-xs font-semibold text-amber-700 hover:text-amber-900 underline shrink-0"
+            >
+                Back to live view
+            </button>
+        </div>
+    @endif
 
     {{-- ===== MAIN CONTENT AREA ===== --}}
     <div class="flex flex-1 overflow-hidden">
@@ -280,7 +330,7 @@
                                         'opacity-20': $store.filters.active && !$store.filters.matches(el),
                                         'ring-2 ring-cyan-400 ring-offset-1': $store.filters.active && $store.filters.matches(el)
                                     }"
-                                @click.stop="hitsSvgContent($event) && $wire.openTableSheet({{ $element['id'] }})"
+                                @click.stop="hitsSvgContent($event) && ($wire.previewDatetime ? $wire.openReservationModal({{ $element['id'] }}) : $wire.openTableSheet({{ $element['id'] }}))"
                                 @endif
                             >
                                 {{-- Element SVG (loaded inline for pixel-precise hit testing) --}}

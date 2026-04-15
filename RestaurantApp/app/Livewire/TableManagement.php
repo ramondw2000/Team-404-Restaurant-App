@@ -54,10 +54,15 @@ class TableManagement extends Component
 
     public ?int $orderInfoElementId = null;
 
+    public ?int $orderInfoOrderId = null;
+
     // Receipt modal
     public bool $showReceiptModal = false;
 
     public ?array $receiptData = null;
+
+    // Datetime preview filter (for checking table availability at a specific time)
+    public string $previewDatetime = '';
 
     // Reservation modal
     public bool $showReservationModal = false;
@@ -303,7 +308,16 @@ class TableManagement extends Component
             return [];
         }
 
-        return app(ReservationService::class)->getReservationMapForFloorPlan($this->activeFloorPlanId);
+        $service = app(ReservationService::class);
+
+        if ($this->previewDatetime !== '') {
+            return $service->getReservationMapForFloorPlanAt(
+                $this->activeFloorPlanId,
+                Carbon::parse($this->previewDatetime)
+            );
+        }
+
+        return $service->getReservationMapForFloorPlan($this->activeFloorPlanId);
     }
 
     /**
@@ -314,18 +328,23 @@ class TableManagement extends Component
     #[Computed]
     public function orderInfo(): ?array
     {
-        if (! $this->orderInfoElementId) {
+        if (! $this->orderInfoOrderId && ! $this->orderInfoElementId) {
             return null;
         }
 
         $orderService = app(OrderService::class);
-        $activeOrder = $orderService->getActiveOrderForElement($this->orderInfoElementId);
 
-        if (! $activeOrder) {
-            return null;
+        if ($this->orderInfoOrderId) {
+            return $orderService->getOrderDetails($this->orderInfoOrderId);
         }
 
-        return $orderService->getOrderDetails($activeOrder->id);
+        // Fallback: find most recent non-cancelled order for the element
+        $order = Order::where('floor_plan_element_id', $this->orderInfoElementId)
+            ->whereNotIn('status', [OrderStatus::Cancelled])
+            ->latest()
+            ->first();
+
+        return $order ? $orderService->getOrderDetails($order->id) : null;
     }
 
     /**
@@ -811,6 +830,7 @@ class TableManagement extends Component
 
         $activeOrder = $element->orders()
             ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+            ->has('items')
             ->latest()
             ->first();
 
@@ -874,16 +894,28 @@ class TableManagement extends Component
 
     public function openOrderInfo(int $elementId): void
     {
+        // Prefer the most recent non-cancelled order (including completed)
+        $order = Order::where('floor_plan_element_id', $elementId)
+            ->whereNotIn('status', [OrderStatus::Cancelled])
+            ->latest()
+            ->first();
+
+        if (! $order) {
+            $this->dispatch('notify', message: 'No order found for this table.', type: 'error');
+
+            return;
+        }
+
+        $this->orderInfoOrderId = $order->id;
         $this->orderInfoElementId = $elementId;
         $this->showOrderInfoModal = true;
-        unset($this->orderInfo);
     }
 
     public function closeOrderInfo(): void
     {
         $this->showOrderInfoModal = false;
         $this->orderInfoElementId = null;
-        unset($this->orderInfo);
+        $this->orderInfoOrderId = null;
     }
 
     /**
@@ -891,20 +923,23 @@ class TableManagement extends Component
      */
     public function completeOrderForTable(int $elementId): void
     {
-        $orderService = app(OrderService::class);
-        $activeOrder = $orderService->getActiveOrderForElement($elementId);
+        $order = Order::where('floor_plan_element_id', $elementId)
+            ->whereIn('status', [OrderStatus::Active->value, OrderStatus::Completed->value])
+            ->where('paid', false)
+            ->latest()
+            ->first();
 
-        if (! $activeOrder) {
-            $this->dispatch('notify', message: 'No active order found for this table.', type: 'error');
+        if (! $order) {
+            $this->dispatch('notify', message: 'No unpaid order found for this table.', type: 'error');
 
             return;
         }
 
-        $orderService->completeOrder($activeOrder->id);
+        $order->update(['paid' => true]);
 
         $this->closeOrderInfo();
         $this->unsetComputed();
-        $this->dispatch('notify', message: 'Order completed successfully.');
+        $this->dispatch('notify', message: 'Order marked as paid.');
     }
 
     // ─── View Mode: Receipt ────────────────────────────────────────────
@@ -947,7 +982,9 @@ class TableManagement extends Component
         $this->reservationPhone = '';
         $this->reservationEmail = '';
         $this->reservationPartySize = 2;
-        $this->reservationDatetime = now()->addHour()->format('Y-m-d\TH:i');
+        $this->reservationDatetime = $this->previewDatetime !== ''
+            ? $this->previewDatetime
+            : now()->addHour()->format('Y-m-d\TH:i');
         $this->reservationNotes = '';
         $this->showReservationModal = true;
     }
