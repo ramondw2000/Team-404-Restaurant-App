@@ -104,26 +104,31 @@ Wij hebben besloten het bestellingsoverzicht aan te passen, zodat bestellingen n
 
 - De gebruiker kan vervolgens nieuwe gerechten kunnen toevoegen of verwijderen in het menu. De benodigde informatie hiervoor is al uitgelijst in de vorige paragraaf. 
 
+### Ingrediënten
+
+- De gebruiker kan vervolgens ingrediënten toevoegen of verwijderen, die vervolgens opgeslagen worden in een lijst. De ingrediënten in deze lijst kunnen vervolgens toegevoegd worden aan elk gegeven gerecht. De allergenen die bij de ingrediënten horen kunnen toegevoegd worden bij de gegeven ingrediënt.
+
 ## Statistieken
 
 - De gebruiker kan de statistieken zien op een dagelijks, wekelijks, maandelijks en jaarlijks basis. Onder statistieken wordt het volgende weergeven:
     - Het totaalwinst van de gekozen periode.
-
-
+    - Een lijst van de meest en minst verkochte gerechten.
 
 ## Bar overzicht
 
-
-
-- Barmedewerkers moeten als aparte rol worden toegevoegd binnen het systeem, met bijbehorende rechten en toegangsbeheer.
 - Er moet een bestellingsoverzicht worden gemaakt voor barmedewerkers, zodat zij bestellingen kunnen bekijken en verwerken voor:
-    - gasten aan tafel
-   - gasten aan de bar
-- Manager kan het barsysteem en barmedewerkers beheren.
-- Manager kan prestaties en aantal verwerkte bestelligen bekijken.
-- Mogelijkheid om notities door te geven van bediening naar bar
+    - Gasten aan tafel
+    - Gasten bij de bar
 
-    - Een lijst van de meest en minst verkochte gerechten.
+- Het bestellingsoverzicht zal dezelfde structuur hebben als het keukenoverzicht, maar dan voor de bar.
+
+## Onderhoudsploeg overzicht
+
+- De gebruiker kan een overzicht zien van alle taken die gegeven zijn door de receptie. De taken zijn gecategoriseerd op hun huidige status (niet begonnen, in behandeling, voltooid). Voor elke taak is de volgende informatie zichtbaar:
+    - De naam van de taak.
+    - De tijd waarop de taak is aangevraagd.
+    - De status van de taak.
+    - Evt. opmerkingen die de onderhoudsploeg kan toevoegen.
 
 *Nog bespreken met de anderen
 

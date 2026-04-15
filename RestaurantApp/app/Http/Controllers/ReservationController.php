@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
+use App\Services\ReservationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,9 @@ class ReservationController extends Controller
     public function index(Request $request): View
     {
         $selectedDate = $request->input('date', Carbon::today()->toDateString());
+
+        // Auto-mark late reservations
+        app(ReservationService::class)->autoMarkLateReservations();
 
         $dinnerReservations = Reservation::whereDate('reservation_datetime', $selectedDate)
             ->orderBy('reservation_datetime')

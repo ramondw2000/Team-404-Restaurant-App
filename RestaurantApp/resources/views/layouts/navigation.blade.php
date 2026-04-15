@@ -20,14 +20,7 @@
 
                     {{-- Floor Operations --}}
                     @canany(['View Orders', 'View Table Management', 'View Reservations'])
-                    <x-nav-dropdown label="Floor Operations" :active="request()->routeIs('ordermanagement') || request()->routeIs('tablemanagement') || request()->routeIs('reservations.*')">
-                        @can('View Orders')
-                        <x-nav-dropdown-item
-                            :href="route('ordermanagement')"
-                            title="Order Management"
-                            description="Oversee all active guest checks and orders."
-                            :active="request()->routeIs('ordermanagement')" />
-                        @endcan
+                    <x-nav-dropdown label="Floor Operations" :active="request()->routeIs('tablemanagement') || request()->routeIs('reservations.*')">
                         @can('View Table Management')
                         <x-nav-dropdown-item
                             :href="route('tablemanagement')"
@@ -46,14 +39,21 @@
                     @endcanany
 
                     {{-- Production Units --}}
-                    @canany(['View Kitchen Orders', 'View Dishes'])
-                    <x-nav-dropdown label="Production Units" :active="request()->routeIs('kitchen-orders') || request()->routeIs('dishes')">
+                    @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes'])
+                    <x-nav-dropdown label="Production Units" :active="request()->routeIs('kitchen-orders') || request()->routeIs('bar-orders') || request()->routeIs('dishes')">
                         @can('View Kitchen Orders')
                         <x-nav-dropdown-item
                             :href="route('kitchen-orders')"
                             title="Kitchen Orders"
                             description="Dedicated view for the chef and line cooks."
                             :active="request()->routeIs('kitchen-orders')" />
+                        @endcan
+                        @can('View Bar Orders')
+                        <x-nav-dropdown-item
+                            :href="route('bar-orders')"
+                            title="Bar Orders"
+                            description="Dedicated view for the bar staff."
+                            :active="request()->routeIs('bar-orders')" />
                         @endcan
                         @can('View Dishes')
                         <x-nav-dropdown-item
@@ -170,11 +170,6 @@
             {{-- Floor Operations --}}
             @canany(['View Orders', 'View Table Management', 'View Reservations'])
             <div class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Floor Operations</div>
-            @can('View Orders')
-            <x-responsive-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
-                {{ __('Order Management') }}
-            </x-responsive-nav-link>
-            @endcan
             @can('View Table Management')
             <x-responsive-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                 {{ __('Table Management') }}
@@ -188,11 +183,16 @@
             @endcanany
 
             {{-- Production Units --}}
-            @canany(['View Kitchen Orders', 'View Dishes'])
+            @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes'])
             <div class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Production Units</div>
             @can('View Kitchen Orders')
             <x-responsive-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
                 {{ __('Kitchen Orders') }}
+            </x-responsive-nav-link>
+            @endcan
+            @can('View Bar Orders')
+            <x-responsive-nav-link :href="route('bar-orders')" :active="request()->routeIs('bar-orders')">
+                {{ __('Bar Orders') }}
             </x-responsive-nav-link>
             @endcan
             @can('View Dishes')

@@ -1,9 +1,9 @@
-@php use App\Models\Image; @endphp
 <div
     class="flex flex-col flex-1 overflow-hidden bg-gray-50"
     @keydown.window.delete="$wire.selectedElementId && $wire.editMode && $wire.deleteElement($wire.selectedElementId)"
     @keydown.window.ctrl.c.prevent="$wire.selectedElementId && $wire.editMode && $wire.copyElement($wire.selectedElementId)"
     @keydown.window.ctrl.v.prevent="$wire.editMode && $wire.pasteElement()"
+    @keydown.window.shift.prevent="$wire.editMode && $wire.toggleSnap()"
 >
     {{-- ===== TOP BAR ===== --}}
     <header class="flex items-center h-14 px-4 bg-white border-b border-gray-200 shadow-sm shrink-0 z-20">
@@ -41,12 +41,22 @@
             </button>
         </div>
 
-        {{-- Center: Title --}}
-        <div class="flex-1 text-center">
+        {{-- Center: Title + Snap Toggle (edit mode) --}}
+        <div class="flex-1 flex items-center justify-center gap-3">
             <span class="text-sm font-semibold text-gray-700 tracking-wide uppercase">Table Management</span>
+            @if($editMode)
+                <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
+                    <input
+                        type="checkbox"
+                        wire:model.live="snapEnabled"
+                        class="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                    >
+                    Snap to elements
+                </label>
+            @endif
         </div>
 
-        {{-- Right: Filters (view mode) / Status summary + Edit toggle --}}
+        {{-- Right: Filters (view mode) / Edit toggle --}}
         <div class="flex items-center gap-3">
             @if($this->activeFloorPlan && $this->floorPlans->isNotEmpty())
                 @if(!$editMode)
@@ -145,6 +155,7 @@
             data-img-width="{{ $this->activeFloorPlan?->backgroundImage?->width ?? 0 }}"
             data-img-height="{{ $this->activeFloorPlan?->backgroundImage?->height ?? 0 }}"
             data-edit-mode="{{ $editMode ? 'true' : 'false' }}"
+            data-snap-enabled="{{ $snapEnabled ? 'true' : 'false' }}"
             @wheel.prevent="onWheel($event)"
             @mousedown="onMouseDown($event)"
             @mousemove="onMouseMove($event)"
@@ -166,23 +177,22 @@
             @reset-canvas-view.window="resetView()"
             @dragover.prevent
             @drop.prevent="
-                const imageId = $event.dataTransfer.getData('image-id');
-                if (imageId) {
+                const shape = $event.dataTransfer.getData('element-shape');
+                const seatCount = $event.dataTransfer.getData('element-seat-count');
+                const defaultWidth = parseFloat($event.dataTransfer.getData('element-default-width') || 10);
+                const defaultHeight = parseFloat($event.dataTransfer.getData('element-default-height') || 10);
+                if (shape && seatCount) {
                     const canvasInner = $el.querySelector('[data-canvas-inner]');
                     const rect = canvasInner.getBoundingClientRect();
                     const xPct = (($event.clientX - rect.left) / rect.width) * 100;
                     const yPct = (($event.clientY - rect.top) / rect.height) * 100;
-                    // Use 15% of the shorter canvas dimension in pixels so the element
-                    // appears as a visually square box regardless of canvas aspect ratio.
-                    const sizePx = Math.min(rect.width, rect.height) * 0.15;
-                    const widthPct = (sizePx / rect.width) * 100;
-                    const heightPct = (sizePx / rect.height) * 100;
                     $wire.placeElement(
-                        parseInt(imageId),
-                        Math.max(0, Math.min(100 - widthPct, xPct - widthPct / 2)),
-                        Math.max(0, Math.min(100 - heightPct, yPct - heightPct / 2)),
-                        widthPct,
-                        heightPct
+                        shape,
+                        parseInt(seatCount),
+                        Math.max(0, Math.min(100 - defaultWidth, xPct - defaultWidth / 2)),
+                        Math.max(0, Math.min(100 - defaultHeight, yPct - defaultHeight / 2)),
+                        defaultWidth,
+                        defaultHeight
                     );
                 }
             "
@@ -235,14 +245,19 @@
                             <div class="absolute inset-0 canvas-checkerboard"></div>
                         @endif
 
+                        {{-- Snap Guide Lines (edit mode only, rendered dynamically by JS) --}}
+                        @if($editMode)
+                            <div data-snap-guides class="absolute inset-0 pointer-events-none z-[9000]"></div>
+                        @endif
+
                         {{-- Placed Elements --}}
                         @foreach($this->elements as $element)
                             @php
-                                $isSelected = $editMode && $selectedElementId === $element['id'];
-                                $isTable = $element['is_table'];
-                                $status = $isTable && $element['status']
+                                $isSelected = $editMode && $selectedElementId == $element['id'];
+                                $status = $element['status']
                                     ? \App\Enums\TableStatus::from($element['status'])
                                     : null;
+                                $reservation = $this->reservationMap[$element['id']] ?? null;
                             @endphp
                             @php $elementId = is_numeric($element['id']) ? $element['id'] : "'" . $element['id'] . "'" @endphp
                             <div
@@ -255,66 +270,84 @@
                                 class="absolute select-none group"
                                 :class="{ 'ring-2 ring-blue-500 ring-offset-1': $wire.selectedElementId == elementId }"
                                 :style="positionStyle"
-                                @click="$wire.selectElement({{ $elementId }})"
+                                @click="hitsSvgContent($event) && $wire.selectElement({{ $elementId }})"
                                 @element-zindex-updated.window="if ($event.detail.id == elementId) zIndex = $event.detail.zIndex"
                                 @else
-                                    x-data="{{ json_encode(['el' => ['is_table' => $isTable, 'table_name' => $element['table_name'], 'status' => $element['status'] ?? null, 'seat_count' => $element['seat_count'] ?? null]]) }}"
-                                class="absolute select-none group transition-opacity {{ $isTable ? 'cursor-pointer' : '' }}"
+                                    x-data="{ ...viewElementSvg('{{ $element['image_path'] }}'), el: {{ json_encode(['table_name' => $element['table_name'], 'status' => $element['status'] ?? null, 'seat_count' => $element['seat_count'] ?? null]) }} }"
+                                class="absolute select-none group transition-opacity cursor-pointer"
                                 style="left:{{ $element['x'] }}%;top:{{ $element['y'] }}%;width:{{ $element['width'] }}%;height:{{ $element['height'] }}%;transform:rotate({{ $element['rotation'] }}deg);z-index:{{ $element['z_index'] }};"
                                 :class="{
                                         'opacity-20': $store.filters.active && !$store.filters.matches(el),
                                         'ring-2 ring-cyan-400 ring-offset-1': $store.filters.active && $store.filters.matches(el)
                                     }"
-                                @if($isTable)
-                                    @click.stop="$wire.openTableSheet({{ $element['id'] }})"
-                                @endif
+                                @click.stop="hitsSvgContent($event) && $wire.openTableSheet({{ $element['id'] }})"
                                 @endif
                             >
-                                {{-- Element Image (with crop) --}}
-                                @php
-                                    $cx = $element['crop_x'] ?? 0;
-                                    $cy = $element['crop_y'] ?? 0;
-                                    $cw = $element['crop_w'] ?? 100;
-                                    $ch = $element['crop_h'] ?? 100;
-                                    $imgW = round((100 / $cw) * 100, 3);
-                                    $imgH = round((100 / $ch) * 100, 3);
-                                    $imgL = round((-$cx / $cw) * 100, 3);
-                                    $imgT = round((-$cy / $ch) * 100, 3);
-                                @endphp
-                                <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                                {{-- Element SVG (loaded inline for pixel-precise hit testing) --}}
+                                <div class="absolute inset-0 overflow-hidden pointer-events-none" data-svg-container wire:ignore>
                                     <img
-                                        src="{{ $element['image_url'] }}"
-                                        alt="{{ $element['table_name'] ?? 'Element' }}"
-                                        class="absolute pointer-events-none"
-                                        style="width:{{ $imgW }}%;height:{{ $imgH }}%;left:{{ $imgL }}%;top:{{ $imgT }}%;max-width:none;max-height:none;"
+                                        src="{{ $element['image_path'] }}"
+                                        alt="{{ $element['table_name'] ?? 'Table' }}"
+                                        class="absolute inset-0 w-full h-full object-contain pointer-events-none"
                                         draggable="false"
                                     >
                                 </div>
 
-                                {{-- Table Status Badge (always visible when is_table) --}}
+                                {{-- Table Name Label + Reservation Indicator --}}
                                 @if($editMode)
                                     <div
-                                        x-show="isTable && tableName"
-                                        class="absolute inset-0 flex flex-col items-center justify-end pb-1 pointer-events-none"
+                                        x-show="tableName"
+                                        class="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                                        style="top: 100%; margin-top: 3px;"
                                     >
-                                        <span :class="badgeClasses" x-text="tableName"></span>
+                                        <span
+                                            :class="badgeClasses"
+                                            x-text="tableName"
+                                            class="whitespace-nowrap"
+                                        ></span>
                                     </div>
                                 @else
-                                    @if($isTable && $status)
+                                    @if($element['table_name'])
                                         <div
-                                            class="absolute inset-0 flex flex-col items-center justify-end pb-1 pointer-events-none">
-                                            <span
-                                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold {{ $status->badgeClasses() }} shadow-sm max-w-full truncate">
-                                                {{ $element['table_name'] }}
-                                            </span>
-                                        </div>
-                                    @elseif($isTable && $element['table_name'])
-                                        <div
-                                            class="absolute inset-0 flex flex-col items-center justify-end pb-1 pointer-events-none">
-                                            <span
-                                                class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 shadow-sm max-w-full truncate">
-                                                {{ $element['table_name'] }}
-                                            </span>
+                                            class="absolute left-1/2 -translate-x-1/2 pointer-events-none flex flex-col items-center gap-0.5"
+                                            style="top: 100%; margin-top: 3px;"
+                                        >
+                                            @if($status)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold {{ $status->badgeClasses() }} shadow-sm whitespace-nowrap">
+                                                    <span class="w-1.5 h-1.5 rounded-full {{ $status->dotClasses() }} shrink-0"></span>
+                                                    {{ $element['table_name'] }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-white/90 text-gray-700 shadow-sm ring-1 ring-gray-200 whitespace-nowrap">
+                                                    {{ $element['table_name'] }}
+                                                </span>
+                                            @endif
+                                            @if($reservation)
+                                                @php
+                                                    $resStatusColor = match($reservation['status']) {
+                                                        'scheduled' => 'bg-blue-100 text-blue-700 ring-blue-200',
+                                                        'arrived' => 'bg-green-100 text-green-700 ring-green-200',
+                                                        'departed' => 'bg-gray-100 text-gray-600 ring-gray-200',
+                                                        'late' => 'bg-amber-100 text-amber-700 ring-amber-200',
+                                                        'no_show' => 'bg-rose-100 text-rose-700 ring-rose-200',
+                                                        'cancelled' => 'bg-red-100 text-red-700 ring-red-200',
+                                                        default => 'bg-white/95 text-gray-600 ring-gray-200',
+                                                    };
+                                                    $resStatusDot = match($reservation['status']) {
+                                                        'scheduled' => 'bg-blue-500',
+                                                        'arrived' => 'bg-green-500',
+                                                        'departed' => 'bg-gray-400',
+                                                        'late' => 'bg-amber-500',
+                                                        'no_show' => 'bg-rose-500',
+                                                        'cancelled' => 'bg-red-500',
+                                                        default => 'bg-molveno-blue-500',
+                                                    };
+                                                @endphp
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold {{ $resStatusColor }} shadow-sm ring-1 whitespace-nowrap">
+                                                    <span class="w-1.5 h-1.5 rounded-full {{ $resStatusDot }} shrink-0"></span>
+                                                    {{ $reservation['guest_name'] }} &middot; {{ $reservation['time'] }}
+                                                </span>
+                                            @endif
                                         </div>
                                     @endif
                                 @endif
@@ -337,7 +370,7 @@
                                     {{-- Delete button --}}
                                     @if($isSelected)
                                         <button
-                                            @click.stop="$wire.deleteElement({{ is_numeric($element['id']) ? $element['id'] : "'" . $element['id'] . "'" }})"
+                                            @click.stop="$wire.deleteElement({{ $elementId }})"
                                             class="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors shadow-md z-10"
                                             title="Delete element"
                                         >
@@ -415,7 +448,7 @@
             <aside
                 class="w-72 bg-white border-l border-gray-200 flex flex-col shadow-sm overflow-hidden shrink-0 transition-all duration-200">
                 @if($selectedElementId && $this->selectedElement)
-                    {{-- Element Properties Panel --}}
+                    {{-- ───── Element Properties Panel ───── --}}
                     @php $el = $this->selectedElement; @endphp
                     <div class="flex flex-col h-full">
                         {{-- Panel Header --}}
@@ -436,103 +469,85 @@
                         <div class="flex-1 overflow-y-auto p-4 space-y-5">
                             {{-- Element preview --}}
                             <div class="flex justify-center p-4 bg-gray-50 rounded-xl">
-                                <img src="{{ $el['image_url'] }}" alt="Element" class="w-24 h-24 object-contain">
+                                <img src="{{ $el['image_path'] }}" alt="Element" class="w-24 h-24 object-contain">
                             </div>
 
-                            {{-- Is Table Toggle --}}
+                            {{-- Properties Form --}}
                             <div
                                 wire:key="element-props-{{ $el['id'] }}"
                                 wire:ignore
                                 x-data="{
-                                    isTable: {{ $el['is_table'] ? 'true' : 'false' }},
                                     tableName: '{{ addslashes($el['table_name'] ?? '') }}',
-                                    seatCount: {{ $el['seat_count'] ?? 4 }},
-                                    status: '{{ $el['status'] ?? 'Available' }}',
+                                    seatCount: {{ $el['seat_count'] }},
+                                    availableSeats: {{ json_encode($this->availableSeatCounts($el['shape'])) }},
                                     syncToWire() {
                                         $wire.updateElementProperties(
                                             {{ json_encode($el['id']) }},
-                                            this.isTable,
                                             this.tableName || null,
-                                            this.seatCount || null,
-                                            this.status || null
+                                            this.seatCount,
                                         );
                                     }
                                 }"
                             >
-                                <div class="flex items-center justify-between mb-4">
-                                    <label class="text-sm font-medium text-gray-700">Is a Table</label>
-                                    <button
-                                        @click="isTable = !isTable; syncToWire()"
-                                        :class="isTable ? 'bg-blue-600' : 'bg-gray-200'"
-                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                {{-- Shape (read-only) --}}
+                                <div class="mb-4">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Shape</label>
+                                    <p class="text-sm font-medium text-gray-800">{{ $this->presetElements[$el['shape']]['label'] ?? ucfirst($el['shape']) }}</p>
+                                </div>
+
+                                {{-- Table Name --}}
+                                <div class="mb-4">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Table Name</label>
+                                    <input
+                                        type="text"
+                                        x-model="tableName"
+                                        @blur="syncToWire()"
+                                        @keydown.enter="syncToWire()"
+                                        placeholder="e.g. Table 1"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
-                                        <span
-                                            :class="isTable ? 'translate-x-6' : 'translate-x-1'"
-                                            class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
-                                        ></span>
-                                    </button>
                                 </div>
 
-                                <div x-show="isTable" class="space-y-4" x-transition>
-                                    <div>
-                                        <label
-                                            class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Table
-                                            Name</label>
-                                        <input
-                                            type="text"
-                                            x-model="tableName"
-                                            @blur="syncToWire()"
-                                            @keydown.enter="syncToWire()"
-                                            placeholder="e.g. Table 1"
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        >
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Seats</label>
-                                        <input
-                                            type="number"
-                                            x-model.number="seatCount"
-                                            @blur="syncToWire()"
-                                            min="1"
-                                            max="99"
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        >
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
-                                        <div class="grid grid-cols-3 gap-1.5">
-                                            @foreach($tableStatuses as $ts)
-                                                @php $tsEnum = \App\Enums\TableStatus::from($ts->value); @endphp
-                                                <button
-                                                    @click="status = '{{ $ts->value }}'; syncToWire()"
-                                                    :class="status === '{{ $ts->value }}' ? '{{ $tsEnum->badgeClasses() }} ring-2 ring-offset-1 ring-current' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                                    class="py-1.5 px-2 text-xs font-medium rounded-lg transition-all"
-                                                >
-                                                    {{ $ts->label() }}
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    </div>
+                                {{-- Seats (dropdown limited to available variants) --}}
+                                <div class="mb-4">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Seats</label>
+                                    <select
+                                        x-model.number="seatCount"
+                                        @change="syncToWire()"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <template x-for="seats in availableSeats" :key="seats">
+                                            <option :value="seats" x-text="seats + ' seats'" :selected="seats === seatCount"></option>
+                                        </template>
+                                    </select>
                                 </div>
+
+                                {{-- Status (read-only, driven by reservations) --}}
+                                @if($el['status'])
+                                    @php $elStatus = \App\Enums\TableStatus::from($el['status']); @endphp
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold {{ $elStatus->badgeClasses() }}">
+                                            <span class="w-2 h-2 rounded-full {{ $elStatus->dotClasses() }}"></span>
+                                            {{ $elStatus->label() }}
+                                        </span>
+                                        <p class="text-[10px] text-gray-400 mt-1">Managed by reservations</p>
+                                    </div>
+                                @endif
                             </div>
 
                             {{-- Z-Order Controls --}}
                             <div>
-                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Layer
-                                    Order</label>
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Layer Order</label>
                                 <div class="flex gap-2">
                                     <button
-                                        wire:click="bringToFront({{ $el['id'] }})"
+                                        wire:click="bringToFront({{ json_encode($el['id']) }})"
                                         class="flex-1 py-2 px-3 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                                     >
                                         Bring to Front
                                     </button>
                                     <button
-                                        wire:click="sendToBack({{ $el['id'] }})"
+                                        wire:click="sendToBack({{ json_encode($el['id']) }})"
                                         class="flex-1 py-2 px-3 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                                     >
                                         Send to Back
@@ -542,7 +557,7 @@
 
                             {{-- Delete Button --}}
                             <button
-                                wire:click="deleteElement({{ is_numeric($el['id']) ? $el['id'] : "'" . $el['id'] . "'" }})"
+                                wire:click="deleteElement({{ json_encode($el['id']) }})"
                                 class="w-full py-2 px-3 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
                             >
                                 Delete Element
@@ -550,7 +565,7 @@
                         </div>
                     </div>
                 @else
-                    {{-- Default Sidebar: Image Library + Floor Plan Controls --}}
+                    {{-- ───── Default Sidebar: Preset Palette + Floor Plan Controls ───── --}}
                     <div class="flex flex-col h-full">
                         {{-- Floor Plan Controls --}}
                         <div class="p-4 border-b border-gray-100">
@@ -608,116 +623,69 @@
                             </div>
                         </div>
 
-                        {{-- Image Library --}}
+                        {{-- ───── Preset Element Palette ───── --}}
                         <div class="flex-1 flex flex-col overflow-hidden">
-                            <div class="flex items-center justify-between px-4 pt-4 pb-2">
-                                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Element
-                                    Library</h3>
-                                <div
-                                    x-data="{ uploading: false, progress: 0 }"
-                                    x-on:livewire-upload-start="uploading = true"
-                                    x-on:livewire-upload-finish="uploading = false; $wire.openNewElementCropModal()"
-                                    x-on:livewire-upload-progress="progress = $event.detail.progress"
-                                >
-                                    <label
-                                        class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
-                                        title="Upload image"
-                                    >
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        <span x-text="uploading ? `${progress}%` : 'Upload'"></span>
-                                        <input
-                                            type="file"
-                                            wire:model="newElementImage"
-                                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                                            class="hidden"
-                                        >
-                                    </label>
-                                </div>
+                            <div class="px-4 pt-4 pb-2">
+                                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Elements</h3>
                             </div>
 
-                            @if($this->imageLibrary->isEmpty())
+                            @if(empty($this->presetElements))
                                 <div class="flex-1 flex flex-col items-center justify-center px-4 py-8 text-center">
-                                    <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-3">
-                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor"
-                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                        </svg>
-                                    </div>
-                                    <p class="text-sm text-gray-500">No images yet.<br>Upload some to get started.</p>
+                                    <p class="text-sm text-gray-500">No preset elements available.</p>
                                 </div>
                             @else
-                                <div class="flex-1 overflow-y-auto px-4 pb-4">
-                                    <div class="grid grid-cols-3 gap-2">
-                                        @foreach($this->imageLibrary as $image)
-                                            @php
-                                                $libImgW = round((100 / $image->crop_w) * 100, 3);
-                                                $libImgH = round((100 / $image->crop_h) * 100, 3);
-                                                $libImgL = round((-$image->crop_x / $image->crop_w) * 100, 3);
-                                                $libImgT = round((-$image->crop_y / $image->crop_h) * 100, 3);
-                                            @endphp
-                                            <div
-                                                wire:key="img-{{ $image->id }}"
-                                                class="relative group aspect-square bg-gray-50 rounded-xl overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors cursor-grab active:cursor-grabbing"
-                                                draggable="true"
-                                                data-image-id="{{ $image->id }}"
-                                                @dragstart="
-                                                    $event.dataTransfer.setData('image-id', '{{ $image->id }}');
-                                                    $event.dataTransfer.effectAllowed = 'copy';
-                                                    const ghost = document.createElement('div');
-                                                    ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:80px;height:80px;overflow:hidden;border-radius:8px;background:#f9fafb;';
-                                                    const ghostImg = document.createElement('img');
-                                                    ghostImg.src = '{{ $image->url() }}';
-                                                    ghostImg.style.cssText = 'position:absolute;width:{{ $libImgW }}%;height:{{ $libImgH }}%;left:{{ $libImgL }}%;top:{{ $libImgT }}%;max-width:none;max-height:none;';
-                                                    ghost.appendChild(ghostImg);
-                                                    document.body.appendChild(ghost);
-                                                    $event.dataTransfer.setDragImage(ghost, 40, 40);
-                                                    setTimeout(() => ghost.remove(), 0);
-                                                "
-                                                title="{{ $image->original_filename }}"
+                                <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+                                    @foreach($this->presetElements as $shape => $shapeData)
+                                        <div x-data="{ open: true }">
+                                            {{-- Shape Group Header (collapsible) --}}
+                                            <button
+                                                @click="open = !open"
+                                                class="flex items-center justify-between w-full py-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wide hover:text-gray-800 transition-colors"
                                             >
-                                                <div class="absolute inset-1 overflow-hidden">
-                                                    <img
-                                                        src="{{ $image->url() }}"
-                                                        alt="{{ $image->original_filename }}"
-                                                        class="absolute pointer-events-none"
-                                                        style="width:{{ $libImgW }}%;height:{{ $libImgH }}%;left:{{ $libImgL }}%;top:{{ $libImgT }}%;max-width:none;max-height:none;"
-                                                        draggable="false"
+                                                {{ $shapeData['label'] }}
+                                                <svg class="w-3.5 h-3.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </button>
+
+                                            {{-- Variant Thumbnails --}}
+                                            <div x-show="open" x-transition class="grid grid-cols-3 gap-2 mt-1.5">
+                                                @foreach($shapeData['variants'] as $seatCount => $variant)
+                                                    <div
+                                                        wire:key="preset-{{ $shape }}-{{ $seatCount }}"
+                                                        class="relative group aspect-square bg-gray-50 rounded-xl overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors cursor-grab active:cursor-grabbing flex items-center justify-center p-2"
+                                                        draggable="true"
+                                                        @dragstart="
+                                                            $event.dataTransfer.setData('element-shape', '{{ $shape }}');
+                                                            $event.dataTransfer.setData('element-seat-count', '{{ $seatCount }}');
+                                                            $event.dataTransfer.setData('element-default-width', '{{ $variant['width'] }}');
+                                                            $event.dataTransfer.setData('element-default-height', '{{ $variant['height'] }}');
+                                                            $event.dataTransfer.effectAllowed = 'copy';
+                                                            const ghost = document.createElement('div');
+                                                            ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:60px;height:60px;overflow:hidden;border-radius:8px;background:#f9fafb;display:flex;align-items:center;justify-content:center;';
+                                                            const ghostImg = document.createElement('img');
+                                                            ghostImg.src = '{{ $variant['image_path'] }}';
+                                                            ghostImg.style.cssText = 'width:80%;height:80%;object-fit:contain;';
+                                                            ghost.appendChild(ghostImg);
+                                                            document.body.appendChild(ghost);
+                                                            $event.dataTransfer.setDragImage(ghost, 30, 30);
+                                                            setTimeout(() => ghost.remove(), 0);
+                                                        "
+                                                        title="{{ $shapeData['label'] }} ({{ $seatCount }} seats)"
                                                     >
-                                                </div>
-                                                {{-- Edit crop button --}}
-                                                <button
-                                                    wire:click.stop="openCropEditor({{ $image->id }})"
-                                                    class="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-blue-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow"
-                                                    title="Edit crop"
-                                                    draggable="false"
-                                                >
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor"
-                                                         viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2"
-                                                              d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m0 8v2a2 2 0 01-2 2h-2"/>
-                                                    </svg>
-                                                </button>
-                                                {{-- Delete button --}}
-                                                <button
-                                                    wire:click.stop="deleteImageFromLibrary({{ $image->id }})"
-                                                    class="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow"
-                                                    title="Delete image"
-                                                    draggable="false"
-                                                >
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor"
-                                                         viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-                                                    </svg>
-                                                </button>
+                                                        <img
+                                                            src="{{ $variant['image_path'] }}"
+                                                            alt="{{ $shapeData['label'] }} {{ $seatCount }} seats"
+                                                            class="w-full h-full object-contain pointer-events-none"
+                                                            draggable="false"
+                                                        >
+                                                        {{-- Seat count label --}}
+                                                        <span class="absolute bottom-0.5 right-1 text-[10px] font-bold text-gray-500">{{ $seatCount }}</span>
+                                                    </div>
+                                                @endforeach
                                             </div>
-                                        @endforeach
-                                    </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             @endif
                         </div>
@@ -750,7 +718,7 @@
                 @click.stop
             >
                 {{-- Sheet Header --}}
-                <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <div class="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
                     <h2 class="text-lg font-bold text-gray-900">{{ $tableEl['table_name'] ?? 'Table' }}</h2>
                     <button
                         wire:click="closeTableSheet"
@@ -764,7 +732,7 @@
                 </div>
 
                 {{-- Sheet Content --}}
-                <div class="flex-1 p-5 space-y-6">
+                <div class="flex-1 overflow-y-auto p-5 space-y-6">
                     {{-- Info Row --}}
                     <div class="flex items-center gap-6">
                         <div>
@@ -773,8 +741,7 @@
                         </div>
                         @if($currentStatus)
                             <div>
-                                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Current
-                                    Status</p>
+                                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Current Status</p>
                                 <span
                                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold {{ $currentStatus->badgeClasses() }}">
                                     <span class="w-2 h-2 rounded-full {{ $currentStatus->dotClasses() }}"></span>
@@ -784,163 +751,172 @@
                         @endif
                     </div>
 
-                    {{-- Status Selector --}}
-                    <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Change Status</p>
-                        <div class="grid grid-cols-3 gap-3">
-                            @foreach($tableStatuses as $ts)
-                                @php
-                                    $tsEnum = \App\Enums\TableStatus::from($ts->value);
-                                    $isActive = $tableEl['status'] === $ts->value;
-                                @endphp
-                                <button
-                                    wire:click="updateTableStatus({{ $tableEl['id'] }}, '{{ $ts->value }}')"
-                                    class="relative flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-2 transition-all {{ $isActive ? $tsEnum->badgeClasses() . ' border-current' : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:bg-gray-50' }}"
-                                >
-                                    <span class="w-4 h-4 rounded-full {{ $tsEnum->dotClasses() }}"></span>
-                                    <span class="text-xs font-semibold">{{ $ts->label() }}</span>
-                                    @if($isActive)
-                                        <span class="absolute top-1.5 right-1.5">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path
-                                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                                        </span>
-                                    @endif
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
+                    {{-- Reservations Section --}}
+                    <x-table-management.reservation-list :reservations="$this->tableSheetReservations" />
                 </div>
 
                 {{-- Sheet Footer --}}
-                <div class="p-5 border-t border-gray-100">
-                    <p class="text-xs text-gray-400 text-center">Changes are saved automatically</p>
+                <div class="p-5 border-t border-gray-100 flex flex-col gap-2 shrink-0">
+                    {{-- View Orders button (if table has active orders) --}}
+                    @if($currentStatus && $currentStatus->value === 'Occupied')
+                        <x-ui.button
+                            wire:click="openOrderInfo({{ $tableEl['id'] }})"
+                            variant="secondary"
+                            class="w-full justify-center"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                                <rect x="9" y="3" width="6" height="4" rx="1"/>
+                            </svg>
+                            View Order Info
+                        </x-ui.button>
+                        <x-ui.button
+                            wire:click="openReceipt({{ $tableEl['id'] }})"
+                            variant="secondary"
+                            class="w-full justify-center"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                            Print Receipt
+                        </x-ui.button>
+                    @endif
+
+                    @can('Create Order')
+                        <x-ui.button
+                            wire:click="acceptOrder({{ $tableEl['id'] }})"
+                            class="w-full justify-center"
+                            :disabled="$currentStatus && $currentStatus->value !== 'Occupied'"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            Accept Order
+                        </x-ui.button>
+                    @endcan
+                    @if($currentStatus && $currentStatus->value !== 'Occupied')
+                        <p class="text-xs text-amber-600 text-center">Seat a reservation first to place orders</p>
+                    @endif
+
+                    @can('Create Reservation')
+                        <x-ui.button
+                            wire:click="openReservationModal({{ $tableEl['id'] }})"
+                            variant="outline"
+                            class="w-full justify-center"
+                            :disabled="$currentStatus && $currentStatus->value === 'Occupied'"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Add Reservation
+                        </x-ui.button>
+                    @endcan
+
+                    <p class="text-xs text-gray-400 text-center">Table status managed by reservations</p>
                 </div>
             </div>
         </div>
     @endif
 
-    {{-- ===== CROP TOOL MODAL ===== --}}
-    @if($showCropModal)
-        @php
-            $isEditCrop = $cropEditImageId !== null;
-            $cropImage = $isEditCrop ? Image::find($cropEditImageId) : null;
-            $cropPreviewUrl = $isEditCrop
-                ? $cropImage?->url()
-                : ($newElementImage ? $newElementImage->temporaryUrl() : null);
-            $initCropX = $cropImage?->crop_x ?? 0;
-            $initCropY = $cropImage?->crop_y ?? 0;
-            $initCropW = $cropImage?->crop_w ?? 100;
-            $initCropH = $cropImage?->crop_h ?? 100;
-        @endphp
-        @if($cropPreviewUrl)
-            <div
-                class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                x-data="cropTool({ x: {{ $initCropX }}, y: {{ $initCropY }}, w: {{ $initCropW }}, h: {{ $initCropH }} })"
-                @keydown.escape.window="$wire.closeCropModal()"
-            >
-                <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col"
-                     style="max-height:90vh;" @click.stop>
-                    {{-- Header --}}
-                    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                        <div>
-                            <h2 class="text-base font-bold text-gray-900">Adjust Crop Area</h2>
-                            <p class="text-xs text-gray-500 mt-0.5">Drag the handles to exclude whitespace. The
-                                highlighted area will be used as the element's clickable bounds.</p>
-                        </div>
-                        <button @click="$wire.closeCropModal()"
-                                class="text-gray-400 hover:text-gray-600 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
+    {{-- ===== ORDER INFO MODAL ===== --}}
+    <x-table-management.order-info-modal
+        :show="$showOrderInfoModal"
+        :order-info="$this->orderInfo"
+        :element-id="$orderInfoElementId"
+    />
 
-                    {{-- Crop canvas --}}
-                    <div class="flex-1 overflow-hidden p-6 flex items-center justify-center bg-gray-50 min-h-0">
-                        <div class="relative select-none" data-crop-preview-container
-                             style="max-width:100%;max-height:100%;">
-                            {{-- Base image --}}
-                            <img
-                                src="{{ $cropPreviewUrl }}"
-                                data-crop-preview
-                                class="block max-w-full max-h-[50vh] pointer-events-none"
-                                draggable="false"
-                                style="image-rendering:auto;"
-                            >
-                            {{-- Dark overlay (box-shadow outside crop rect) --}}
-                            <div
-                                class="absolute pointer-events-none"
-                                :style="overlayStyle"
-                            ></div>
-                            {{-- Crop rect border --}}
-                            <div
-                                class="absolute border-2 border-white"
-                                :style="cropStyle"
-                            >
-                                {{-- Move handle (interior) --}}
-                                <div
-                                    class="absolute inset-0 cursor-move"
-                                    @mousedown.prevent="startDrag('move', $event)"
-                                ></div>
-                                {{-- Corner handles --}}
-                                <div
-                                    class="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-nwse-resize shadow"
-                                    @mousedown.prevent="startDrag('nw', $event)"></div>
-                                <div
-                                    class="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-nesw-resize shadow"
-                                    @mousedown.prevent="startDrag('ne', $event)"></div>
-                                <div
-                                    class="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-nesw-resize shadow"
-                                    @mousedown.prevent="startDrag('sw', $event)"></div>
-                                <div
-                                    class="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-nwse-resize shadow"
-                                    @mousedown.prevent="startDrag('se', $event)"></div>
-                                {{-- Edge handles --}}
-                                <div
-                                    class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-ns-resize shadow"
-                                    @mousedown.prevent="startDrag('n', $event)"></div>
-                                <div
-                                    class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-ns-resize shadow"
-                                    @mousedown.prevent="startDrag('s', $event)"></div>
-                                <div
-                                    class="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-ew-resize shadow"
-                                    @mousedown.prevent="startDrag('w', $event)"></div>
-                                <div
-                                    class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border border-gray-400 rounded-sm cursor-ew-resize shadow"
-                                    @mousedown.prevent="startDrag('e', $event)"></div>
+    {{-- ===== RECEIPT MODAL ===== --}}
+    <x-table-management.receipt-modal
+        :show="$showReceiptModal"
+        :receipt-data="$receiptData"
+    />
+
+    {{-- ===== RESERVATION MODAL ===== --}}
+    <x-table-management.reservation-modal
+        :show="$showReservationModal"
+        :element-id="$reservationElementId"
+        :table-name="collect($this->elements)->firstWhere('id', $reservationElementId)['table_name'] ?? 'Table'"
+    />
+
+    {{-- ===== RESUME / NEW ORDER CONFIRMATION ===== --}}
+    @if($showResumeOrderConfirm)
+        <div wire:key="resume-order-confirm" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="dismissResumeConfirm"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" @click.stop>
+                <div class="flex items-start gap-4 mb-5">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 shrink-0">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-gray-900">Existing Draft Order</h3>
+                        <p class="mt-1 text-sm text-gray-500">A draft order already exists for this table — resume it or start a new one?</p>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <x-ui.button wire:click="resumeOrder" class="w-full justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Resume Draft Order
+                    </x-ui.button>
+                    <x-ui.button variant="danger" wire:click="startNewOrder" class="w-full justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                        Start New Order
+                    </x-ui.button>
+                    <x-ui.button variant="secondary" wire:click="dismissResumeConfirm" class="w-full justify-center">
+                        Cancel
+                    </x-ui.button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== DEPARTURE CONFIRMATION MODAL ===== --}}
+    @if($showDepartureConfirm)
+        <div wire:key="departure-confirm-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="closeDepartureConfirm"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" @click.stop>
+                <h2 class="text-lg font-bold text-gray-900 mb-1">Confirm Departure</h2>
+                <p class="text-sm text-gray-500 mb-5">Mark the guest as departed and set payment status for their orders.</p>
+
+                <div class="space-y-4">
+                    {{-- Payment Status Toggle --}}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Payment Received</p>
+                                <p class="text-xs text-gray-500">Mark orders as paid</p>
                             </div>
                         </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" wire:model="departurePaid" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                        </label>
                     </div>
 
-                    {{-- Footer --}}
-                    <div
-                        class="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-white rounded-b-2xl">
-                        <button
-                            @click="reset()"
-                            class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                        >Reset to full image
-                        </button>
-                        <div class="flex items-center gap-3">
-                            <x-ui.button variant="secondary" size="sm" @click="$wire.closeCropModal()">
-                                Cancel
-                            </x-ui.button>
-                            @if($isEditCrop)
-                                <x-ui.button size="sm" @click="$wire.saveCrop({{ $cropEditImageId }}, cropX, cropY, cropW, cropH)">
-                                    Save crop
-                                </x-ui.button>
-                            @else
-                                <x-ui.button size="sm" @click="$wire.uploadElementImage(cropX, cropY, cropW, cropH)" wire:loading.attr="disabled" wire:target="uploadElementImage">
-                                    <span wire:loading.remove wire:target="uploadElementImage">Add to library</span>
-                                    <span wire:loading wire:target="uploadElementImage">Saving…</span>
-                                </x-ui.button>
-                            @endif
-                        </div>
+                    {{-- Action Buttons --}}
+                    <div class="flex gap-3 pt-2">
+                        <x-ui.button variant="secondary" class="flex-1" wire:click="closeDepartureConfirm">
+                            Cancel
+                        </x-ui.button>
+                        <x-ui.button class="flex-1" wire:click="confirmDeparture">
+                            Confirm Departure
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
-        @endif
+        </div>
     @endif
 
     {{-- ===== CREATE FLOOR PLAN MODAL ===== --}}

@@ -52,6 +52,7 @@ class RoleSeeder extends Seeder
             'permissions' => [
                 'View Dishes',
                 'View Kitchen Orders', 'Mark Orders Ready',
+                'View Bar Orders', 'Send Bar Orders',
             ],
         ],
         'maintenance_crew' => [

@@ -2,12 +2,18 @@
 
 namespace App\Livewire;
 
+use App\Enums\OrderStatus;
 use App\Enums\TableStatus;
 use App\Models\FloorPlan;
 use App\Models\FloorPlanElement;
 use App\Models\Image;
+use App\Models\Order;
+use App\Models\Reservation;
+use App\Services\OrderService;
+use App\Services\ReservationService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -43,6 +49,45 @@ class TableManagement extends Component
 
     public ?int $tableSheetElementId = null;
 
+    // Order info modal
+    public bool $showOrderInfoModal = false;
+
+    public ?int $orderInfoElementId = null;
+
+    // Receipt modal
+    public bool $showReceiptModal = false;
+
+    public ?array $receiptData = null;
+
+    // Reservation modal
+    public bool $showReservationModal = false;
+
+    public ?int $reservationElementId = null;
+
+    public string $reservationGuestName = '';
+
+    public string $reservationPhone = '';
+
+    public string $reservationEmail = '';
+
+    public int $reservationPartySize = 2;
+
+    public string $reservationDatetime = '';
+
+    public string $reservationNotes = '';
+
+    // Accept Order — existing-order confirmation
+    public bool $showResumeOrderConfirm = false;
+
+    public ?int $pendingOrderElementId = null;
+
+    // Departure confirmation modal
+    public bool $showDepartureConfirm = false;
+
+    public ?int $pendingDepartureReservationId = null;
+
+    public bool $departurePaid = true;
+
     // Create floor plan form
     public string $newFloorPlanName = '';
 
@@ -51,16 +96,11 @@ class TableManagement extends Component
     // Rename floor plan form
     public string $renameFloorPlanName = '';
 
-    // Image upload for element library
-    public $newElementImage = null;
-
     // Background image replacement
     public $replacementBackgroundImage = null;
 
-    // Crop tool modal
-    public bool $showCropModal = false;
-
-    public ?int $cropEditImageId = null;
+    // Snap to elements toggle
+    public bool $snapEnabled = true;
 
     // Clipboard for copy/paste
     /** @var array<string, mixed> */
@@ -84,6 +124,8 @@ class TableManagement extends Component
         }
     }
 
+    // ─── Computed Properties ───────────────────────────────────────────
+
     #[Computed]
     public function floorPlans(): Collection
     {
@@ -97,9 +139,14 @@ class TableManagement extends Component
             return null;
         }
 
-        return FloorPlan::with(['backgroundImage', 'elements.image'])->find($this->activeFloorPlanId);
+        return FloorPlan::with(['backgroundImage', 'elements'])->find($this->activeFloorPlanId);
     }
 
+    /**
+     * Build the element array for the canvas, merging DB state with pending changes.
+     *
+     * @return array<int, array<string, mixed>>
+     */
     #[Computed]
     public function elements(): array
     {
@@ -116,47 +163,82 @@ class TableManagement extends Component
 
             $data = [
                 'id' => $element->id,
-                'image_id' => $element->image_id,
-                'image_url' => $element->image->url(),
-                'crop_x' => $element->image->crop_x,
-                'crop_y' => $element->image->crop_y,
-                'crop_w' => $element->image->crop_w,
-                'crop_h' => $element->image->crop_h,
+                'shape' => $element->shape,
+                'seat_count' => $element->seat_count,
+                'image_path' => $element->image_path,
                 'x' => $element->x,
                 'y' => $element->y,
                 'width' => $element->width,
                 'height' => $element->height,
                 'rotation' => $element->rotation,
                 'z_index' => $element->z_index,
-                'is_table' => $element->is_table,
                 'table_name' => $element->table_name,
-                'seat_count' => $element->seat_count,
                 'status' => $element->status?->value,
             ];
 
-            // Apply any pending changes
             if (isset($this->pendingChanges[$element->id])) {
-                $data = array_merge($data, $this->pendingChanges[$element->id]);
+                $merged = array_merge($data, $this->pendingChanges[$element->id]);
+
+                // Re-resolve image path if seat_count changed
+                if (isset($this->pendingChanges[$element->id]['seat_count'])) {
+                    $merged['image_path'] = $this->resolveImagePath(
+                        $merged['shape'],
+                        $merged['seat_count'],
+                    );
+                }
+
+                $data = $merged;
             }
 
             $elements[] = $data;
         }
 
-        // Add newly placed elements (pending new)
         foreach ($this->pendingNewElements as $newElement) {
             $elements[] = $newElement;
         }
 
-        // Sort by z_index
         usort($elements, fn ($a, $b) => $a['z_index'] <=> $b['z_index']);
 
         return $elements;
     }
 
+    /**
+     * Available preset elements derived from config and validated against the filesystem.
+     *
+     * @return array<string, array{label: string, variants: array<int, array{width: float, height: float, image_path: string}>}>
+     */
     #[Computed]
-    public function imageLibrary(): Collection
+    public function presetElements(): array
     {
-        return Image::query()->latest()->get();
+        /** @var array<string, array{label: string, variants: array<int, array{width: float, height: float}>}> $config */
+        $config = config('table-elements', []);
+        $presets = [];
+
+        foreach ($config as $shape => $shapeConfig) {
+            $variants = [];
+
+            foreach ($shapeConfig['variants'] as $seatCount => $dimensions) {
+                $imagePath = $this->resolveImagePath($shape, $seatCount);
+                if ($imagePath === null) {
+                    continue;
+                }
+
+                $variants[$seatCount] = [
+                    'width' => $dimensions['width'],
+                    'height' => $dimensions['height'],
+                    'image_path' => $imagePath,
+                ];
+            }
+
+            if ($variants !== []) {
+                $presets[$shape] = [
+                    'label' => $shapeConfig['label'],
+                    'variants' => $variants,
+                ];
+            }
+        }
+
+        return $presets;
     }
 
     #[Computed]
@@ -167,7 +249,6 @@ class TableManagement extends Component
         }
 
         foreach ($this->elements as $element) {
-            // Use loose comparison so int DB ids and string pending ids both match.
             if ($element['id'] == $this->selectedElementId) {
                 return $element;
             }
@@ -202,7 +283,7 @@ class TableManagement extends Component
         ];
 
         foreach ($this->elements as $element) {
-            if ($element['is_table'] && $element['status']) {
+            if ($element['status']) {
                 $counts[$element['status']] = ($counts[$element['status']] ?? 0) + 1;
             }
         }
@@ -210,11 +291,69 @@ class TableManagement extends Component
         return $counts;
     }
 
+    /**
+     * Reservation map for current floor plan (element_id => reservation info).
+     *
+     * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, status: string}>
+     */
     #[Computed]
-    public function tableStatuses(): array
+    public function reservationMap(): array
     {
-        return array_map(fn (TableStatus $s) => $s->value, TableStatus::cases());
+        if (! $this->activeFloorPlanId) {
+            return [];
+        }
+
+        return app(ReservationService::class)->getReservationMapForFloorPlan($this->activeFloorPlanId);
     }
+
+    /**
+     * Order info for the currently viewed table element.
+     *
+     * @return array<string, mixed>|null
+     */
+    #[Computed]
+    public function orderInfo(): ?array
+    {
+        if (! $this->orderInfoElementId) {
+            return null;
+        }
+
+        $orderService = app(OrderService::class);
+        $activeOrder = $orderService->getActiveOrderForElement($this->orderInfoElementId);
+
+        if (! $activeOrder) {
+            return null;
+        }
+
+        return $orderService->getOrderDetails($activeOrder->id);
+    }
+
+    /**
+     * Today's reservations for the table sheet element.
+     *
+     * @return Collection<int, Reservation>
+     */
+    #[Computed]
+    public function tableSheetReservations(): Collection
+    {
+        if (! $this->tableSheetElementId) {
+            return new Collection;
+        }
+
+        return app(ReservationService::class)->getTodayReservationsForElement($this->tableSheetElementId);
+    }
+
+    /**
+     * Return the available seat count options for a given shape.
+     *
+     * @return int[]
+     */
+    public function availableSeatCounts(string $shape): array
+    {
+        return array_keys($this->presetElements[$shape]['variants'] ?? []);
+    }
+
+    // ─── Floor Plan Management ─────────────────────────────────────────
 
     public function switchFloorPlan(int $floorPlanId): void
     {
@@ -299,7 +438,6 @@ class TableManagement extends Component
             return;
         }
 
-        // Soft-delete all elements first
         $this->activeFloorPlan->elements()->delete();
         $this->activeFloorPlan->delete();
 
@@ -328,6 +466,8 @@ class TableManagement extends Component
         $this->unsetComputed();
     }
 
+    // ─── Edit Mode ─────────────────────────────────────────────────────
+
     public function enterEditMode(): void
     {
         $this->editMode = true;
@@ -352,7 +492,6 @@ class TableManagement extends Component
             return;
         }
 
-        // Apply pending changes to DB elements
         foreach ($this->pendingChanges as $elementId => $changes) {
             $element = FloorPlanElement::find($elementId);
             if (! $element) {
@@ -361,45 +500,31 @@ class TableManagement extends Component
 
             $updateData = array_intersect_key($changes, array_flip([
                 'x', 'y', 'width', 'height', 'rotation', 'z_index',
-                'is_table', 'table_name', 'seat_count', 'status',
+                'table_name', 'seat_count', 'status',
             ]));
-
-            // Convert status string to enum value for DB storage
-            if (isset($updateData['status']) && $updateData['status'] !== null) {
-                $updateData['status'] = $updateData['status'];
-            }
-
-            if (isset($updateData['is_table']) && ! $updateData['is_table']) {
-                $updateData['table_name'] = null;
-                $updateData['seat_count'] = null;
-                $updateData['status'] = null;
-            }
 
             $element->update($updateData);
         }
 
-        // Delete pending elements
         foreach ($this->pendingDeletes as $elementId) {
             FloorPlanElement::find($elementId)?->delete();
         }
 
-        // Create new elements
         $maxZIndex = FloorPlanElement::where('floor_plan_id', $this->activeFloorPlanId)->max('z_index') ?? 0;
         foreach ($this->pendingNewElements as $newElementData) {
             $maxZIndex++;
             FloorPlanElement::create([
                 'floor_plan_id' => $this->activeFloorPlanId,
-                'image_id' => $newElementData['image_id'],
+                'shape' => $newElementData['shape'],
+                'seat_count' => $newElementData['seat_count'],
                 'x' => $newElementData['x'],
                 'y' => $newElementData['y'],
                 'width' => $newElementData['width'],
                 'height' => $newElementData['height'],
                 'rotation' => $newElementData['rotation'] ?? 0,
                 'z_index' => $maxZIndex,
-                'is_table' => $newElementData['is_table'] ?? false,
-                'table_name' => $newElementData['table_name'] ?? null,
-                'seat_count' => $newElementData['seat_count'] ?? null,
-                'status' => $newElementData['status'] ?? null,
+                'table_name' => $newElementData['table_name'],
+                'status' => $newElementData['status'] ?? TableStatus::Available->value,
             ]);
         }
 
@@ -425,90 +550,33 @@ class TableManagement extends Component
         $this->unsetComputed();
     }
 
-    public function uploadElementImage(float $cropX = 0.0, float $cropY = 0.0, float $cropW = 100.0, float $cropH = 100.0): void
+    // ─── Element Operations ────────────────────────────────────────────
+
+    /**
+     * Place a new preset element on the canvas.
+     */
+    public function placeElement(string $shape, int $seatCount, float $x, float $y, float $width, float $height): void
     {
-        $this->validate([
-            'newElementImage' => ['required', 'file', 'mimes:png,jpg,jpeg,webp,svg', 'max:51200'],
-        ]);
-
-        $this->storeUploadedImage($this->newElementImage, $cropX, $cropY, $cropW, $cropH);
-        $this->newElementImage = null;
-        $this->showCropModal = false;
-        $this->unsetComputed();
-    }
-
-    public function openNewElementCropModal(): void
-    {
-        $this->showCropModal = true;
-    }
-
-    public function openCropEditor(int $imageId): void
-    {
-        $this->cropEditImageId = $imageId;
-        $this->showCropModal = true;
-    }
-
-    public function saveCrop(int $imageId, float $cropX, float $cropY, float $cropW, float $cropH): void
-    {
-        Image::findOrFail($imageId)->update([
-            'crop_x' => max(0, min(99, $cropX)),
-            'crop_y' => max(0, min(99, $cropY)),
-            'crop_w' => max(1, min(100 - $cropX, $cropW)),
-            'crop_h' => max(1, min(100 - $cropY, $cropH)),
-        ]);
-
-        $this->showCropModal = false;
-        $this->cropEditImageId = null;
-        $this->unsetComputed();
-    }
-
-    public function closeCropModal(): void
-    {
-        $this->showCropModal = false;
-        $this->cropEditImageId = null;
-        $this->newElementImage = null;
-    }
-
-    public function deleteImageFromLibrary(int $imageId): void
-    {
-        $image = Image::findOrFail($imageId);
-
-        if ($image->isInUse()) {
-            $this->dispatch('notify', type: 'error', message: 'This image is in use and cannot be deleted.');
-
+        $imagePath = $this->resolveImagePath($shape, $seatCount);
+        if ($imagePath === null) {
             return;
         }
 
-        $image->floorPlanElements()->withTrashed()->forceDelete();
-        $image->floorPlans()->withTrashed()->forceDelete();
-
-        Storage::delete($image->path);
-        $image->delete();
-        $this->unsetComputed();
-    }
-
-    public function placeElement(int $imageId, float $x, float $y, float $width = 10.0, float $height = 10.0): void
-    {
-        $image = Image::findOrFail($imageId);
+        $tableName = $this->generateTableName();
 
         $this->pendingNewElements[] = [
             'id' => 'new_'.count($this->pendingNewElements),
-            'image_id' => $imageId,
-            'image_url' => $image->url(),
-            'crop_x' => $image->crop_x,
-            'crop_y' => $image->crop_y,
-            'crop_w' => $image->crop_w,
-            'crop_h' => $image->crop_h,
+            'shape' => $shape,
+            'seat_count' => $seatCount,
+            'image_path' => $imagePath,
             'x' => $x,
             'y' => $y,
             'width' => $width,
             'height' => $height,
             'rotation' => 0.0,
             'z_index' => 999 + count($this->pendingNewElements),
-            'is_table' => false,
-            'table_name' => null,
-            'seat_count' => null,
-            'status' => null,
+            'table_name' => $tableName,
+            'status' => TableStatus::Available->value,
         ];
 
         $this->hasUnsavedChanges = true;
@@ -535,7 +603,6 @@ class TableManagement extends Component
             $existing = $this->pendingChanges[$id] ?? [];
             $this->pendingChanges[$id] = array_merge($existing, $transformData);
         } else {
-            // New element
             foreach ($this->pendingNewElements as &$newElement) {
                 if ($newElement['id'] === $elementId) {
                     $newElement = array_merge($newElement, $transformData);
@@ -600,7 +667,7 @@ class TableManagement extends Component
             );
         }
 
-        if ($this->selectedElementId === (int) $elementId) {
+        if ($this->selectedElementId == $elementId) {
             $this->selectedElementId = null;
         }
 
@@ -629,23 +696,20 @@ class TableManagement extends Component
         $newX = min(90, ($this->clipboard['x'] ?? 0) + $offset);
         $newY = min(90, ($this->clipboard['y'] ?? 0) + $offset);
 
+        $tableName = $this->generateTableName();
+
         $this->pendingNewElements[] = [
             'id' => 'new_'.count($this->pendingNewElements),
-            'image_id' => $this->clipboard['image_id'],
-            'image_url' => $this->clipboard['image_url'],
-            'crop_x' => $this->clipboard['crop_x'] ?? 0,
-            'crop_y' => $this->clipboard['crop_y'] ?? 0,
-            'crop_w' => $this->clipboard['crop_w'] ?? 100,
-            'crop_h' => $this->clipboard['crop_h'] ?? 100,
+            'shape' => $this->clipboard['shape'],
+            'seat_count' => $this->clipboard['seat_count'],
+            'image_path' => $this->clipboard['image_path'],
             'x' => $newX,
             'y' => $newY,
             'width' => $this->clipboard['width'],
             'height' => $this->clipboard['height'],
             'rotation' => $this->clipboard['rotation'],
             'z_index' => 999 + count($this->pendingNewElements),
-            'is_table' => $this->clipboard['is_table'],
-            'table_name' => $this->clipboard['table_name'],
-            'seat_count' => $this->clipboard['seat_count'],
+            'table_name' => $tableName,
             'status' => $this->clipboard['status'],
         ];
 
@@ -653,19 +717,50 @@ class TableManagement extends Component
         $this->unsetComputed();
     }
 
+    /**
+     * Update the properties of a selected element (table name, seat count).
+     *
+     * When the seat count changes, the element is proportionally scaled based on
+     * the ratio of the new default size to the old default size from config.
+     * Status is not manually settable — it is driven by reservations.
+     */
     public function updateElementProperties(
         int|string $elementId,
-        bool $isTable,
         ?string $tableName,
-        ?int $seatCount,
-        ?string $status,
+        int $seatCount,
     ): void {
+        $currentElement = null;
+        foreach ($this->elements as $el) {
+            if ($el['id'] == $elementId) {
+                $currentElement = $el;
+                break;
+            }
+        }
+
+        if (! $currentElement) {
+            return;
+        }
+
         $updateData = [
-            'is_table' => $isTable,
-            'table_name' => $isTable ? $tableName : null,
-            'seat_count' => $isTable ? $seatCount : null,
-            'status' => $isTable ? $status : null,
+            'table_name' => $tableName,
+            'seat_count' => $seatCount,
         ];
+
+        // Proportional scaling when seat count changes
+        if ($seatCount !== $currentElement['seat_count']) {
+            $shape = $currentElement['shape'];
+            $scaled = $this->computeProportionalScale(
+                $shape,
+                $currentElement['seat_count'],
+                $seatCount,
+                $currentElement['width'],
+                $currentElement['height'],
+            );
+            $updateData['width'] = $scaled['width'];
+            $updateData['height'] = $scaled['height'];
+
+            $updateData['image_path'] = $this->resolveImagePath($shape, $seatCount);
+        }
 
         if (is_numeric($elementId)) {
             $id = (int) $elementId;
@@ -683,35 +778,359 @@ class TableManagement extends Component
 
         $this->dispatch('element-properties-updated',
             id: $elementId,
-            isTable: $isTable,
             tableName: $tableName,
-            status: $status,
+            seatCount: $seatCount,
+            width: $updateData['width'] ?? null,
+            height: $updateData['height'] ?? null,
+            imagePath: $updateData['image_path'] ?? null,
         );
 
         $this->hasUnsavedChanges = true;
         $this->unsetComputed();
     }
 
-    public function updateTableStatus(int $elementId, string $status): void
+    // ─── View Mode: Accept Order ───────────────────────────────────────
+
+    /**
+     * Initiate the Accept Order flow for a given table element.
+     * Only allowed for tables with an active reservation (Occupied status).
+     */
+    public function acceptOrder(int $elementId): void
     {
-        // This can save immediately (no separate save needed for status changes in view mode)
         $element = FloorPlanElement::find($elementId);
-        if ($element && $element->is_table) {
-            $element->update(['status' => $status]);
+        if (! $element) {
+            return;
         }
 
-        // Also update in pending changes if element has pending state
-        if (isset($this->pendingChanges[$elementId])) {
-            $this->pendingChanges[$elementId]['status'] = $status;
+        // Only allow orders for occupied tables (active reservation)
+        if ($element->status !== TableStatus::Occupied) {
+            $this->dispatch('notify', message: 'Orders can only be placed for tables with an active reservation.', type: 'error');
+
+            return;
+        }
+
+        $activeOrder = $element->orders()
+            ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+            ->latest()
+            ->first();
+
+        if ($activeOrder) {
+            $this->pendingOrderElementId = $elementId;
+            $this->showResumeOrderConfirm = true;
+        } else {
+            $this->redirect(route('orders.create', $element));
+        }
+    }
+
+    /**
+     * Resume the existing draft/active order for the pending element.
+     */
+    public function resumeOrder(): void
+    {
+        if (! $this->pendingOrderElementId) {
+            return;
+        }
+
+        $element = FloorPlanElement::find($this->pendingOrderElementId);
+        $this->showResumeOrderConfirm = false;
+        $this->pendingOrderElementId = null;
+
+        if ($element) {
+            $this->redirect(route('orders.create', $element));
+        }
+    }
+
+    /**
+     * Cancel the existing draft order and start a fresh one.
+     */
+    public function startNewOrder(): void
+    {
+        if (! $this->pendingOrderElementId) {
+            return;
+        }
+
+        $element = FloorPlanElement::find($this->pendingOrderElementId);
+        if ($element) {
+            $element->orders()
+                ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+                ->update(['status' => OrderStatus::Cancelled->value]);
+        }
+
+        $this->showResumeOrderConfirm = false;
+        $this->pendingOrderElementId = null;
+
+        if ($element) {
+            $this->redirect(route('orders.create', $element));
+        }
+    }
+
+    public function dismissResumeConfirm(): void
+    {
+        $this->showResumeOrderConfirm = false;
+        $this->pendingOrderElementId = null;
+    }
+
+    // ─── View Mode: Order Info ─────────────────────────────────────────
+
+    public function openOrderInfo(int $elementId): void
+    {
+        $this->orderInfoElementId = $elementId;
+        $this->showOrderInfoModal = true;
+        unset($this->orderInfo);
+    }
+
+    public function closeOrderInfo(): void
+    {
+        $this->showOrderInfoModal = false;
+        $this->orderInfoElementId = null;
+        unset($this->orderInfo);
+    }
+
+    /**
+     * Complete the active order for a table and update statistics.
+     */
+    public function completeOrderForTable(int $elementId): void
+    {
+        $orderService = app(OrderService::class);
+        $activeOrder = $orderService->getActiveOrderForElement($elementId);
+
+        if (! $activeOrder) {
+            $this->dispatch('notify', message: 'No active order found for this table.', type: 'error');
+
+            return;
+        }
+
+        $orderService->completeOrder($activeOrder->id);
+
+        $this->closeOrderInfo();
+        $this->unsetComputed();
+        $this->dispatch('notify', message: 'Order completed successfully.');
+    }
+
+    // ─── View Mode: Receipt ────────────────────────────────────────────
+
+    public function openReceipt(int $elementId): void
+    {
+        $orderService = app(OrderService::class);
+        $reservationService = app(ReservationService::class);
+
+        $activeReservation = $reservationService->getActiveReservationForElement($elementId);
+
+        if ($activeReservation) {
+            $this->receiptData = $orderService->getReceiptForReservation($activeReservation->id);
+        } else {
+            $activeOrder = $orderService->getActiveOrderForElement($elementId);
+            if ($activeOrder) {
+                $this->receiptData = $orderService->getReceiptForOrder($activeOrder->id);
+            }
+        }
+
+        if ($this->receiptData) {
+            $this->showReceiptModal = true;
+        } else {
+            $this->dispatch('notify', message: 'No orders found to generate receipt.', type: 'error');
+        }
+    }
+
+    public function closeReceipt(): void
+    {
+        $this->showReceiptModal = false;
+        $this->receiptData = null;
+    }
+
+    // ─── View Mode: Reservation Management ─────────────────────────────
+
+    public function openReservationModal(int $elementId): void
+    {
+        $this->reservationElementId = $elementId;
+        $this->reservationGuestName = '';
+        $this->reservationPhone = '';
+        $this->reservationEmail = '';
+        $this->reservationPartySize = 2;
+        $this->reservationDatetime = now()->addHour()->format('Y-m-d\TH:i');
+        $this->reservationNotes = '';
+        $this->showReservationModal = true;
+    }
+
+    public function closeReservationModal(): void
+    {
+        $this->showReservationModal = false;
+        $this->reservationElementId = null;
+        $this->resetValidation();
+    }
+
+    public function createReservation(): void
+    {
+        $this->validate([
+            'reservationGuestName' => ['required', 'string', 'max:255'],
+            'reservationPhone' => ['nullable', 'string', 'max:50'],
+            'reservationEmail' => ['nullable', 'email', 'max:255'],
+            'reservationPartySize' => ['required', 'integer', 'min:1', 'max:20'],
+            'reservationDatetime' => ['required', 'date', 'after:now'],
+            'reservationNotes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $element = FloorPlanElement::find($this->reservationElementId);
+        if (! $element) {
+            return;
+        }
+
+        // Check table is not currently occupied
+        if ($element->status === TableStatus::Occupied) {
+            $this->addError('reservationDatetime', 'This table is currently occupied.');
+
+            return;
+        }
+
+        $reservationService = app(ReservationService::class);
+        $dateTime = Carbon::parse($this->reservationDatetime);
+
+        // Check availability
+        if (! $reservationService->isTableAvailableAt($element->id, $dateTime)) {
+            $this->addError('reservationDatetime', 'This table is already reserved around that time (2-hour window).');
+
+            return;
+        }
+
+        $reservationService->createForTable($element->id, [
+            'guest_name' => $this->reservationGuestName,
+            'phone' => $this->reservationPhone,
+            'email' => $this->reservationEmail,
+            'party_size' => $this->reservationPartySize,
+            'reservation_datetime' => $this->reservationDatetime,
+            'internal_notes' => $this->reservationNotes,
+        ]);
+
+        $this->closeReservationModal();
+        $this->unsetComputed();
+        $this->dispatch('notify', message: 'Reservation created successfully.');
+    }
+
+    /**
+     * Seat a reservation (mark as arrived, table becomes Occupied).
+     */
+    public function seatReservation(int $reservationId): void
+    {
+        $reservation = Reservation::find($reservationId);
+        if (! $reservation) {
+            return;
+        }
+
+        app(ReservationService::class)->seatReservation($reservation);
+        $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' has been seated.');
+    }
+
+    /**
+     * Open departure confirmation modal.
+     */
+    public function openDepartureConfirm(int $reservationId): void
+    {
+        $this->pendingDepartureReservationId = $reservationId;
+        $this->departurePaid = true;
+        $this->showDepartureConfirm = true;
+    }
+
+    /**
+     * Close departure confirmation modal.
+     */
+    public function closeDepartureConfirm(): void
+    {
+        $this->showDepartureConfirm = false;
+        $this->pendingDepartureReservationId = null;
+        $this->departurePaid = true;
+    }
+
+    /**
+     * Complete a reservation (mark as departed) with payment status.
+     */
+    public function confirmDeparture(): void
+    {
+        if (! $this->pendingDepartureReservationId) {
+            return;
+        }
+
+        $reservation = Reservation::find($this->pendingDepartureReservationId);
+        if (! $reservation) {
+            $this->closeDepartureConfirm();
+
+            return;
+        }
+
+        app(ReservationService::class)->completeReservation($reservation, $this->departurePaid);
+        $this->closeDepartureConfirm();
+        $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' has departed. Orders marked as '.($this->departurePaid ? 'paid' : 'unpaid').'.');
+    }
+
+    /**
+     * Cancel a reservation.
+     */
+    public function cancelReservation(int $reservationId): void
+    {
+        $reservation = Reservation::find($reservationId);
+        if (! $reservation) {
+            return;
+        }
+
+        $reservation->update(['status' => 'cancelled']);
+
+        // Free up the table if this was the only active reservation
+        if ($reservation->floorPlanElement) {
+            $hasOtherActive = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
+                ->where('id', '!=', $reservation->id)
+                ->whereIn('status', ['scheduled', 'arrived'])
+                ->whereDate('reservation_datetime', today())
+                ->exists();
+
+            if (! $hasOtherActive) {
+                $reservation->floorPlanElement->update(['status' => \App\Enums\TableStatus::Available]);
+            }
         }
 
         $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' reservation cancelled.');
     }
+
+    /**
+     * Mark a reservation as no-show.
+     */
+    public function markNoShow(int $reservationId): void
+    {
+        $reservation = Reservation::find($reservationId);
+        if (! $reservation) {
+            return;
+        }
+
+        $reservation->update(['status' => 'no_show']);
+
+        // Free up the table if this was the only active reservation
+        if ($reservation->floorPlanElement) {
+            $hasOtherActive = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
+                ->where('id', '!=', $reservation->id)
+                ->whereIn('status', ['scheduled', 'arrived'])
+                ->whereDate('reservation_datetime', today())
+                ->exists();
+
+            if (! $hasOtherActive) {
+                $reservation->floorPlanElement->update(['status' => \App\Enums\TableStatus::Available]);
+            }
+        }
+
+        $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' marked as no-show.');
+    }
+
+    // ─── View Mode: Table Sheet ───────────────────────────────────────
 
     public function openTableSheet(int $elementId): void
     {
+        // Auto-mark late reservations before showing
+        app(ReservationService::class)->autoMarkLateReservations();
+
         $this->tableSheetElementId = $elementId;
         $this->showTableSheet = true;
+        unset($this->tableSheetReservations);
         $this->unsetComputed();
     }
 
@@ -719,10 +1138,90 @@ class TableManagement extends Component
     {
         $this->showTableSheet = false;
         $this->tableSheetElementId = null;
+        unset($this->tableSheetReservations);
         $this->unsetComputed();
     }
 
-    private function storeUploadedImage(mixed $file, float $cropX = 0.0, float $cropY = 0.0, float $cropW = 100.0, float $cropH = 100.0): Image
+    // ─── Snap Toggle ───────────────────────────────────────────────────
+
+    public function toggleSnap(): void
+    {
+        $this->snapEnabled = ! $this->snapEnabled;
+    }
+
+    // ─── Private Helpers ───────────────────────────────────────────────
+
+    /**
+     * Resolve the public URL path for a shape + seat count image.
+     */
+    private function resolveImagePath(string $shape, int $seatCount): ?string
+    {
+        $extensions = ['svg', 'png', 'jpg', 'jpeg', 'webp'];
+        $directory = public_path("elements/{$shape}");
+
+        foreach ($extensions as $ext) {
+            if (File::exists("{$directory}/{$seatCount}.{$ext}")) {
+                return "/elements/{$shape}/{$seatCount}.{$ext}";
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Auto-generate the next sequential table name across all elements on this floor plan.
+     */
+    private function generateTableName(): string
+    {
+        $maxNumber = 0;
+
+        foreach ($this->elements as $element) {
+            if (preg_match('/^Table (\d+)$/', $element['table_name'] ?? '', $matches)) {
+                $maxNumber = max($maxNumber, (int) $matches[1]);
+            }
+        }
+
+        foreach ($this->pendingNewElements as $newElement) {
+            if (preg_match('/^Table (\d+)$/', $newElement['table_name'] ?? '', $matches)) {
+                $maxNumber = max($maxNumber, (int) $matches[1]);
+            }
+        }
+
+        return 'Table '.($maxNumber + 1);
+    }
+
+    /**
+     * Compute proportionally scaled dimensions when changing seat count.
+     *
+     * @return array{width: float, height: float}
+     */
+    private function computeProportionalScale(
+        string $shape,
+        int $oldSeatCount,
+        int $newSeatCount,
+        float $currentWidth,
+        float $currentHeight,
+    ): array {
+        /** @var array<string, array{variants: array<int, array{width: float, height: float}>}> $config */
+        $config = config('table-elements', []);
+
+        $oldDefault = $config[$shape]['variants'][$oldSeatCount] ?? null;
+        $newDefault = $config[$shape]['variants'][$newSeatCount] ?? null;
+
+        if (! $oldDefault || ! $newDefault) {
+            return ['width' => $currentWidth, 'height' => $currentHeight];
+        }
+
+        $widthScale = $newDefault['width'] / $oldDefault['width'];
+        $heightScale = $newDefault['height'] / $oldDefault['height'];
+
+        return [
+            'width' => min(100, $currentWidth * $widthScale),
+            'height' => min(100, $currentHeight * $heightScale),
+        ];
+    }
+
+    private function storeUploadedImage(mixed $file): Image
     {
         $originalName = $file->getClientOriginalName();
         $mimeType = $file->getMimeType();
@@ -741,10 +1240,6 @@ class TableManagement extends Component
             'size' => $size,
             'width' => $width,
             'height' => $height,
-            'crop_x' => $cropX,
-            'crop_y' => $cropY,
-            'crop_w' => $cropW,
-            'crop_h' => $cropH,
         ]);
     }
 
@@ -784,17 +1279,19 @@ class TableManagement extends Component
             $this->floorPlans,
             $this->activeFloorPlan,
             $this->elements,
-            $this->imageLibrary,
+            $this->presetElements,
             $this->selectedElement,
             $this->tableSheetElement,
             $this->statusSummary,
+            $this->reservationMap,
+            $this->orderInfo,
+            $this->tableSheetReservations,
         );
     }
 
     public function render(): View
     {
-        return view('livewire.table-management', [
-            'tableStatuses' => TableStatus::cases(),
-        ])->layout('layouts.molveno');
+        return view('livewire.table-management')
+            ->layout('layouts.molveno');
     }
 }

@@ -1,14 +1,17 @@
 <?php
 
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\DishController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\BarOrderController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
+use App\Livewire\TableManagement;
+use App\Livewire\Dishes\DishesPage;
+use App\Livewire\Orders\OrderPage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -40,17 +43,25 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Statistics')
         ->name('statistics');
 
-    Route::livewire('/tablemanagement', TableManagement::class)
+    Route::get('/tablemanagement', TableManagement::class)
         ->middleware('permission:View Table Management')
         ->name('tablemanagement');
-
-    Route::get('/ordermanagement', [OrderManagementController::class, 'index'])
-        ->middleware('permission:View Orders')
-        ->name('ordermanagement');
 
     Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
         ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders');
+
+    Route::get('/barorders', [BarOrderController::class, 'index'])
+        ->middleware('permission:View Bar Orders')
+        ->name('bar-orders');
+
+    Route::patch('/kitchenorders/items/{orderItem}/ready', [KitchenOrderController::class, 'markDishReady'])
+        ->middleware('permission:Mark Orders Ready')
+        ->name('kitchen-orders.dish.ready');
+
+    Route::patch('/kitchenorders/orders/{order}/complete', [KitchenOrderController::class, 'completeOrder'])
+        ->middleware('permission:Mark Orders Ready')
+        ->name('kitchen-orders.order.complete');
 
     Route::get('/reservations', [ReservationController::class, 'index'])
         ->middleware('permission:View Reservations')
@@ -68,7 +79,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:Edit Reservation')
         ->name('reservations.updateStatus');
 
-    Route::get('/dishes', [DishController::class, 'index'])
+    Route::livewire('/dishes', DishesPage::class)
         ->middleware('permission:View Dishes')
         ->name('dishes');
 
@@ -92,6 +103,9 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/maintenance/{task}/done', [MaintenanceController::class, 'markAsDone'])
         ->name('maintenance.markAsDone');
-});
+  
+    Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
+        ->middleware('permission:Create Order')
+        ->name('orders.create');
 
 require __DIR__.'/auth.php';

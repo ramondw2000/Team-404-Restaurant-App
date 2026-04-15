@@ -2,6 +2,8 @@
 
 namespace App\Livewire;
 
+use App\Enums\OrderStatus;
+use App\Models\Order;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -384,119 +386,53 @@ class CompletedOrderTable extends Component
     }
 
     /**
+     * Query completed orders from the database and map them to the array shape
+     * expected by the existing view.
+     *
      * @return Collection<int, array<string, mixed>>
      */
     private function getCompletedOrders(): Collection
     {
-        return collect([
-            [
-                'id' => 'ORD-045',
-                'type' => 'restaurant',
-                'location' => 'Table B7',
-                'waiter' => 'Elena V.',
-                'customer' => 'John Smith',
-                'closed_at' => '18:14',
-                'completed_at' => now()->subMinutes(5)->toDateTimeString(),
-                'completed_at_carbon' => now()->subMinutes(5),
-                'payment_method' => 'Card',
-                'is_refunded' => false,
-                'items' => [
-                    ['name' => 'Grilled Salmon', 'qty' => 2, 'price' => 22.00],
-                    ['name' => 'Beef Tenderloin', 'qty' => 1, 'price' => 28.00],
-                    ['name' => 'Verdure Grigliate', 'qty' => 3, 'price' => 6.00],
-                    ['name' => 'Vino Rosso della Casa', 'qty' => 1, 'price' => 6.50],
-                ],
-            ],
-            [
-                'id' => 'ORD-044',
-                'type' => 'restaurant',
-                'location' => 'Table A3',
-                'waiter' => 'Sofia R.',
-                'customer' => 'Maria Rossi',
-                'closed_at' => '18:02',
-                'completed_at' => now()->subMinutes(17)->toDateTimeString(),
-                'completed_at_carbon' => now()->subMinutes(17),
-                'payment_method' => 'Cash',
-                'is_refunded' => false,
-                'items' => [
-                    ['name' => 'Truffle Pasta', 'qty' => 2, 'price' => 24.00],
-                    ['name' => 'Lobster Bisque', 'qty' => 2, 'price' => 18.00],
-                    ['name' => 'Tiramisu', 'qty' => 2, 'price' => 8.50],
-                ],
-            ],
-            [
-                'id' => 'ORD-043',
-                'type' => 'room_service',
-                'location' => 'Room 501',
-                'waiter' => 'Marco D.',
-                'customer' => 'Guest R501',
-                'closed_at' => '17:55',
-                'completed_at' => now()->subMinutes(24)->toDateTimeString(),
-                'completed_at_carbon' => now()->subMinutes(24),
-                'payment_method' => 'Room Charge',
-                'is_refunded' => true,
-                'items' => [
-                    ['name' => 'Club Sandwich', 'qty' => 1, 'price' => 14.00],
-                    ['name' => 'Caesar Salad', 'qty' => 1, 'price' => 12.00],
-                    ['name' => 'Sparkling Water', 'qty' => 2, 'price' => 4.00],
-                ],
-            ],
-            [
-                'id' => 'ORD-041',
-                'type' => 'room_service',
-                'location' => 'Room 312',
-                'waiter' => 'Marco D.',
-                'customer' => 'Guest R312',
-                'closed_at' => '17:45',
-                'completed_at' => now()->subMinutes(34)->toDateTimeString(),
-                'completed_at_carbon' => now()->subMinutes(34),
-                'payment_method' => 'Room Charge',
-                'is_refunded' => false,
-                'items' => [
-                    ['name' => 'Vegan Buddha Bowl', 'qty' => 1, 'price' => 11.50],
-                    ['name' => 'Focaccia al Rosmarino', 'qty' => 1, 'price' => 5.50],
-                    ['name' => 'Succo di Frutta', 'qty' => 2, 'price' => 4.00],
-                ],
-            ],
-            [
-                'id' => 'ORD-040',
-                'type' => 'restaurant',
-                'location' => 'Table B2',
-                'waiter' => 'Sofia R.',
-                'customer' => 'Anna Bianchi',
-                'closed_at' => '17:38',
-                'completed_at' => now()->subMinutes(41)->toDateTimeString(),
-                'completed_at_carbon' => now()->subMinutes(41),
-                'payment_method' => 'Card',
-                'is_refunded' => false,
-                'items' => [
-                    ['name' => 'Minestrone Soup', 'qty' => 2, 'price' => 7.00],
-                    ['name' => 'Pollo alla Cacciatora', 'qty' => 2, 'price' => 17.50],
-                    ['name' => 'Caffè Affogato', 'qty' => 2, 'price' => 5.00],
-                ],
-            ],
-            [
-                'id' => 'ORD-039',
-                'type' => 'room_service',
-                'location' => 'Room 204',
-                'waiter' => 'Marco D.',
-                'customer' => 'Guest R204',
-                'closed_at' => '17:10',
-                'completed_at' => now()->subMinutes(69)->toDateTimeString(),
-                'completed_at_carbon' => now()->subMinutes(69),
-                'payment_method' => 'Room Charge',
-                'is_refunded' => false,
-                'items' => [
-                    ['name' => 'Mushroom Risotto', 'qty' => 1, 'price' => 15.00],
-                    ['name' => 'Gelato al Limone', 'qty' => 1, 'price' => 5.50],
-                    ['name' => 'Acqua Minerale', 'qty' => 1, 'price' => 3.00],
-                ],
-            ],
-        ])->map(function (array $order): array {
-            $order['total'] = collect($order['items'])
-                ->reduce(fn (float $carry, array $item): float => $carry + ($item['qty'] * $item['price']), 0);
+        $query = Order::with(['items.dish', 'floorPlanElement'])
+            ->where('status', OrderStatus::Completed);
 
-            return $order;
+        if ($this->dateRange === 'today') {
+            $query->whereDate('updated_at', today());
+        } elseif ($this->dateRange === 'week') {
+            $query->whereBetween('updated_at', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($this->dateRange === 'month') {
+            $query->whereMonth('updated_at', now()->month)
+                ->whereYear('updated_at', now()->year);
+        } elseif ($this->dateRange === 'custom' && $this->customDateFrom && $this->customDateTo) {
+            $query->whereBetween('updated_at', [$this->customDateFrom, $this->customDateTo]);
+        }
+
+        return $query->get()->map(function (Order $order): array {
+            $completedAt = $order->updated_at;
+
+            $items = $order->items->map(fn ($item): array => [
+                'name' => $item->dish?->name ?? 'Unknown',
+                'qty' => $item->quantity,
+                'price' => (float) $item->unit_price,
+            ])->all();
+
+            $total = collect($items)
+                ->reduce(fn (float $carry, array $item): float => $carry + ($item['qty'] * $item['price']), 0.0);
+
+            return [
+                'id' => 'ORD-' . str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
+                'type' => 'restaurant',
+                'location' => $order->floorPlanElement?->table_name ?? '—',
+                'waiter' => '—',
+                'customer' => '—',
+                'closed_at' => $completedAt?->format('H:i') ?? '—',
+                'completed_at' => $completedAt?->toDateTimeString(),
+                'completed_at_carbon' => $completedAt,
+                'payment_method' => null,
+                'is_refunded' => false,
+                'items' => $items,
+                'total' => $total,
+            ];
         });
     }
 }

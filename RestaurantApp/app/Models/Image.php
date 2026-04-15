@@ -21,10 +21,6 @@ class Image extends Model
         'size',
         'width',
         'height',
-        'crop_x',
-        'crop_y',
-        'crop_w',
-        'crop_h',
     ];
 
     protected function casts(): array
@@ -33,16 +29,7 @@ class Image extends Model
             'size' => 'integer',
             'width' => 'integer',
             'height' => 'integer',
-            'crop_x' => 'float',
-            'crop_y' => 'float',
-            'crop_w' => 'float',
-            'crop_h' => 'float',
         ];
-    }
-
-    public function floorPlanElements(): HasMany
-    {
-        return $this->hasMany(FloorPlanElement::class);
     }
 
     public function floorPlans(): HasMany
@@ -57,7 +44,6 @@ class Image extends Model
 
     public function isInUse(): bool
     {
-        return $this->floorPlanElements()->exists()
-            || $this->floorPlans()->exists();
+        return $this->floorPlans()->exists();
     }
 }

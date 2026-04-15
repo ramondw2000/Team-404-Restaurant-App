@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Reservation extends Model
 {
@@ -13,6 +15,7 @@ class Reservation extends Model
         'party_size',
         'reservation_datetime',
         'table_number',
+        'floor_plan_element_id',
         'room_number',
         'status',
         'internal_notes',
@@ -20,9 +23,27 @@ class Reservation extends Model
         'deposit_status',
     ];
 
-    protected $casts = [
-        'reservation_datetime' => 'datetime',
-        'party_size' => 'integer',
-        'deposit_amount' => 'decimal:2',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'reservation_datetime' => 'datetime',
+            'party_size' => 'integer',
+            'deposit_amount' => 'decimal:2',
+        ];
+    }
+
+    public function floorPlanElement(): BelongsTo
+    {
+        return $this->belongsTo(FloorPlanElement::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function isActive(): bool
+    {
+        return in_array($this->status, ['scheduled', 'arrived']);
+    }
 }

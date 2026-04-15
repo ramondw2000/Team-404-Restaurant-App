@@ -1,7 +1,31 @@
 <?php
 
+use App\Enums\OrderItemStatus;
+use App\Enums\OrderStatus;
 use App\Livewire\CompletedOrderTable;
+use App\Models\Dish;
+use App\Models\FloorPlanElement;
+use App\Models\Order;
+use App\Models\OrderItem;
 use Livewire\Livewire;
+
+beforeEach(function () {
+    /** @var FloorPlanElement $element */
+    $element = FloorPlanElement::factory()->create(['table_name' => 'Table A1']);
+    $dish = Dish::factory()->create(['name' => 'Truffle Pasta', 'price' => 24.00]);
+
+    $this->completedOrder = Order::factory()->completed()->create([
+        'floor_plan_element_id' => $element->id,
+    ]);
+    OrderItem::factory()->served()->create([
+        'order_id' => $this->completedOrder->id,
+        'dish_id' => $dish->id,
+        'quantity' => 2,
+        'unit_price' => 24.00,
+    ]);
+
+    $this->expectedId = 'ORD-' . str_pad((string) $this->completedOrder->id, 3, '0', STR_PAD_LEFT);
+});
 
 it('renders the completed order table component', function () {
     Livewire::test(CompletedOrderTable::class)
@@ -10,73 +34,40 @@ it('renders the completed order table component', function () {
         ->assertSee('Completed orders');
 });
 
-it('displays all orders by default', function () {
+it('displays completed orders from the database', function () {
     Livewire::test(CompletedOrderTable::class)
-        ->assertSee('ORD-045')
-        ->assertSee('ORD-044')
-        ->assertSee('ORD-043')
-        ->assertSee('ORD-041')
-        ->assertSee('ORD-040')
-        ->assertSee('ORD-039');
+        ->call('setDateRange', 'all')
+        ->assertSee($this->expectedId);
 });
 
-it('filters orders by search term on order id', function () {
-    Livewire::test(CompletedOrderTable::class)
-        ->set('search', 'ORD-045')
-        ->assertSee('ORD-045')
-        ->assertDontSee('ORD-039');
-});
-
-it('filters orders by search term on waiter name', function () {
-    Livewire::test(CompletedOrderTable::class)
-        ->set('search', 'Elena')
-        ->assertSee('ORD-045')
-        ->assertDontSee('ORD-039');
-});
-
-it('filters orders by search term on location', function () {
-    Livewire::test(CompletedOrderTable::class)
-        ->set('search', 'Room 312')
-        ->assertSee('ORD-041')
-        ->assertDontSee('ORD-045');
-});
-
-it('filters orders by payment method', function () {
-    Livewire::test(CompletedOrderTable::class)
-        ->set('paymentMethod', 'Cash')
-        ->assertSee('ORD-044')
-        ->assertDontSee('ORD-045');
-});
-
-it('filters orders by location multi-select', function () {
-    Livewire::test(CompletedOrderTable::class)
-        ->set('selectedLocations', ['Table B7'])
-        ->assertSee('ORD-045')
-        ->assertDontSee('ORD-044');
-});
-
-it('filters orders by waiter multi-select', function () {
-    Livewire::test(CompletedOrderTable::class)
-        ->set('selectedWaiters', ['Marco D.'])
-        ->assertSee('ORD-043')
-        ->assertSee('ORD-041')
-        ->assertSee('ORD-039')
-        ->assertDontSee('ORD-045');
-});
-
-it('filters orders by order type', function () {
-    Livewire::test(CompletedOrderTable::class)
-        ->set('orderType', 'room_service')
-        ->assertSee('ORD-043')
-        ->assertSee('ORD-041')
-        ->assertSee('ORD-039')
-        ->assertDontSee('ORD-045');
-});
-
-it('shows empty state when no orders match', function () {
+it('shows empty state when no orders match the search', function () {
     Livewire::test(CompletedOrderTable::class)
         ->set('search', 'nonexistent-order-xyz')
         ->assertSee('No completed orders found for the selected criteria');
+});
+
+it('filters orders by search term on order id', function () {
+    $element2 = FloorPlanElement::factory()->create(['table_name' => 'Table B9']);
+    $order2 = Order::factory()->completed()->create(['floor_plan_element_id' => $element2->id]);
+    $id2 = 'ORD-' . str_pad((string) $order2->id, 3, '0', STR_PAD_LEFT);
+
+    Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
+        ->set('search', $this->expectedId)
+        ->assertSee($this->expectedId)
+        ->assertDontSee($id2);
+});
+
+it('filters orders by location multi-select', function () {
+    $element2 = FloorPlanElement::factory()->create(['table_name' => 'Table Z99']);
+    $order2 = Order::factory()->completed()->create(['floor_plan_element_id' => $element2->id]);
+    $id2 = 'ORD-' . str_pad((string) $order2->id, 3, '0', STR_PAD_LEFT);
+
+    Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
+        ->set('selectedLocations', ['Table A1'])
+        ->assertSee($this->expectedId)
+        ->assertDontSee($id2);
 });
 
 it('sorts orders by column', function () {
@@ -99,29 +90,28 @@ it('changes per page count', function () {
 
 it('opens and closes the receipt modal', function () {
     Livewire::test(CompletedOrderTable::class)
-        ->call('viewReceipt', 'ORD-045')
+        ->call('setDateRange', 'all')
+        ->call('viewReceipt', $this->expectedId)
         ->assertSet('showReceiptModal', true)
-        ->assertSet('receiptOrderId', 'ORD-045')
+        ->assertSet('receiptOrderId', $this->expectedId)
         ->assertSee('Receipt')
-        ->assertSee('Grilled Salmon')
-        ->assertSee('Beef Tenderloin')
+        ->assertSee('Truffle Pasta')
         ->call('closeReceipt')
         ->assertSet('showReceiptModal', false)
         ->assertSet('receiptOrderId', null);
 });
 
-it('shows receipt with itemized details', function () {
+it('shows receipt with itemized dish details', function () {
     Livewire::test(CompletedOrderTable::class)
-        ->call('viewReceipt', 'ORD-045')
-        ->assertSee('Grilled Salmon')
-        ->assertSee('Beef Tenderloin')
-        ->assertSee('Verdure Grigliate')
-        ->assertSee('Vino Rosso della Casa')
+        ->call('setDateRange', 'all')
+        ->call('viewReceipt', $this->expectedId)
+        ->assertSee('Truffle Pasta')
         ->assertSee('Thank you for dining at Molveno Lake Resort');
 });
 
 it('toggles select all on current page', function () {
     $component = Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
         ->set('selectAllOnPage', true)
         ->call('toggleSelectAll');
 
@@ -130,6 +120,7 @@ it('toggles select all on current page', function () {
 
 it('clears selection when select all is unchecked', function () {
     Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
         ->set('selectAllOnPage', true)
         ->call('toggleSelectAll')
         ->set('selectAllOnPage', false)
@@ -139,15 +130,15 @@ it('clears selection when select all is unchecked', function () {
 
 it('dispatches print-receipt event', function () {
     Livewire::test(CompletedOrderTable::class)
-        ->call('printReceipt', 'ORD-045')
-        ->assertDispatched('print-receipt', orderId: 'ORD-045');
+        ->call('printReceipt', $this->expectedId)
+        ->assertDispatched('print-receipt', orderId: $this->expectedId);
 });
 
 it('dispatches batch-print event for selected orders', function () {
     Livewire::test(CompletedOrderTable::class)
-        ->set('selectedOrders', ['ORD-045', 'ORD-044'])
+        ->set('selectedOrders', [$this->expectedId])
         ->call('batchPrint')
-        ->assertDispatched('batch-print', orderIds: ['ORD-045', 'ORD-044']);
+        ->assertDispatched('batch-print', orderIds: [$this->expectedId]);
 });
 
 it('does not dispatch batch-print when no orders are selected', function () {
@@ -156,43 +147,36 @@ it('does not dispatch batch-print when no orders are selected', function () {
         ->assertNotDispatched('batch-print');
 });
 
-it('applies refunded row color class', function () {
-    $component = Livewire::test(CompletedOrderTable::class);
-    $refundedOrder = $component->instance()->allOrders->firstWhere('id', 'ORD-043');
+it('applies stale row color class for orders older than 30 minutes', function () {
+    $element = FloorPlanElement::factory()->create();
+    $oldOrder = Order::factory()->completed()->create([
+        'floor_plan_element_id' => $element->id,
+        'updated_at' => now()->subHour(),
+    ]);
 
-    expect($component->instance()->rowClasses($refundedOrder))->toBe('bg-red-50');
+    $component = Livewire::test(CompletedOrderTable::class)->call('setDateRange', 'all');
+    $staleId = 'ORD-' . str_pad((string) $oldOrder->id, 3, '0', STR_PAD_LEFT);
+    $order = $component->instance()->allOrders->firstWhere('id', $staleId);
+
+    expect($component->instance()->rowClasses($order))->toBe('bg-yellow-50');
 });
 
-it('applies stale row color class for old orders', function () {
-    $component = Livewire::test(CompletedOrderTable::class);
-    $staleOrder = $component->instance()->allOrders->firstWhere('id', 'ORD-041');
+it('returns empty row class for a recently completed order', function () {
+    $component = Livewire::test(CompletedOrderTable::class)->call('setDateRange', 'all');
+    $order = $component->instance()->allOrders->firstWhere('id', $this->expectedId);
 
-    expect($component->instance()->rowClasses($staleOrder))->toBe('bg-yellow-50');
-});
-
-it('returns empty row class for normal orders', function () {
-    $component = Livewire::test(CompletedOrderTable::class);
-    $normalOrder = $component->instance()->allOrders->firstWhere('id', 'ORD-045');
-
-    expect($component->instance()->rowClasses($normalOrder))->toBe('');
-});
-
-it('applies high-value row color class for orders over 100', function () {
-    $component = Livewire::test(CompletedOrderTable::class);
-    $highValueOrder = $component->instance()->allOrders->firstWhere('id', 'ORD-044');
-
-    expect($component->instance()->rowClasses($highValueOrder))->toBe('bg-green-50');
+    expect($component->instance()->rowClasses($order))->toBe('');
 });
 
 it('sets date range filter', function () {
     Livewire::test(CompletedOrderTable::class)
-        ->call('setDateRange', 'this_week')
-        ->assertSet('dateRange', 'this_week');
+        ->call('setDateRange', 'week')
+        ->assertSet('dateRange', 'week');
 });
 
-it('resets selection when filters change', function () {
+it('resets selection when search filter changes', function () {
     Livewire::test(CompletedOrderTable::class)
-        ->set('selectedOrders', ['ORD-045'])
+        ->set('selectedOrders', [$this->expectedId])
         ->set('search', 'something')
         ->assertSet('selectedOrders', []);
 });

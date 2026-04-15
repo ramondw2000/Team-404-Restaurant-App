@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RoleSeeder::class);
         $this->call(MaintenanceTaskSeeder::class);
+        $this->call(DishSeeder::class);
         // User::factory(10)->create();
 
         User::firstOrCreate(
