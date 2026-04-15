@@ -19,8 +19,8 @@ class OrderObserver
     }
 
     /**
-     * When an order transitions to completed or cancelled, revert the table to Available.
-     * When a draft/active order is created (status updated), mark table Occupied.
+     * When a draft/active order is created or updated, ensure table is marked Occupied.
+     * Note: Table does NOT revert to Available when order is completed - only when guest departs.
      */
     public function updated(Order $order): void
     {
@@ -28,9 +28,9 @@ class OrderObserver
             return;
         }
 
-        if ($order->status === OrderStatus::Completed || $order->status === OrderStatus::Cancelled) {
-            $order->floorPlanElement()->update(['status' => TableStatus::Available]);
-        } elseif ($order->status->isActive()) {
+        // Only mark table as Occupied when an active order is created
+        // Table stays Occupied even when order is completed - guest must depart to free table
+        if ($order->status->isActive()) {
             $order->floorPlanElement()->update(['status' => TableStatus::Occupied]);
         }
     }

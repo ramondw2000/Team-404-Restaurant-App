@@ -8,6 +8,10 @@ use App\Models\FloorPlan;
 use App\Models\FloorPlanElement;
 use App\Models\Image;
 use App\Models\Order;
+use App\Models\Reservation;
+use App\Services\OrderService;
+use App\Services\ReservationService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
@@ -45,10 +49,44 @@ class TableManagement extends Component
 
     public ?int $tableSheetElementId = null;
 
+    // Order info modal
+    public bool $showOrderInfoModal = false;
+
+    public ?int $orderInfoElementId = null;
+
+    // Receipt modal
+    public bool $showReceiptModal = false;
+
+    public ?array $receiptData = null;
+
+    // Reservation modal
+    public bool $showReservationModal = false;
+
+    public ?int $reservationElementId = null;
+
+    public string $reservationGuestName = '';
+
+    public string $reservationPhone = '';
+
+    public string $reservationEmail = '';
+
+    public int $reservationPartySize = 2;
+
+    public string $reservationDatetime = '';
+
+    public string $reservationNotes = '';
+
     // Accept Order — existing-order confirmation
     public bool $showResumeOrderConfirm = false;
 
     public ?int $pendingOrderElementId = null;
+
+    // Departure confirmation modal
+    public bool $showDepartureConfirm = false;
+
+    public ?int $pendingDepartureReservationId = null;
+
+    public bool $departurePaid = true;
 
     // Create floor plan form
     public string $newFloorPlanName = '';
@@ -253,10 +291,56 @@ class TableManagement extends Component
         return $counts;
     }
 
+    /**
+     * Reservation map for current floor plan (element_id => reservation info).
+     *
+     * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, status: string}>
+     */
     #[Computed]
-    public function tableStatuses(): array
+    public function reservationMap(): array
     {
-        return array_map(fn (TableStatus $s) => $s->value, TableStatus::cases());
+        if (! $this->activeFloorPlanId) {
+            return [];
+        }
+
+        return app(ReservationService::class)->getReservationMapForFloorPlan($this->activeFloorPlanId);
+    }
+
+    /**
+     * Order info for the currently viewed table element.
+     *
+     * @return array<string, mixed>|null
+     */
+    #[Computed]
+    public function orderInfo(): ?array
+    {
+        if (! $this->orderInfoElementId) {
+            return null;
+        }
+
+        $orderService = app(OrderService::class);
+        $activeOrder = $orderService->getActiveOrderForElement($this->orderInfoElementId);
+
+        if (! $activeOrder) {
+            return null;
+        }
+
+        return $orderService->getOrderDetails($activeOrder->id);
+    }
+
+    /**
+     * Today's reservations for the table sheet element.
+     *
+     * @return Collection<int, Reservation>
+     */
+    #[Computed]
+    public function tableSheetReservations(): Collection
+    {
+        if (! $this->tableSheetElementId) {
+            return new Collection;
+        }
+
+        return app(ReservationService::class)->getTodayReservationsForElement($this->tableSheetElementId);
     }
 
     /**
@@ -634,16 +718,16 @@ class TableManagement extends Component
     }
 
     /**
-     * Update the properties of a selected element (table name, seat count, status).
+     * Update the properties of a selected element (table name, seat count).
      *
      * When the seat count changes, the element is proportionally scaled based on
      * the ratio of the new default size to the old default size from config.
+     * Status is not manually settable — it is driven by reservations.
      */
     public function updateElementProperties(
         int|string $elementId,
         ?string $tableName,
         int $seatCount,
-        ?string $status,
     ): void {
         $currentElement = null;
         foreach ($this->elements as $el) {
@@ -660,7 +744,6 @@ class TableManagement extends Component
         $updateData = [
             'table_name' => $tableName,
             'seat_count' => $seatCount,
-            'status' => $status,
         ];
 
         // Proportional scaling when seat count changes
@@ -697,7 +780,6 @@ class TableManagement extends Component
             id: $elementId,
             tableName: $tableName,
             seatCount: $seatCount,
-            status: $status,
             width: $updateData['width'] ?? null,
             height: $updateData['height'] ?? null,
             imagePath: $updateData['image_path'] ?? null,
@@ -711,13 +793,19 @@ class TableManagement extends Component
 
     /**
      * Initiate the Accept Order flow for a given table element.
-     * If the element already has a draft/active order, prompt the user to resume or start new.
-     * Otherwise navigate directly to the order creation page.
+     * Only allowed for tables with an active reservation (Occupied status).
      */
     public function acceptOrder(int $elementId): void
     {
         $element = FloorPlanElement::find($elementId);
         if (! $element) {
+            return;
+        }
+
+        // Only allow orders for occupied tables (active reservation)
+        if ($element->status !== TableStatus::Occupied) {
+            $this->dispatch('notify', message: 'Orders can only be placed for tables with an active reservation.', type: 'error');
+
             return;
         }
 
@@ -782,26 +870,267 @@ class TableManagement extends Component
         $this->pendingOrderElementId = null;
     }
 
-    // ─── View Mode: Table Status ───────────────────────────────────────
+    // ─── View Mode: Order Info ─────────────────────────────────────────
 
-    public function updateTableStatus(int $elementId, string $status): void
+    public function openOrderInfo(int $elementId): void
     {
-        $element = FloorPlanElement::find($elementId);
-        if ($element) {
-            $element->update(['status' => $status]);
+        $this->orderInfoElementId = $elementId;
+        $this->showOrderInfoModal = true;
+        unset($this->orderInfo);
+    }
+
+    public function closeOrderInfo(): void
+    {
+        $this->showOrderInfoModal = false;
+        $this->orderInfoElementId = null;
+        unset($this->orderInfo);
+    }
+
+    /**
+     * Complete the active order for a table and update statistics.
+     */
+    public function completeOrderForTable(int $elementId): void
+    {
+        $orderService = app(OrderService::class);
+        $activeOrder = $orderService->getActiveOrderForElement($elementId);
+
+        if (! $activeOrder) {
+            $this->dispatch('notify', message: 'No active order found for this table.', type: 'error');
+
+            return;
         }
 
-        if (isset($this->pendingChanges[$elementId])) {
-            $this->pendingChanges[$elementId]['status'] = $status;
+        $orderService->completeOrder($activeOrder->id);
+
+        $this->closeOrderInfo();
+        $this->unsetComputed();
+        $this->dispatch('notify', message: 'Order completed successfully.');
+    }
+
+    // ─── View Mode: Receipt ────────────────────────────────────────────
+
+    public function openReceipt(int $elementId): void
+    {
+        $orderService = app(OrderService::class);
+        $reservationService = app(ReservationService::class);
+
+        $activeReservation = $reservationService->getActiveReservationForElement($elementId);
+
+        if ($activeReservation) {
+            $this->receiptData = $orderService->getReceiptForReservation($activeReservation->id);
+        } else {
+            $activeOrder = $orderService->getActiveOrderForElement($elementId);
+            if ($activeOrder) {
+                $this->receiptData = $orderService->getReceiptForOrder($activeOrder->id);
+            }
+        }
+
+        if ($this->receiptData) {
+            $this->showReceiptModal = true;
+        } else {
+            $this->dispatch('notify', message: 'No orders found to generate receipt.', type: 'error');
+        }
+    }
+
+    public function closeReceipt(): void
+    {
+        $this->showReceiptModal = false;
+        $this->receiptData = null;
+    }
+
+    // ─── View Mode: Reservation Management ─────────────────────────────
+
+    public function openReservationModal(int $elementId): void
+    {
+        $this->reservationElementId = $elementId;
+        $this->reservationGuestName = '';
+        $this->reservationPhone = '';
+        $this->reservationEmail = '';
+        $this->reservationPartySize = 2;
+        $this->reservationDatetime = now()->addHour()->format('Y-m-d\TH:i');
+        $this->reservationNotes = '';
+        $this->showReservationModal = true;
+    }
+
+    public function closeReservationModal(): void
+    {
+        $this->showReservationModal = false;
+        $this->reservationElementId = null;
+        $this->resetValidation();
+    }
+
+    public function createReservation(): void
+    {
+        $this->validate([
+            'reservationGuestName' => ['required', 'string', 'max:255'],
+            'reservationPhone' => ['nullable', 'string', 'max:50'],
+            'reservationEmail' => ['nullable', 'email', 'max:255'],
+            'reservationPartySize' => ['required', 'integer', 'min:1', 'max:20'],
+            'reservationDatetime' => ['required', 'date', 'after:now'],
+            'reservationNotes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $element = FloorPlanElement::find($this->reservationElementId);
+        if (! $element) {
+            return;
+        }
+
+        // Check table is not currently occupied
+        if ($element->status === TableStatus::Occupied) {
+            $this->addError('reservationDatetime', 'This table is currently occupied.');
+
+            return;
+        }
+
+        $reservationService = app(ReservationService::class);
+        $dateTime = Carbon::parse($this->reservationDatetime);
+
+        // Check availability
+        if (! $reservationService->isTableAvailableAt($element->id, $dateTime)) {
+            $this->addError('reservationDatetime', 'This table is already reserved around that time (2-hour window).');
+
+            return;
+        }
+
+        $reservationService->createForTable($element->id, [
+            'guest_name' => $this->reservationGuestName,
+            'phone' => $this->reservationPhone,
+            'email' => $this->reservationEmail,
+            'party_size' => $this->reservationPartySize,
+            'reservation_datetime' => $this->reservationDatetime,
+            'internal_notes' => $this->reservationNotes,
+        ]);
+
+        $this->closeReservationModal();
+        $this->unsetComputed();
+        $this->dispatch('notify', message: 'Reservation created successfully.');
+    }
+
+    /**
+     * Seat a reservation (mark as arrived, table becomes Occupied).
+     */
+    public function seatReservation(int $reservationId): void
+    {
+        $reservation = Reservation::find($reservationId);
+        if (! $reservation) {
+            return;
+        }
+
+        app(ReservationService::class)->seatReservation($reservation);
+        $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' has been seated.');
+    }
+
+    /**
+     * Open departure confirmation modal.
+     */
+    public function openDepartureConfirm(int $reservationId): void
+    {
+        $this->pendingDepartureReservationId = $reservationId;
+        $this->departurePaid = true;
+        $this->showDepartureConfirm = true;
+    }
+
+    /**
+     * Close departure confirmation modal.
+     */
+    public function closeDepartureConfirm(): void
+    {
+        $this->showDepartureConfirm = false;
+        $this->pendingDepartureReservationId = null;
+        $this->departurePaid = true;
+    }
+
+    /**
+     * Complete a reservation (mark as departed) with payment status.
+     */
+    public function confirmDeparture(): void
+    {
+        if (! $this->pendingDepartureReservationId) {
+            return;
+        }
+
+        $reservation = Reservation::find($this->pendingDepartureReservationId);
+        if (! $reservation) {
+            $this->closeDepartureConfirm();
+
+            return;
+        }
+
+        app(ReservationService::class)->completeReservation($reservation, $this->departurePaid);
+        $this->closeDepartureConfirm();
+        $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' has departed. Orders marked as '.($this->departurePaid ? 'paid' : 'unpaid').'.');
+    }
+
+    /**
+     * Cancel a reservation.
+     */
+    public function cancelReservation(int $reservationId): void
+    {
+        $reservation = Reservation::find($reservationId);
+        if (! $reservation) {
+            return;
+        }
+
+        $reservation->update(['status' => 'cancelled']);
+
+        // Free up the table if this was the only active reservation
+        if ($reservation->floorPlanElement) {
+            $hasOtherActive = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
+                ->where('id', '!=', $reservation->id)
+                ->whereIn('status', ['scheduled', 'arrived'])
+                ->whereDate('reservation_datetime', today())
+                ->exists();
+
+            if (! $hasOtherActive) {
+                $reservation->floorPlanElement->update(['status' => \App\Enums\TableStatus::Available]);
+            }
         }
 
         $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' reservation cancelled.');
     }
+
+    /**
+     * Mark a reservation as no-show.
+     */
+    public function markNoShow(int $reservationId): void
+    {
+        $reservation = Reservation::find($reservationId);
+        if (! $reservation) {
+            return;
+        }
+
+        $reservation->update(['status' => 'no_show']);
+
+        // Free up the table if this was the only active reservation
+        if ($reservation->floorPlanElement) {
+            $hasOtherActive = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
+                ->where('id', '!=', $reservation->id)
+                ->whereIn('status', ['scheduled', 'arrived'])
+                ->whereDate('reservation_datetime', today())
+                ->exists();
+
+            if (! $hasOtherActive) {
+                $reservation->floorPlanElement->update(['status' => \App\Enums\TableStatus::Available]);
+            }
+        }
+
+        $this->unsetComputed();
+        $this->dispatch('notify', message: $reservation->guest_name.' marked as no-show.');
+    }
+
+    // ─── View Mode: Table Sheet ───────────────────────────────────────
 
     public function openTableSheet(int $elementId): void
     {
+        // Auto-mark late reservations before showing
+        app(ReservationService::class)->autoMarkLateReservations();
+
         $this->tableSheetElementId = $elementId;
         $this->showTableSheet = true;
+        unset($this->tableSheetReservations);
         $this->unsetComputed();
     }
 
@@ -809,6 +1138,7 @@ class TableManagement extends Component
     {
         $this->showTableSheet = false;
         $this->tableSheetElementId = null;
+        unset($this->tableSheetReservations);
         $this->unsetComputed();
     }
 
@@ -953,13 +1283,15 @@ class TableManagement extends Component
             $this->selectedElement,
             $this->tableSheetElement,
             $this->statusSummary,
+            $this->reservationMap,
+            $this->orderInfo,
+            $this->tableSheetReservations,
         );
     }
 
     public function render(): View
     {
-        return view('livewire.table-management', [
-            'tableStatuses' => TableStatus::cases(),
-        ])->layout('layouts.molveno');
+        return view('livewire.table-management')
+            ->layout('layouts.molveno');
     }
 }

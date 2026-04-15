@@ -61,6 +61,14 @@ class FloorPlanElement extends Model
     }
 
     /**
+     * @return HasMany<Reservation, $this>
+     */
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    /**
      * Resolve the public image path for this element's shape + seat_count combination.
      *
      * Scans public/elements/{shape}/ for a file named {seat_count}.{ext} in the

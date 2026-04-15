@@ -16,7 +16,9 @@ class Order extends Model
 
     protected $fillable = [
         'floor_plan_element_id',
+        'reservation_id',
         'status',
+        'paid',
         'notes',
     ];
 
@@ -24,6 +26,7 @@ class Order extends Model
     {
         return [
             'status' => OrderStatus::class,
+            'paid' => 'boolean',
         ];
     }
 
@@ -41,5 +44,13 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * @return BelongsTo<Reservation, $this>
+     */
+    public function reservation(): BelongsTo
+    {
+        return $this->belongsTo(Reservation::class);
     }
 }
