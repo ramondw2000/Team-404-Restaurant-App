@@ -103,9 +103,10 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/maintenance/{task}/done', [MaintenanceController::class, 'markAsDone'])
         ->name('maintenance.markAsDone');
-  
+
     Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
         ->middleware('permission:Create Order')
         ->name('orders.create');
+});
 
 require __DIR__.'/auth.php';
