@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\MaintenanceTaskStatus;
 use App\Models\MaintenanceTask;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,15 +14,10 @@ class MaintenanceController extends Controller
      */
     public function index(): View
     {
-        $pendingTasks = MaintenanceTask::where('status', MaintenanceTaskStatus::Pending)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $pendingTasks   = MaintenanceTask::pending()->get();
+        $completedTasks = MaintenanceTask::completed()->get();
 
-        $completedTasks = MaintenanceTask::where('status', MaintenanceTaskStatus::Completed)
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        return view('maintenance.index', [
+        return view('maintenance', [
             'pendingTasks' => $pendingTasks,
             'completedTasks' => $completedTasks,
         ]);
@@ -48,7 +42,7 @@ class MaintenanceController extends Controller
      */
     public function markAsDone(MaintenanceTask $task): RedirectResponse
     {
-        $task->update(['status' => MaintenanceTaskStatus::Completed]);
+        $task->markAsDone();
 
         return redirect()->route('maintenance')->with('success', 'Task marked as done.');
     }

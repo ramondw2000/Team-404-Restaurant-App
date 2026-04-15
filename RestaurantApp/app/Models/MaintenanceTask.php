@@ -24,4 +24,19 @@ class MaintenanceTask extends Model
             'status' => MaintenanceTaskStatus::class,
         ];
     }
+
+    public function markAsDone(): void
+    {
+        $this->update(['status' => MaintenanceTaskStatus::Completed]);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', MaintenanceTaskStatus::Pending)->orderBy('created_at', 'desc');
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', MaintenanceTaskStatus::Completed)->orderBy('updated_at', 'desc');
+    }
 }
