@@ -25,7 +25,8 @@ $cardStateClass = $order['overall'] === 'completed'
 <div class="order-card rounded-xl border overflow-hidden flex flex-col transition-colors duration-300 {{ $cardStateClass }}"
      data-overall="{{ $order['overall'] }}"
      data-type="{{ $order['type'] }}"
-     data-order-id="{{ $order['id'] }}">
+     data-order-id="{{ $order['id'] }}"
+     data-order-db-id="{{ $order['db_id'] }}">
 
     <!-- ── Ticket header ──────────────────── -->
     <div class="px-4 py-3 text-white {{ $headerClass }}">
@@ -69,7 +70,7 @@ $cardStateClass = $order['overall'] === 'completed'
     <!-- ── Dish list ──────────────────────── -->
     <div class="flex-1 divide-y divide-gray-100">
         @foreach($order['dishes'] as $dish)
-            <x-orders.dish-row :dish="$dish" :allergenConfig="$allergenConfig" :orderId="$order['id']" :dishIndex="$loop->index" />
+            <x-orders.dish-row :dish="$dish" :allergenConfig="$allergenConfig" :orderId="$order['id']" :itemId="$dish['item_id']" :dishIndex="$loop->index" />
         @endforeach
     </div>
 

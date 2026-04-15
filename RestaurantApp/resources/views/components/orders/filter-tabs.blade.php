@@ -1,9 +1,9 @@
 @props(['orderCount', 'countActive', 'countCompleted'])
 
 <x-ui.tab-group>
-    <x-ui.tab :active="true" :count="$orderCount" value="all" data-tab="all" data-default="true" onclick="switchTab(this)">All</x-ui.tab>
-    <x-ui.tab :active="false" :count="$countActive" value="active" data-tab="active" onclick="switchTab(this)">Active</x-ui.tab>
-    <x-ui.tab :active="false" :count="$countCompleted" value="completed" data-tab="completed" onclick="switchTab(this)">Completed</x-ui.tab>
+    <x-ui.tab :active="false" :count="$orderCount" value="all" data-tab="all" onclick="switchTab(this)">All</x-ui.tab>
+    <x-ui.tab :active="true" :count="$countActive" value="active" data-tab="active" data-default="true" data-count-type="active" onclick="switchTab(this)">Active</x-ui.tab>
+    <x-ui.tab :active="false" :count="$countCompleted" value="completed" data-tab="completed" data-count-type="completed" onclick="switchTab(this)">Completed</x-ui.tab>
     <x-ui.divider orientation="vertical" class="h-5 mx-1 hidden sm:block" />
     <x-ui.tab :active="false" value="restaurant" data-tab="restaurant" onclick="switchTab(this)">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

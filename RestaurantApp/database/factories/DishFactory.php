@@ -11,19 +11,14 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class DishFactory extends Factory
 {
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            'name' => $this->faker->words(3, true),
-            'description' => $this->faker->optional()->sentence(),
-            'price' => $this->faker->randomFloat(2, 3, 30),
-            'category' => $this->faker->randomElement(['Starters', 'Mains', 'Desserts', 'Drinks', 'Sides']),
-            'allergens' => [],
-            'dietary' => [],
+            'name' => fake()->words(3, true),
+            'description' => fake()->optional()->sentence(),
+            'price' => fake()->randomFloat(2, 3, 30),
             'color' => '#309bcf',
             'photo_path' => null,
         ];

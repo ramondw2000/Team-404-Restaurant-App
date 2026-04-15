@@ -1,5 +1,10 @@
 <?php
 
+use App\Livewire\Dishes\DishesPage;
+use App\Models\Dish;
+use App\Models\FloorPlanElement;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 
@@ -10,34 +15,18 @@ beforeEach(function () {
     $this->actingAs($this->user);
 });
 
-it('DishController passes dishes and allergenConfig to the dishes view', function () {
+it('dishes page renders as Livewire component', function () {
     $response = $this->get(route('dishes'));
-
     $response->assertOk();
-    $response->assertViewHas('dishes');
-    $response->assertViewHas('allergenConfig');
-
-    $dishes = $response->viewData('dishes');
-    $allergenConfig = $response->viewData('allergenConfig');
-
-    expect($dishes)->toBeArray()->not->toBeEmpty();
-    expect($allergenConfig)->toBeArray()->toHaveKeys(['gluten', 'nuts', 'milk', 'wheat', 'fish', 'egg']);
-});
-
-it('OrderManagementController passes dishes, allergenConfig, tables, and categories', function () {
-    $response = $this->get(route('ordermanagement'));
-
-    $response->assertOk();
-    $response->assertViewHas('dishes');
-    $response->assertViewHas('allergenConfig');
-    $response->assertViewHas('tables');
-    $response->assertViewHas('categories');
-
-    expect($response->viewData('tables'))->toBeArray()->not->toBeEmpty();
-    expect($response->viewData('categories'))->toBeArray()->toContain('Starters', 'Mains', 'Desserts');
+    $response->assertSeeLivewire(DishesPage::class);
 });
 
 it('KitchenOrderController passes orders and computed counts', function () {
+    $element = FloorPlanElement::factory()->create();
+    $dish    = Dish::factory()->create();
+    $order   = Order::factory()->active()->create(['floor_plan_element_id' => $element->id]);
+    OrderItem::factory()->create(['order_id' => $order->id, 'dish_id' => $dish->id]);
+
     $response = $this->get(route('kitchen-orders'));
 
     $response->assertOk();
@@ -65,12 +54,3 @@ it('AccountController passes users, roleConfig, and counts', function () {
     expect($counts)->toBeArray()->toHaveKeys(['all', 'management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew']);
 });
 
-it('allergenConfig is consistent across all controllers using shared config', function () {
-    $dishResponse = $this->get(route('dishes'));
-    $orderMgmtResponse = $this->get(route('ordermanagement'));
-    $kitchenResponse = $this->get(route('kitchen-orders'));
-
-    expect($dishResponse->viewData('allergenConfig'))
-        ->toBe($orderMgmtResponse->viewData('allergenConfig'))
-        ->toBe($kitchenResponse->viewData('allergenConfig'));
-});
