@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\BarOrderController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
+use App\Livewire\TableManagement;
 use App\Livewire\Dishes\DishesPage;
 use App\Livewire\Orders\OrderPage;
 use Illuminate\Support\Facades\Route;
@@ -39,13 +41,17 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Statistics')
         ->name('statistics');
 
-    Route::livewire('/tablemanagement', TableManagement::class)
+    Route::get('/tablemanagement', TableManagement::class)
         ->middleware('permission:View Table Management')
         ->name('tablemanagement');
 
     Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
         ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders');
+
+    Route::get('/barorders', [BarOrderController::class, 'index'])
+        ->middleware('permission:View Bar Orders')
+        ->name('bar-orders');
 
     Route::patch('/kitchenorders/items/{orderItem}/ready', [KitchenOrderController::class, 'markDishReady'])
         ->middleware('permission:Mark Orders Ready')
