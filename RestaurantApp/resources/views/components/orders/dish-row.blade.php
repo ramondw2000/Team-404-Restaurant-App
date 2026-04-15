@@ -1,4 +1,4 @@
-@props(['dish', 'allergenConfig', 'orderId', 'dishIndex'])
+@props(['dish', 'allergenConfig', 'orderId', 'dishIndex', 'itemId'])
 
 @php
 $dotClassMap = [
@@ -36,7 +36,7 @@ $markReadyClasses   = 'bg-sky-600 border border-sky-700 text-white shadow-lg sha
               placeholder="No notes…">{{ $dish['notes'] }}</textarea>
 
     <!-- Action buttons -->
-    <div class="dish-action" data-order-id="{{ $orderId }}" data-dish-status="{{ $dish['status'] }}" data-dish-index="{{ $dishIndex }}">
+    <div class="dish-action" data-order-id="{{ $orderId }}" data-item-id="{{ $itemId }}" data-dish-status="{{ $dish['status'] }}" data-dish-index="{{ $dishIndex }}">
         @if($dish['status'] === 'served')
             <div class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 border border-green-200 px-2.5 py-1.5 rounded-lg">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>

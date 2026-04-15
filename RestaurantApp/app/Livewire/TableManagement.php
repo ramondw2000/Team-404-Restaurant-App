@@ -2,10 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Enums\OrderStatus;
 use App\Enums\TableStatus;
 use App\Models\FloorPlan;
 use App\Models\FloorPlanElement;
 use App\Models\Image;
+use App\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
@@ -42,6 +44,11 @@ class TableManagement extends Component
     public bool $showTableSheet = false;
 
     public ?int $tableSheetElementId = null;
+
+    // Accept Order — existing-order confirmation
+    public bool $showResumeOrderConfirm = false;
+
+    public ?int $pendingOrderElementId = null;
 
     // Create floor plan form
     public string $newFloorPlanName = '';
@@ -698,6 +705,81 @@ class TableManagement extends Component
 
         $this->hasUnsavedChanges = true;
         $this->unsetComputed();
+    }
+
+    // ─── View Mode: Accept Order ───────────────────────────────────────
+
+    /**
+     * Initiate the Accept Order flow for a given table element.
+     * If the element already has a draft/active order, prompt the user to resume or start new.
+     * Otherwise navigate directly to the order creation page.
+     */
+    public function acceptOrder(int $elementId): void
+    {
+        $element = FloorPlanElement::find($elementId);
+        if (! $element) {
+            return;
+        }
+
+        $activeOrder = $element->orders()
+            ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+            ->latest()
+            ->first();
+
+        if ($activeOrder) {
+            $this->pendingOrderElementId = $elementId;
+            $this->showResumeOrderConfirm = true;
+        } else {
+            $this->redirect(route('orders.create', $element));
+        }
+    }
+
+    /**
+     * Resume the existing draft/active order for the pending element.
+     */
+    public function resumeOrder(): void
+    {
+        if (! $this->pendingOrderElementId) {
+            return;
+        }
+
+        $element = FloorPlanElement::find($this->pendingOrderElementId);
+        $this->showResumeOrderConfirm = false;
+        $this->pendingOrderElementId = null;
+
+        if ($element) {
+            $this->redirect(route('orders.create', $element));
+        }
+    }
+
+    /**
+     * Cancel the existing draft order and start a fresh one.
+     */
+    public function startNewOrder(): void
+    {
+        if (! $this->pendingOrderElementId) {
+            return;
+        }
+
+        $element = FloorPlanElement::find($this->pendingOrderElementId);
+        if ($element) {
+            $element->orders()
+                ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+                ->update(['status' => OrderStatus::Cancelled->value]);
+        }
+
+        $this->showResumeOrderConfirm = false;
+        $this->pendingOrderElementId = null;
+
+        if ($element) {
+            $this->redirect(route('orders.create', $element));
+        }
+    }
+
+    public function dismissResumeConfirm(): void
+    {
+        $this->showResumeOrderConfirm = false;
+        $this->pendingOrderElementId = null;
     }
 
     // ─── View Mode: Table Status ───────────────────────────────────────

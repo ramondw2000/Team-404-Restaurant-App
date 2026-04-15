@@ -1,4 +1,7 @@
 <script>
+    const KITCHEN_MARK_READY_URL = '{{ rtrim(route('kitchen-orders.dish.ready', ['orderItem' => '__ID__']), '') }}';
+    const KITCHEN_COMPLETE_URL   = '{{ rtrim(route('kitchen-orders.order.complete', ['order' => '__ID__']), '') }}';
+    const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content;
     const TAB_ACTIVE_CLASSES = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
     const TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
     const TAB_COUNT_ACTIVE_CLASSES = ['bg-white/25', 'text-white'];
@@ -73,6 +76,14 @@
         updateDishVisualState(dishAction, nextState);
 
         updateOrderSendState(button.closest('.order-card'));
+
+        const itemId = dishAction?.dataset.itemId;
+        if (itemId) {
+            fetch(KITCHEN_MARK_READY_URL.replace('__ID__', itemId), {
+                method: 'PATCH',
+                headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+            }).catch(() => {});
+        }
     }
 
     function completeOrder(button) {
@@ -83,6 +94,39 @@
             hideOrderActions(card);
             markAllDishesServed(card);
             syncCardVisualState(card);
+            updateFilterCounts('completed');
+        }
+
+        const dbId = card?.dataset.orderDbId;
+        if (dbId) {
+            fetch(KITCHEN_COMPLETE_URL.replace('__ID__', dbId), {
+                method: 'PATCH',
+                headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+            }).catch(() => {});
+        }
+    }
+
+    function updateFilterCounts(direction) {
+        const activeCountEl = document.querySelector('button[data-count-type="active"] span');
+        const completedCountEl = document.querySelector('button[data-count-type="completed"] span');
+        const allCountEl = document.querySelector('button[data-tab="all"] span');
+
+        if (direction === 'completed') {
+            if (activeCountEl) {
+                const current = parseInt(activeCountEl.textContent, 10) || 0;
+                activeCountEl.textContent = Math.max(0, current - 1);
+            }
+            if (completedCountEl) {
+                const current = parseInt(completedCountEl.textContent, 10) || 0;
+                completedCountEl.textContent = current + 1;
+            }
+        }
+
+        // Update "All" count to match sum of active + completed
+        if (allCountEl && activeCountEl && completedCountEl) {
+            const active = parseInt(activeCountEl.textContent, 10) || 0;
+            const completed = parseInt(completedCountEl.textContent, 10) || 0;
+            allCountEl.textContent = active + completed;
         }
     }
 

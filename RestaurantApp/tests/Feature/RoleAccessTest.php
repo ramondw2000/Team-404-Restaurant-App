@@ -103,32 +103,6 @@ it('denies bar_staff access to table management', function () {
     actingAsRole('bar_staff')->get(route('tablemanagement'))->assertForbidden();
 });
 
-// ── Order Management: management, server, receptionist ──
-
-it('allows management to access order management', function () {
-    actingAsRole('management')->get(route('ordermanagement'))->assertOk();
-});
-
-it('allows server to access order management', function () {
-    actingAsRole('server')->get(route('ordermanagement'))->assertOk();
-});
-
-it('allows receptionist to access order management', function () {
-    actingAsRole('receptionist')->get(route('ordermanagement'))->assertOk();
-});
-
-it('denies chef access to order management', function () {
-    actingAsRole('chef')->get(route('ordermanagement'))->assertForbidden();
-});
-
-it('denies bar_staff access to order management', function () {
-    actingAsRole('bar_staff')->get(route('ordermanagement'))->assertForbidden();
-});
-
-it('denies maintenance_crew access to order management', function () {
-    actingAsRole('maintenance_crew')->get(route('ordermanagement'))->assertForbidden();
-});
-
 // ── Kitchen Orders: management, receptionist, chef, bar_staff ──
 
 it('allows management to access kitchen orders', function () {

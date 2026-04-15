@@ -1,4 +1,4 @@
-@props(['filter', 'value', 'onclick' => null])
+@props(['filter', 'value'])
 
 <x-ui.button
     size="pill"
@@ -7,7 +7,6 @@
         'class' => 'filter-btn shadow-none',
         'data-filter' => $filter,
         'data-value' => $value,
-        'onclick' => $onclick,
     ]) }}
 >
     {{ $slot }}
