@@ -4,6 +4,8 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\BarOrderController;
 use App\Http\Controllers\KitchenOrderController;
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
@@ -81,9 +83,29 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Dishes')
         ->name('dishes');
 
+    Route::post('/dishes', [DishController::class, 'store'])
+        ->middleware('role:management|chef|bar_staff')
+        ->name('dishes.store');
+
+    Route::post('/dishes/{dish}/update', [DishController::class, 'update'])
+        ->middleware('role:management|chef|bar_staff')
+        ->name('dishes.update');
+
+    Route::delete('/dishes/{dish}', [DishController::class, 'destroy'])
+        ->middleware('role:management|chef|bar_staff')
+        ->name('dishes.destroy');
+
+    Route::get('/maintenance', [MaintenanceController::class, 'index'])
+        ->name('maintenance');
+
+    Route::patch('/maintenance/{task}/notes', [MaintenanceController::class, 'updateNotes'])
+        ->name('maintenance.updateNotes');
+
+    Route::patch('/maintenance/{task}/done', [MaintenanceController::class, 'markAsDone'])
+        ->name('maintenance.markAsDone');
+  
     Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
         ->middleware('permission:Create Order')
         ->name('orders.create');
-});
 
 require __DIR__.'/auth.php';
