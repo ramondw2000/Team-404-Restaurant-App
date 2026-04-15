@@ -1,30 +1,51 @@
 @props(['reservation'])
 
 <div
-    @click="selectedReservation = {{ $reservation->id }}"
-    :class="selectedReservation === {{ $reservation->id }} ? 'border-molveno-blue-500 bg-molveno-blue-50 ring-1 ring-molveno-blue-200' : 'border-gray-200 bg-white hover:border-molveno-blue-300'"
-    class="group cursor-pointer rounded-lg border px-3 py-2 transition-all duration-150"
+    wire:click="selectReservation({{ $reservation->id }})"
+    x-data="{ localStatus: '{{ $reservation->status }}' }"
+    class="group flex items-center gap-3 px-1 py-2.5 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors duration-100"
 >
-    <div class="flex items-center gap-3">
-        <p class="min-w-[100px] text-sm font-semibold text-gray-900">
-            {{ $reservation->guest_name }}
-        </p>
-        <span class="flex items-center gap-1 text-xs text-gray-500">
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+    {{-- Exact time --}}
+    <span class="w-12 shrink-0 text-xs font-bold text-molveno-blue-600 tabular-nums text-right">
+        {{ $reservation->reservation_datetime->format('H:i') }}
+    </span>
+
+    {{-- Guest name --}}
+    <p class="w-36 shrink-0 text-sm font-semibold text-gray-900 truncate">
+        {{ $reservation->guest_name }}
+    </p>
+
+    {{-- Meta pills --}}
+    <div class="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+        {{-- Party size --}}
+        <span class="inline-flex items-center gap-1 text-xs text-gray-500 shrink-0">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
             {{ $reservation->party_size }}
         </span>
+
         @if($reservation->table_number)
-            <span class="flex items-center gap-1 text-xs text-gray-500">
-                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            <span class="inline-flex items-center gap-1 text-xs text-gray-500 shrink-0">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><line x1="12" y1="12" x2="12" y2="12"/>
                 </svg>
                 {{ $reservation->table_number }}
             </span>
         @endif
-        <span class="ml-auto">
-            <x-reservations.status-badge :status="$reservation->status" />
-        </span>
+
+        @if($reservation->room_number)
+            <span class="inline-flex items-center gap-1 text-xs text-gray-400 shrink-0">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                {{ $reservation->room_number }}
+            </span>
+        @endif
     </div>
+
+    {{-- Status badge (optimistic) --}}
+    <span class="ml-auto shrink-0">
+        <x-reservations.status-badge :status="$reservation->status" x-bind:data-status="localStatus" />
+    </span>
 </div>

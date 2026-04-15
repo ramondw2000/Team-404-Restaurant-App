@@ -98,12 +98,12 @@
                         </svg>
                         Print Receipt
                     </x-ui.button>
-                    @if($orderInfo['status'] !== 'completed')
+                    @if(! $orderInfo['paid'])
                         <x-ui.button wire:click="completeOrderForTable({{ $elementId }})" class="flex-1 justify-center">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
-                            Mark Finished
+                            Mark Paid
                         </x-ui.button>
                     @endif
                 </div>

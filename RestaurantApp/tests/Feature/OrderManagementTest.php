@@ -174,9 +174,10 @@ it('accept order navigates directly to order page when no active order exists', 
         ->assertRedirect(route('orders.create', $element));
 });
 
-it('accept order shows resume confirmation when draft order already exists', function () {
+it('accept order shows resume confirmation when draft order with items already exists', function () {
     $element = FloorPlanElement::factory()->occupied()->create();
-    Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+    $draft = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+    OrderItem::factory()->create(['order_id' => $draft->id]);
 
     Livewire::actingAs(orderUser())
         ->test(TableManagement::class)
@@ -185,9 +186,21 @@ it('accept order shows resume confirmation when draft order already exists', fun
         ->assertSet('pendingOrderElementId', $element->id);
 });
 
-it('resumeOrder redirects to order page with existing draft', function () {
+it('accept order skips empty draft and redirects directly', function () {
     $element = FloorPlanElement::factory()->occupied()->create();
     Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+
+    Livewire::actingAs(orderUser())
+        ->test(TableManagement::class)
+        ->call('acceptOrder', $element->id)
+        ->assertSet('showResumeOrderConfirm', false)
+        ->assertRedirect(route('orders.create', $element));
+});
+
+it('resumeOrder redirects to order page with existing draft', function () {
+    $element = FloorPlanElement::factory()->occupied()->create();
+    $draft = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+    OrderItem::factory()->create(['order_id' => $draft->id]);
 
     Livewire::actingAs(orderUser())
         ->test(TableManagement::class)
@@ -199,6 +212,7 @@ it('resumeOrder redirects to order page with existing draft', function () {
 it('startNewOrder cancels the existing draft and redirects', function () {
     $element = FloorPlanElement::factory()->occupied()->create();
     $draft = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+    OrderItem::factory()->create(['order_id' => $draft->id]);
 
     Livewire::actingAs(orderUser())
         ->test(TableManagement::class)

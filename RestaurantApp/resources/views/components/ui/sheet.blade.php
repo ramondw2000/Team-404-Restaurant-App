@@ -30,8 +30,8 @@
             document.body.style.overflow = '';
         },
     }"
-    x-on:open-sheet.window="if ($event.detail === '{{ $name }}') { open() }"
-    x-on:close-sheet.window="if ($event.detail === '{{ $name }}') { close() }"
+    x-on:open-sheet.window="if ($event.detail.name === '{{ $name }}') { open() }"
+    x-on:close-sheet.window="if ($event.detail.name === '{{ $name }}') { close() }"
     x-on:keydown.escape.window="if (show) { close() }"
     {{ $attributes }}
 >

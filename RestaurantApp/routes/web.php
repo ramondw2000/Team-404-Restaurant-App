@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
+use App\Livewire\Reservations;
 use App\Livewire\TableManagement;
 use App\Livewire\Dishes\DishesPage;
 use App\Livewire\Orders\OrderPage;
@@ -63,7 +64,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:Mark Orders Ready')
         ->name('kitchen-orders.order.complete');
 
-    Route::get('/reservations', [ReservationController::class, 'index'])
+    Route::livewire('/reservations', Reservations::class)
         ->middleware('permission:View Reservations')
         ->name('reservations.index');
 
