@@ -3,7 +3,6 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\KitchenOrderController;
-use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
@@ -43,10 +42,6 @@ Route::middleware('auth')->group(function () {
     Route::livewire('/tablemanagement', TableManagement::class)
         ->middleware('permission:View Table Management')
         ->name('tablemanagement');
-
-    Route::get('/ordermanagement', [OrderManagementController::class, 'index'])
-        ->middleware('permission:View Orders')
-        ->name('ordermanagement');
 
     Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
         ->middleware('permission:View Kitchen Orders')

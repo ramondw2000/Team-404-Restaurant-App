@@ -21,19 +21,6 @@ it('dishes page renders as Livewire component', function () {
     $response->assertSeeLivewire(DishesPage::class);
 });
 
-it('OrderManagementController passes dishes, allergenConfig, tables, and categories', function () {
-    $response = $this->get(route('ordermanagement'));
-
-    $response->assertOk();
-    $response->assertViewHas('dishes');
-    $response->assertViewHas('allergenConfig');
-    $response->assertViewHas('tables');
-    $response->assertViewHas('categories');
-
-    expect($response->viewData('tables'))->toBeArray()->not->toBeEmpty();
-    expect($response->viewData('categories'))->toBeArray()->toContain('Starters', 'Mains', 'Desserts');
-});
-
 it('KitchenOrderController passes orders and computed counts', function () {
     $element = FloorPlanElement::factory()->create();
     $dish    = Dish::factory()->create();
@@ -67,10 +54,3 @@ it('AccountController passes users, roleConfig, and counts', function () {
     expect($counts)->toBeArray()->toHaveKeys(['all', 'management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew']);
 });
 
-it('allergenConfig is consistent across controllers using shared config', function () {
-    $orderMgmtResponse = $this->get(route('ordermanagement'));
-    $kitchenResponse = $this->get(route('kitchen-orders'));
-
-    expect($orderMgmtResponse->viewData('allergenConfig'))
-        ->toBe($kitchenResponse->viewData('allergenConfig'));
-});

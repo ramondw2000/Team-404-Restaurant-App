@@ -8,6 +8,7 @@ use App\Models\Dish;
 use App\Models\FloorPlanElement;
 use App\Models\MenuCategory;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Validation\ValidationException;
@@ -219,6 +220,42 @@ it('dismissResumeConfirm hides the modal', function () {
         ->call('dismissResumeConfirm')
         ->assertSet('showResumeOrderConfirm', false)
         ->assertSet('pendingOrderElementId', null);
+});
+
+// ── initialCart ───────────────────────────────────────────────
+
+it('initialCart is empty for a brand new draft order', function () {
+    $element = FloorPlanElement::factory()->create();
+
+    $component = Livewire::actingAs(orderUser())
+        ->test(OrderPage::class, ['floorPlanElement' => $element]);
+
+    expect($component->get('initialCart'))->toBe([]);
+});
+
+it('initialCart is seeded with existing items when resuming a draft', function () {
+    $element = FloorPlanElement::factory()->create();
+    $dish    = Dish::factory()->create(['price' => 12.50]);
+    $order   = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+
+    OrderItem::factory()->create([
+        'order_id'   => $order->id,
+        'dish_id'    => $dish->id,
+        'quantity'   => 3,
+        'unit_price' => 12.50,
+        'notes'      => 'Extra sauce',
+    ]);
+
+    $component = Livewire::actingAs(orderUser())
+        ->test(OrderPage::class, ['floorPlanElement' => $element]);
+
+    $cart = $component->get('initialCart');
+
+    expect($cart)->toHaveKey($dish->id);
+    expect($cart[$dish->id]['qty'])->toBe(3);
+    expect($cart[$dish->id]['price'])->toBe(12.50);
+    expect($cart[$dish->id]['notes'])->toBe('Extra sauce');
+    expect($cart[$dish->id]['name'])->toBe($dish->name);
 });
 
 // ── Filter bar ─────────────────────────────────────────────────

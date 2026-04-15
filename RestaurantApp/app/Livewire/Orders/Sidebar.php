@@ -6,13 +6,15 @@ use App\Models\Menu;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
+use Livewire\Attributes\Reactive;
 use Livewire\Component;
 
 class Sidebar extends Component
 {
+    #[Reactive]
     public ?int $activeMenuId = null;
 
+    #[Reactive]
     public ?int $activeCategoryId = null;
 
     public int $floorPlanId;
@@ -33,28 +35,17 @@ class Sidebar extends Component
 
     public function selectMenu(int $menuId): void
     {
-        $this->activeMenuId = $menuId;
-        $this->activeCategoryId = null;
         $this->dispatch('setMenuCategory', menuId: $menuId, categoryId: null)->to(OrderPage::class);
     }
 
     public function selectCategory(int $menuId, int $categoryId): void
     {
-        $this->activeMenuId = $menuId;
-        $this->activeCategoryId = $categoryId;
         $this->dispatch('setMenuCategory', menuId: $menuId, categoryId: $categoryId)->to(OrderPage::class);
     }
 
     public function toggleMenu(int $menuId): void
     {
         $this->expandedMenus[$menuId] = ! ($this->expandedMenus[$menuId] ?? false);
-    }
-
-    #[On('active-menu-changed')]
-    public function syncActiveMenu(int $menuId, ?int $categoryId = null): void
-    {
-        $this->activeMenuId = $menuId;
-        $this->activeCategoryId = $categoryId;
     }
 
     public function render(): View

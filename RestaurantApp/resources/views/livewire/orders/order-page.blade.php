@@ -1,10 +1,9 @@
-<x-ordermanagement.styles />
-
 <div
     class="min-h-screen bg-[#eaf4fa]"
-    x-data="orderCart()"
+    x-data="orderCart({{ json_encode($this->initialCart) }})"
     x-init="init()"
 >
+    <x-ordermanagement.styles />
     {{-- ══════════════════════════════════════════════════════════
          Layout: sidebar + main
     ══════════════════════════════════════════════════════════ --}}
@@ -149,37 +148,40 @@
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
                                 <span class="text-xs font-semibold text-gray-500 shrink-0">Dietary:</span>
 
-                                <button
-                                    type="button"
+                                <x-dishes.filter-pill
+                                    filter="dietary"
+                                    value="vegetarian"
                                     wire:click="toggleDietaryFilter('vegetarian')"
-                                    class="filter-btn inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors {{ in_array('vegetarian', $dietaryFilters) ? 'filter-active' : 'bg-white border-gray-200 text-gray-700' }}"
+                                    @class(['filter-active' => in_array('vegetarian', $dietaryFilters)])
                                 >
                                     <x-dishes.dietary-icon type="vegetarian" size="sm" />
                                     Vegetarian
-                                </button>
+                                </x-dishes.filter-pill>
 
-                                <button
-                                    type="button"
+                                <x-dishes.filter-pill
+                                    filter="dietary"
+                                    value="vegan"
                                     wire:click="toggleDietaryFilter('vegan')"
-                                    class="filter-btn inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors {{ in_array('vegan', $dietaryFilters) ? 'filter-active' : 'bg-white border-gray-200 text-gray-700' }}"
+                                    @class(['filter-active' => in_array('vegan', $dietaryFilters)])
                                 >
                                     <x-dishes.dietary-icon type="vegan" size="sm" />
                                     Vegan
-                                </button>
+                                </x-dishes.filter-pill>
 
                                 <span class="text-gray-300 hidden sm:inline">|</span>
                                 <span class="text-xs font-semibold text-gray-500 shrink-0">Free from:</span>
 
                                 @foreach($this->allergenConfig as $allergenKey => $cfg)
-                                    <button
-                                        type="button"
+                                    <x-dishes.filter-pill
+                                        filter="freefrom"
+                                        :value="$allergenKey"
                                         wire:key="allergen-pill-{{ $allergenKey }}"
                                         wire:click="toggleAllergenFilter('{{ $allergenKey }}')"
-                                        class="filter-btn inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors {{ in_array($allergenKey, $allergenFilters) ? 'filter-active' : 'bg-white border-gray-200 text-gray-700' }}"
+                                        @class(['filter-active' => in_array($allergenKey, $allergenFilters)])
                                     >
                                         <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" size="sm" />
                                         {{ $cfg['label'] }}-free
-                                    </button>
+                                    </x-dishes.filter-pill>
                                 @endforeach
                             </div>
 
@@ -501,7 +503,7 @@
          Alpine.js cart logic
     ══════════════════════════════════════════════════════════ --}}
     <script>
-        function orderCart() {
+        function orderCart(initialCart = {}) {
             return {
                 sidebarOpen: false,
                 addModal: { open: false, dishId: null, name: '', price: 0, qty: 1, notes: '' },
@@ -510,7 +512,7 @@
                 orderNotes: '',
 
                 /** @type {Object.<number, {name: string, price: number, qty: number, notes: string}>} */
-                cart: {},
+                cart: { ...initialCart },
 
                 get itemCount() {
                     return Object.values(this.cart).reduce((sum, item) => sum + item.qty, 0);
@@ -520,7 +522,7 @@
                     return Object.values(this.cart).reduce((sum, item) => sum + (item.price * item.qty), 0);
                 },
 
-                init() {},
+                init() { this.cart = { ...initialCart }; },
 
                 openAddModal(dishId, name, price, allergens, dietary) {
                     this.addModal = {

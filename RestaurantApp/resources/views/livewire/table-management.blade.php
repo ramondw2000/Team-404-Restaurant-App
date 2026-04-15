@@ -292,30 +292,35 @@
                                     >
                                 </div>
 
-                                {{-- Table Name Badge --}}
+                                {{-- Table Name Label --}}
                                 @if($editMode)
                                     <div
                                         x-show="tableName"
-                                        class="absolute inset-0 flex flex-col items-center justify-end pb-1 pointer-events-none"
+                                        class="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                                        style="top: 100%; margin-top: 3px;"
                                     >
-                                        <span :class="badgeClasses" x-text="tableName"></span>
+                                        <span
+                                            :class="badgeClasses"
+                                            x-text="tableName"
+                                            class="whitespace-nowrap"
+                                        ></span>
                                     </div>
                                 @else
-                                    @if($status)
+                                    @if($element['table_name'])
                                         <div
-                                            class="absolute inset-0 flex flex-col items-center justify-end pb-1 pointer-events-none">
-                                            <span
-                                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold {{ $status->badgeClasses() }} shadow-sm max-w-full truncate">
-                                                {{ $element['table_name'] }}
-                                            </span>
-                                        </div>
-                                    @elseif($element['table_name'])
-                                        <div
-                                            class="absolute inset-0 flex flex-col items-center justify-end pb-1 pointer-events-none">
-                                            <span
-                                                class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 shadow-sm max-w-full truncate">
-                                                {{ $element['table_name'] }}
-                                            </span>
+                                            class="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                                            style="top: 100%; margin-top: 3px;"
+                                        >
+                                            @if($status)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold {{ $status->badgeClasses() }} shadow-sm whitespace-nowrap">
+                                                    <span class="w-1.5 h-1.5 rounded-full {{ $status->dotClasses() }} shrink-0"></span>
+                                                    {{ $element['table_name'] }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-white/90 text-gray-700 shadow-sm ring-1 ring-gray-200 whitespace-nowrap">
+                                                    {{ $element['table_name'] }}
+                                                </span>
+                                            @endif
                                         </div>
                                     @endif
                                 @endif

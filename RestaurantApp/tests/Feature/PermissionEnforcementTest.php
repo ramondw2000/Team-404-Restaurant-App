@@ -30,7 +30,6 @@ it('allows an administrator role to access all permission-protected routes', fun
     $this->actingAs($user)->get(route('accounts.index'))->assertOk();
     $this->actingAs($user)->get(route('dishes'))->assertOk();
     $this->actingAs($user)->get(route('kitchen-orders'))->assertOk();
-    $this->actingAs($user)->get(route('ordermanagement'))->assertOk();
     $this->actingAs($user)->get(route('statistics'))->assertOk();
     $this->actingAs($user)->get(route('tablemanagement'))->assertOk();
 });
@@ -61,12 +60,6 @@ it('enforces View Kitchen Orders permission on the kitchen orders route', functi
     $user = userWithRole('server'); // no View Kitchen Orders permission
 
     $this->actingAs($user)->get(route('kitchen-orders'))->assertForbidden();
-});
-
-it('enforces View Orders permission on the order management route', function () {
-    $user = userWithRole('chef'); // no View Orders permission
-
-    $this->actingAs($user)->get(route('ordermanagement'))->assertForbidden();
 });
 
 it('enforces View Account Management permission on the accounts route', function () {

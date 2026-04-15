@@ -94,6 +94,7 @@
             hideOrderActions(card);
             markAllDishesServed(card);
             syncCardVisualState(card);
+            updateFilterCounts('completed');
         }
 
         const dbId = card?.dataset.orderDbId;
@@ -102,6 +103,30 @@
                 method: 'PATCH',
                 headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
             }).catch(() => {});
+        }
+    }
+
+    function updateFilterCounts(direction) {
+        const activeCountEl = document.querySelector('button[data-count-type="active"] span');
+        const completedCountEl = document.querySelector('button[data-count-type="completed"] span');
+        const allCountEl = document.querySelector('button[data-tab="all"] span');
+
+        if (direction === 'completed') {
+            if (activeCountEl) {
+                const current = parseInt(activeCountEl.textContent, 10) || 0;
+                activeCountEl.textContent = Math.max(0, current - 1);
+            }
+            if (completedCountEl) {
+                const current = parseInt(completedCountEl.textContent, 10) || 0;
+                completedCountEl.textContent = current + 1;
+            }
+        }
+
+        // Update "All" count to match sum of active + completed
+        if (allCountEl && activeCountEl && completedCountEl) {
+            const active = parseInt(activeCountEl.textContent, 10) || 0;
+            const completed = parseInt(completedCountEl.textContent, 10) || 0;
+            allCountEl.textContent = active + completed;
         }
     }
 

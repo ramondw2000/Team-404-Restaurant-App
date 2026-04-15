@@ -410,32 +410,7 @@ window.canvasElement = function (elementData) {
             const container = this.$el.querySelector('[data-svg-container]');
             if (!container || !this.imagePath) return;
 
-            const result = await loadInlineSvg(container, this.imagePath);
-            if (result?.aspectRatio) {
-                this.matchAspectRatio(result.aspectRatio);
-            }
-        },
-
-        /**
-         * Adjust element height so the container matches the SVG's
-         * natural aspect ratio — eliminates letterboxing and distortion.
-         */
-        matchAspectRatio(svgRatio) {
-            const canvas = this.$el.closest('[data-canvas-inner]');
-            if (!canvas) return;
-            const rect = canvas.getBoundingClientRect();
-
-            const wPx = (this.width / 100) * rect.width;
-            const hPx = (this.height / 100) * rect.height;
-            const containerRatio = wPx / hPx;
-
-            if (Math.abs(containerRatio - svgRatio) < 0.05) return;
-
-            const newHPx = wPx / svgRatio;
-            const newH = (newHPx / rect.height) * 100;
-
-            this.y += (this.height - newH) / 2;
-            this.height = newH;
+            await loadInlineSvg(container, this.imagePath);
         },
 
         /**
@@ -573,34 +548,7 @@ window.viewElementSvg = function (src) {
             const container = this.$el.querySelector('[data-svg-container]');
             if (!container || !src) return;
 
-            const result = await loadInlineSvg(container, src);
-            if (result?.aspectRatio) {
-                this.matchAspectRatio(result.aspectRatio);
-            }
-        },
-
-        /**
-         * Adjust the element's inline style so its height matches the
-         * SVG's natural aspect ratio — no letterboxing, no distortion.
-         */
-        matchAspectRatio(svgRatio) {
-            const canvas = this.$el.closest('[data-canvas-inner]');
-            if (!canvas) return;
-            const rect = canvas.getBoundingClientRect();
-
-            const w = parseFloat(this.$el.style.width);
-            const h = parseFloat(this.$el.style.height);
-            const wPx = (w / 100) * rect.width;
-            const hPx = (h / 100) * rect.height;
-            const containerRatio = wPx / hPx;
-
-            if (Math.abs(containerRatio - svgRatio) < 0.05) return;
-
-            const newHPx = wPx / svgRatio;
-            const newH = (newHPx / rect.height) * 100;
-
-            this.$el.style.top = `${parseFloat(this.$el.style.top) + (h - newH) / 2}%`;
-            this.$el.style.height = `${newH}%`;
+            await loadInlineSvg(container, src);
         },
 
         hitsSvgContent(event) {

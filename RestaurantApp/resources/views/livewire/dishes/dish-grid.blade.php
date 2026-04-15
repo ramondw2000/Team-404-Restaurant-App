@@ -10,59 +10,69 @@
         {{-- Dietary + free-from pills --}}
         <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
             <span class="text-xs font-semibold text-gray-500 shrink-0">Dietary:</span>
-            <button
+
+            <x-dishes.filter-pill
+                filter="dietary"
+                value="vegetarian"
                 wire:click="toggleDietary('vegetarian')"
-                class="filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors
-                    {{ in_array('vegetarian', $dietaryFilters) ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-700 hover:border-molveno-blue-500' }}"
+                @class(['filter-active' => in_array('vegetarian', $dietaryFilters)])
             >
                 <x-dishes.dietary-icon type="vegetarian" size="sm" />
                 Vegetarian
-            </button>
-            <button
+            </x-dishes.filter-pill>
+
+            <x-dishes.filter-pill
+                filter="dietary"
+                value="vegan"
                 wire:click="toggleDietary('vegan')"
-                class="filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors
-                    {{ in_array('vegan', $dietaryFilters) ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-700 hover:border-molveno-blue-500' }}"
+                @class(['filter-active' => in_array('vegan', $dietaryFilters)])
             >
                 <x-dishes.dietary-icon type="vegan" size="sm" />
                 Vegan
-            </button>
+            </x-dishes.filter-pill>
 
             <span class="text-gray-300 hidden sm:inline">|</span>
             <span class="text-xs font-semibold text-gray-500 shrink-0">Free from:</span>
+
             @foreach($allergenConfig as $key => $cfg)
-                <button
+                <x-dishes.filter-pill
+                    filter="freefrom"
+                    :value="$key"
+                    wire:key="freefrom-pill-{{ $key }}"
                     wire:click="toggleFreeFrom('{{ $key }}')"
-                    class="filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors
-                        {{ in_array($key, $freeFromFilters) ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-700 hover:border-molveno-blue-500' }}"
+                    @class(['filter-active' => in_array($key, $freeFromFilters)])
                 >
                     <x-dishes.allergen-icon :bg="$cfg['bg']" :icon="$cfg['icon']" size="sm" />
                     {{ $cfg['label'] }}-free
-                </button>
+                </x-dishes.filter-pill>
             @endforeach
         </div>
 
         {{-- Sort + page size --}}
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Sort:</span>
-                <button wire:click="setSort('name')" class="text-xs font-medium {{ $sortBy === 'name' ? 'text-molveno-blue-700 underline' : 'text-gray-600 hover:text-gray-900' }}">
-                    Name {!! $sortBy === 'name' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
-                </button>
-                <button wire:click="setSort('price')" class="text-xs font-medium {{ $sortBy === 'price' ? 'text-molveno-blue-700 underline' : 'text-gray-600 hover:text-gray-900' }}">
-                    Price {!! $sortBy === 'price' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
-                </button>
-                <button wire:click="setSort('created_at')" class="text-xs font-medium {{ $sortBy === 'created_at' ? 'text-molveno-blue-700 underline' : 'text-gray-600 hover:text-gray-900' }}">
-                    Newest {!! $sortBy === 'created_at' ? ($sortDir === 'asc' ? '↑' : '↓') : '' !!}
-                </button>
+                <span class="text-xs font-semibold text-gray-500 shrink-0">Sort:</span>
+                <x-ui.tab-group>
+                    <x-ui.tab :active="$sortBy === 'name'" wire:click="setSort('name')">
+                        Name @if($sortBy === 'name') {!! $sortDir === 'asc' ? '↑' : '↓' !!} @endif
+                    </x-ui.tab>
+                    <x-ui.tab :active="$sortBy === 'price'" wire:click="setSort('price')">
+                        Price @if($sortBy === 'price') {!! $sortDir === 'asc' ? '↑' : '↓' !!} @endif
+                    </x-ui.tab>
+                    <x-ui.tab :active="$sortBy === 'created_at'" wire:click="setSort('created_at')">
+                        Newest @if($sortBy === 'created_at') {!! $sortDir === 'asc' ? '↑' : '↓' !!} @endif
+                    </x-ui.tab>
+                </x-ui.tab-group>
             </div>
-            <div class="flex items-center gap-1.5">
-                <span class="text-xs text-gray-500">Show:</span>
-                @foreach([12, 20, 40] as $size)
-                    <button
-                        wire:click="setPerPage({{ $size }})"
-                        class="text-xs px-2 py-1 rounded {{ $perPage === $size ? 'bg-molveno-blue-500 text-white' : 'text-gray-600 hover:bg-gray-100' }}"
-                    >{{ $size }}</button>
-                @endforeach
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-gray-500 shrink-0">Show:</span>
+                <x-ui.tab-group>
+                    @foreach([12, 20, 40] as $size)
+                        <x-ui.tab :active="$perPage === $size" wire:click="setPerPage({{ $size }})">
+                            {{ $size }}
+                        </x-ui.tab>
+                    @endforeach
+                </x-ui.tab-group>
             </div>
         </div>
     </div>

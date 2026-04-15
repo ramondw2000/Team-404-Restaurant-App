@@ -18,7 +18,7 @@ class KitchenOrderController extends Controller
         $allergenConfig = config('restaurant.allergens');
 
         $dbOrders = Order::with(['items.dish.ingredients', 'floorPlanElement'])
-            ->whereIn('status', [OrderStatus::Active->value])
+            ->whereIn('status', [OrderStatus::Active->value, OrderStatus::Completed->value])
             ->latest()
             ->get();
 

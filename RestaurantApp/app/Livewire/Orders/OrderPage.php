@@ -85,6 +85,32 @@ class OrderPage extends Component
     }
 
     /**
+     * Returns existing order items keyed by dish_id for seeding the Alpine cart on resume.
+     *
+     * @return array<int, array{name: string, price: float, qty: int, notes: string}>
+     */
+    #[Computed]
+    public function initialCart(): array
+    {
+        $order = Order::find($this->orderId);
+        if (! $order) {
+            return [];
+        }
+
+        $cart = [];
+        foreach ($order->items()->with('dish')->get() as $item) {
+            $cart[$item->dish_id] = [
+                'name'  => $item->dish->name,
+                'price' => (float) $item->unit_price,
+                'qty'   => $item->quantity,
+                'notes' => $item->notes ?? '',
+            ];
+        }
+
+        return $cart;
+    }
+
+    /**
      * @return array<string, array{label: string, bg: string, icon: string}>
      */
     #[Computed]
@@ -153,8 +179,6 @@ class OrderPage extends Component
         $this->activeCategoryId = null;
         $this->search = '';
         unset($this->categories, $this->dishes);
-
-        $this->dispatch('active-menu-changed', menuId: $menuId, categoryId: null);
     }
 
     public function selectCategory(?int $categoryId): void

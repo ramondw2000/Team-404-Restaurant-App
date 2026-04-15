@@ -20,14 +20,7 @@
 
                     {{-- Floor Operations --}}
                     @canany(['View Orders', 'View Table Management', 'View Reservations'])
-                    <x-nav-dropdown label="Floor Operations" :active="request()->routeIs('ordermanagement') || request()->routeIs('tablemanagement') || request()->routeIs('reservations.*')">
-                        @can('View Orders')
-                        <x-nav-dropdown-item
-                            :href="route('ordermanagement')"
-                            title="Order Management"
-                            description="Oversee all active guest checks and orders."
-                            :active="request()->routeIs('ordermanagement')" />
-                        @endcan
+                    <x-nav-dropdown label="Floor Operations" :active="request()->routeIs('tablemanagement') || request()->routeIs('reservations.*')">
                         @can('View Table Management')
                         <x-nav-dropdown-item
                             :href="route('tablemanagement')"
@@ -165,11 +158,6 @@
             {{-- Floor Operations --}}
             @canany(['View Orders', 'View Table Management', 'View Reservations'])
             <div class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Floor Operations</div>
-            @can('View Orders')
-            <x-responsive-nav-link :href="route('ordermanagement')" :active="request()->routeIs('ordermanagement')">
-                {{ __('Order Management') }}
-            </x-responsive-nav-link>
-            @endcan
             @can('View Table Management')
             <x-responsive-nav-link :href="route('tablemanagement')" :active="request()->routeIs('tablemanagement')">
                 {{ __('Table Management') }}
