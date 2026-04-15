@@ -56,7 +56,7 @@
                     class="relative w-full rounded-xl overflow-hidden cursor-pointer border-2 border-dashed transition-colors"
                     :class="dragover ? 'border-molveno-blue-500 bg-blue-50' : 'border-gray-200'"
                     style="aspect-ratio: 16/9; background-color: {{ $color }}"
-                    wire:click="$refs?.photoInput?.click()"
+                    x-on:click="$refs.photoInput.click()"
                 >
                     @if($photo && $photo->isPreviewable())
                         <img src="{{ $photo->temporaryUrl() }}" class="absolute inset-0 w-full h-full object-cover" alt="Preview">
