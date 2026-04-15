@@ -18,19 +18,6 @@ class IngredientLibrary extends Component
     #[Url]
     public string $search = '';
 
-    // Create/Edit form state
-    public bool $showForm = false;
-
-    public ?int $editingId = null;
-
-    public string $formName = '';
-
-    /** @var list<string> */
-    public array $formAllergens = [];
-
-    /** @var list<string> */
-    public array $formDietary = [];
-
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -51,46 +38,6 @@ class IngredientLibrary extends Component
         return $query->orderBy('name')->paginate(20);
     }
 
-    public function openCreateForm(): void
-    {
-        $this->resetForm();
-        $this->showForm = true;
-    }
-
-    public function openEditForm(int $id): void
-    {
-        $ingredient = Ingredient::findOrFail($id);
-        $this->editingId = $id;
-        $this->formName = $ingredient->name;
-        $this->formAllergens = $ingredient->allergens ?? [];
-        $this->formDietary = $ingredient->dietary ?? [];
-        $this->showForm = true;
-    }
-
-    public function saveIngredient(): void
-    {
-        $rules = [
-            'formName' => 'required|string|max:255|unique:ingredients,name'.($this->editingId ? ','.$this->editingId : ''),
-        ];
-
-        $this->validate($rules);
-
-        $data = [
-            'name' => $this->formName,
-            'allergens' => $this->formAllergens,
-            'dietary' => $this->formDietary,
-        ];
-
-        if ($this->editingId) {
-            Ingredient::where('id', $this->editingId)->update($data);
-        } else {
-            Ingredient::create($data);
-        }
-
-        $this->resetForm();
-        unset($this->ingredients);
-    }
-
     public function deleteIngredient(int $id): void
     {
         $ingredient = Ingredient::withCount('dishes')->findOrFail($id);
@@ -105,18 +52,11 @@ class IngredientLibrary extends Component
         unset($this->ingredients);
     }
 
-    public function resetForm(): void
-    {
-        $this->showForm = false;
-        $this->editingId = null;
-        $this->formName = '';
-        $this->formAllergens = [];
-        $this->formDietary = [];
-        $this->resetErrorBag();
-    }
-
     #[On('dish-saved')]
     #[On('dish-deleted')]
+    #[On('ingredient-updated')]
+    #[On('ingredient-created')]
+    #[On('ingredient-deleted')]
     public function refreshIngredients(): void
     {
         unset($this->ingredients);
