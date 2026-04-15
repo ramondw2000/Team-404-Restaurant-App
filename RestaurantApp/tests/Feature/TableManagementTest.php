@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TableStatus;
 use App\Livewire\TableManagement;
 use App\Models\FloorPlan;
 use App\Models\FloorPlanElement;
@@ -148,22 +147,17 @@ it('can update element properties', function () {
         ->test(TableManagement::class)
         ->call('enterEditMode')
         ->call('selectElement', $element->id)
-        ->call('updateElementProperties', $element->id, 'VIP Table', 4, 'Reserved');
+        ->call('updateElementProperties', $element->id, 'VIP Table', 4);
 
-    $pending = Livewire::actingAs($user)
-        ->test(TableManagement::class)
-        ->get('pendingChanges');
-
-    // Properties were applied as pending changes, not yet saved
-    // We test the full flow instead:
+    // Test the full flow: update properties then save
     $component = Livewire::actingAs($user)
         ->test(TableManagement::class)
         ->call('enterEditMode')
-        ->call('updateElementProperties', $element->id, 'VIP Table', 4, 'Reserved')
+        ->call('updateElementProperties', $element->id, 'VIP Table', 4)
         ->call('saveChanges');
 
     expect($element->fresh()->table_name)->toBe('VIP Table');
-    expect($element->fresh()->status)->toBe(TableStatus::Reserved);
+    expect($element->fresh()->seat_count)->toBe(4);
 });
 
 it('proportionally scales element when seat count changes', function () {
@@ -183,7 +177,7 @@ it('proportionally scales element when seat count changes', function () {
     $component = Livewire::actingAs($user)
         ->test(TableManagement::class)
         ->call('enterEditMode')
-        ->call('updateElementProperties', $element->id, 'Table 1', 8, 'Available')
+        ->call('updateElementProperties', $element->id, 'Table 1', 8)
         ->call('saveChanges');
 
     $element->refresh();
@@ -275,24 +269,6 @@ it('can copy and paste an element', function () {
     expect($newElements[0]['shape'])->toBe('round');
     expect($newElements[0]['seat_count'])->toBe(6);
     expect($newElements[0]['x'])->toBe(12.0); // 10 + 2 offset
-});
-
-// ── View Mode Status Update ──────────────────────────────────
-
-it('can update table status immediately in view mode', function () {
-    $user = tableManagementUser();
-    $plan = FloorPlan::factory()->create();
-    $element = FloorPlanElement::factory()->available()->create([
-        'floor_plan_id' => $plan->id,
-        'shape' => 'round',
-        'seat_count' => 4,
-    ]);
-
-    Livewire::actingAs($user)
-        ->test(TableManagement::class)
-        ->call('updateTableStatus', $element->id, 'Occupied');
-
-    expect($element->fresh()->status)->toBe(TableStatus::Occupied);
 });
 
 // ── Status Summary ───────────────────────────────────────────

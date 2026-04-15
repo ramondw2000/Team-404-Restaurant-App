@@ -257,6 +257,7 @@
                                 $status = $element['status']
                                     ? \App\Enums\TableStatus::from($element['status'])
                                     : null;
+                                $reservation = $this->reservationMap[$element['id']] ?? null;
                             @endphp
                             @php $elementId = is_numeric($element['id']) ? $element['id'] : "'" . $element['id'] . "'" @endphp
                             <div
@@ -292,7 +293,7 @@
                                     >
                                 </div>
 
-                                {{-- Table Name Label --}}
+                                {{-- Table Name Label + Reservation Indicator --}}
                                 @if($editMode)
                                     <div
                                         x-show="tableName"
@@ -308,7 +309,7 @@
                                 @else
                                     @if($element['table_name'])
                                         <div
-                                            class="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                                            class="absolute left-1/2 -translate-x-1/2 pointer-events-none flex flex-col items-center gap-0.5"
                                             style="top: 100%; margin-top: 3px;"
                                         >
                                             @if($status)
@@ -319,6 +320,32 @@
                                             @else
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-white/90 text-gray-700 shadow-sm ring-1 ring-gray-200 whitespace-nowrap">
                                                     {{ $element['table_name'] }}
+                                                </span>
+                                            @endif
+                                            @if($reservation)
+                                                @php
+                                                    $resStatusColor = match($reservation['status']) {
+                                                        'scheduled' => 'bg-blue-100 text-blue-700 ring-blue-200',
+                                                        'arrived' => 'bg-green-100 text-green-700 ring-green-200',
+                                                        'departed' => 'bg-gray-100 text-gray-600 ring-gray-200',
+                                                        'late' => 'bg-amber-100 text-amber-700 ring-amber-200',
+                                                        'no_show' => 'bg-rose-100 text-rose-700 ring-rose-200',
+                                                        'cancelled' => 'bg-red-100 text-red-700 ring-red-200',
+                                                        default => 'bg-white/95 text-gray-600 ring-gray-200',
+                                                    };
+                                                    $resStatusDot = match($reservation['status']) {
+                                                        'scheduled' => 'bg-blue-500',
+                                                        'arrived' => 'bg-green-500',
+                                                        'departed' => 'bg-gray-400',
+                                                        'late' => 'bg-amber-500',
+                                                        'no_show' => 'bg-rose-500',
+                                                        'cancelled' => 'bg-red-500',
+                                                        default => 'bg-molveno-blue-500',
+                                                    };
+                                                @endphp
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold {{ $resStatusColor }} shadow-sm ring-1 whitespace-nowrap">
+                                                    <span class="w-1.5 h-1.5 rounded-full {{ $resStatusDot }} shrink-0"></span>
+                                                    {{ $reservation['guest_name'] }} &middot; {{ $reservation['time'] }}
                                                 </span>
                                             @endif
                                         </div>
@@ -452,14 +479,12 @@
                                 x-data="{
                                     tableName: '{{ addslashes($el['table_name'] ?? '') }}',
                                     seatCount: {{ $el['seat_count'] }},
-                                    status: '{{ $el['status'] ?? 'Available' }}',
                                     availableSeats: {{ json_encode($this->availableSeatCounts($el['shape'])) }},
                                     syncToWire() {
                                         $wire.updateElementProperties(
                                             {{ json_encode($el['id']) }},
                                             this.tableName || null,
                                             this.seatCount,
-                                            this.status || null
                                         );
                                     }
                                 }"
@@ -497,22 +522,18 @@
                                     </select>
                                 </div>
 
-                                {{-- Status --}}
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
-                                    <div class="grid grid-cols-3 gap-1.5">
-                                        @foreach($tableStatuses as $ts)
-                                            @php $tsEnum = \App\Enums\TableStatus::from($ts->value); @endphp
-                                            <button
-                                                @click="status = '{{ $ts->value }}'; syncToWire()"
-                                                :class="status === '{{ $ts->value }}' ? '{{ $tsEnum->badgeClasses() }} ring-2 ring-offset-1 ring-current' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                                class="py-1.5 px-2 text-xs font-medium rounded-lg transition-all"
-                                            >
-                                                {{ $ts->label() }}
-                                            </button>
-                                        @endforeach
+                                {{-- Status (read-only, driven by reservations) --}}
+                                @if($el['status'])
+                                    @php $elStatus = \App\Enums\TableStatus::from($el['status']); @endphp
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold {{ $elStatus->badgeClasses() }}">
+                                            <span class="w-2 h-2 rounded-full {{ $elStatus->dotClasses() }}"></span>
+                                            {{ $elStatus->label() }}
+                                        </span>
+                                        <p class="text-[10px] text-gray-400 mt-1">Managed by reservations</p>
                                     </div>
-                                </div>
+                                @endif
                             </div>
 
                             {{-- Z-Order Controls --}}
@@ -697,7 +718,7 @@
                 @click.stop
             >
                 {{-- Sheet Header --}}
-                <div class="flex items-center justify-between p-5 border-b border-gray-100">
+                <div class="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
                     <h2 class="text-lg font-bold text-gray-900">{{ $tableEl['table_name'] ?? 'Table' }}</h2>
                     <button
                         wire:click="closeTableSheet"
@@ -711,7 +732,7 @@
                 </div>
 
                 {{-- Sheet Content --}}
-                <div class="flex-1 p-5 space-y-6">
+                <div class="flex-1 overflow-y-auto p-5 space-y-6">
                     {{-- Info Row --}}
                     <div class="flex items-center gap-6">
                         <div>
@@ -720,8 +741,7 @@
                         </div>
                         @if($currentStatus)
                             <div>
-                                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Current
-                                    Status</p>
+                                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Current Status</p>
                                 <span
                                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold {{ $currentStatus->badgeClasses() }}">
                                     <span class="w-2 h-2 rounded-full {{ $currentStatus->dotClasses() }}"></span>
@@ -731,39 +751,42 @@
                         @endif
                     </div>
 
-                    {{-- Status Selector --}}
-                    <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Change Status</p>
-                        <div class="grid grid-cols-3 gap-3">
-                            @foreach($tableStatuses as $ts)
-                                @php
-                                    $tsEnum = \App\Enums\TableStatus::from($ts->value);
-                                    $isActive = $tableEl['status'] === $ts->value;
-                                @endphp
-                                <button
-                                    wire:click="updateTableStatus({{ $tableEl['id'] }}, '{{ $ts->value }}')"
-                                    class="relative flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-2 transition-all {{ $isActive ? $tsEnum->badgeClasses() . ' border-current' : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:bg-gray-50' }}"
-                                >
-                                    <span class="w-4 h-4 rounded-full {{ $tsEnum->dotClasses() }}"></span>
-                                    <span class="text-xs font-semibold">{{ $ts->label() }}</span>
-                                    @if($isActive)
-                                        <span class="absolute top-1.5 right-1.5">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path
-                                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                                        </span>
-                                    @endif
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
+                    {{-- Reservations Section --}}
+                    <x-table-management.reservation-list :reservations="$this->tableSheetReservations" />
                 </div>
 
                 {{-- Sheet Footer --}}
-                <div class="p-5 border-t border-gray-100 flex flex-col gap-3">
+                <div class="p-5 border-t border-gray-100 flex flex-col gap-2 shrink-0">
+                    {{-- View Orders button (if table has active orders) --}}
+                    @if($currentStatus && $currentStatus->value === 'Occupied')
+                        <x-ui.button
+                            wire:click="openOrderInfo({{ $tableEl['id'] }})"
+                            variant="secondary"
+                            class="w-full justify-center"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                                <rect x="9" y="3" width="6" height="4" rx="1"/>
+                            </svg>
+                            View Order Info
+                        </x-ui.button>
+                        <x-ui.button
+                            wire:click="openReceipt({{ $tableEl['id'] }})"
+                            variant="secondary"
+                            class="w-full justify-center"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                            Print Receipt
+                        </x-ui.button>
+                    @endif
+
                     @can('Create Order')
                         <x-ui.button
                             wire:click="acceptOrder({{ $tableEl['id'] }})"
                             class="w-full justify-center"
+                            :disabled="$currentStatus && $currentStatus->value !== 'Occupied'"
                         >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
@@ -773,11 +796,52 @@
                             Accept Order
                         </x-ui.button>
                     @endcan
-                    <p class="text-xs text-gray-400 text-center">Status changes are saved automatically</p>
+                    @if($currentStatus && $currentStatus->value !== 'Occupied')
+                        <p class="text-xs text-amber-600 text-center">Seat a reservation first to place orders</p>
+                    @endif
+
+                    @can('Create Reservation')
+                        <x-ui.button
+                            wire:click="openReservationModal({{ $tableEl['id'] }})"
+                            variant="outline"
+                            class="w-full justify-center"
+                            :disabled="$currentStatus && $currentStatus->value === 'Occupied'"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Add Reservation
+                        </x-ui.button>
+                    @endcan
+
+                    <p class="text-xs text-gray-400 text-center">Table status managed by reservations</p>
                 </div>
             </div>
         </div>
     @endif
+
+    {{-- ===== ORDER INFO MODAL ===== --}}
+    <x-table-management.order-info-modal
+        :show="$showOrderInfoModal"
+        :order-info="$this->orderInfo"
+        :element-id="$orderInfoElementId"
+    />
+
+    {{-- ===== RECEIPT MODAL ===== --}}
+    <x-table-management.receipt-modal
+        :show="$showReceiptModal"
+        :receipt-data="$receiptData"
+    />
+
+    {{-- ===== RESERVATION MODAL ===== --}}
+    <x-table-management.reservation-modal
+        :show="$showReservationModal"
+        :element-id="$reservationElementId"
+        :table-name="collect($this->elements)->firstWhere('id', $reservationElementId)['table_name'] ?? 'Table'"
+    />
 
     {{-- ===== RESUME / NEW ORDER CONFIRMATION ===== --}}
     @if($showResumeOrderConfirm)
@@ -808,6 +872,48 @@
                     <x-ui.button variant="secondary" wire:click="dismissResumeConfirm" class="w-full justify-center">
                         Cancel
                     </x-ui.button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== DEPARTURE CONFIRMATION MODAL ===== --}}
+    @if($showDepartureConfirm)
+        <div wire:key="departure-confirm-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="closeDepartureConfirm"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" @click.stop>
+                <h2 class="text-lg font-bold text-gray-900 mb-1">Confirm Departure</h2>
+                <p class="text-sm text-gray-500 mb-5">Mark the guest as departed and set payment status for their orders.</p>
+
+                <div class="space-y-4">
+                    {{-- Payment Status Toggle --}}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Payment Received</p>
+                                <p class="text-xs text-gray-500">Mark orders as paid</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" wire:model="departurePaid" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                        </label>
+                    </div>
+
+                    {{-- Action Buttons --}}
+                    <div class="flex gap-3 pt-2">
+                        <x-ui.button variant="secondary" class="flex-1" wire:click="closeDepartureConfirm">
+                            Cancel
+                        </x-ui.button>
+                        <x-ui.button class="flex-1" wire:click="confirmDeparture">
+                            Confirm Departure
+                        </x-ui.button>
+                    </div>
                 </div>
             </div>
         </div>

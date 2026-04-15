@@ -6,7 +6,6 @@ use App\Livewire\Orders\OrderPage;
 use App\Livewire\TableManagement;
 use App\Models\Dish;
 use App\Models\FloorPlanElement;
-use App\Models\MenuCategory;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
@@ -167,7 +166,7 @@ it('allows deletion of a floor plan element with only completed orders', functio
 // ── TableManagement Accept Order button ───────────────────────
 
 it('accept order navigates directly to order page when no active order exists', function () {
-    $element = FloorPlanElement::factory()->create();
+    $element = FloorPlanElement::factory()->occupied()->create();
 
     Livewire::actingAs(orderUser())
         ->test(TableManagement::class)
@@ -176,7 +175,7 @@ it('accept order navigates directly to order page when no active order exists', 
 });
 
 it('accept order shows resume confirmation when draft order already exists', function () {
-    $element = FloorPlanElement::factory()->create();
+    $element = FloorPlanElement::factory()->occupied()->create();
     Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
 
     Livewire::actingAs(orderUser())
@@ -187,7 +186,7 @@ it('accept order shows resume confirmation when draft order already exists', fun
 });
 
 it('resumeOrder redirects to order page with existing draft', function () {
-    $element = FloorPlanElement::factory()->create();
+    $element = FloorPlanElement::factory()->occupied()->create();
     Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
 
     Livewire::actingAs(orderUser())
@@ -198,7 +197,7 @@ it('resumeOrder redirects to order page with existing draft', function () {
 });
 
 it('startNewOrder cancels the existing draft and redirects', function () {
-    $element = FloorPlanElement::factory()->create();
+    $element = FloorPlanElement::factory()->occupied()->create();
     $draft = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
 
     Livewire::actingAs(orderUser())
@@ -211,7 +210,7 @@ it('startNewOrder cancels the existing draft and redirects', function () {
 });
 
 it('dismissResumeConfirm hides the modal', function () {
-    $element = FloorPlanElement::factory()->create();
+    $element = FloorPlanElement::factory()->occupied()->create();
     Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
 
     Livewire::actingAs(orderUser())
@@ -220,6 +219,15 @@ it('dismissResumeConfirm hides the modal', function () {
         ->call('dismissResumeConfirm')
         ->assertSet('showResumeOrderConfirm', false)
         ->assertSet('pendingOrderElementId', null);
+});
+
+it('accept order rejects non-occupied tables', function () {
+    $element = FloorPlanElement::factory()->available()->create();
+
+    Livewire::actingAs(orderUser())
+        ->test(TableManagement::class)
+        ->call('acceptOrder', $element->id)
+        ->assertNotDispatched('redirect');
 });
 
 // ── initialCart ───────────────────────────────────────────────
@@ -235,15 +243,15 @@ it('initialCart is empty for a brand new draft order', function () {
 
 it('initialCart is seeded with existing items when resuming a draft', function () {
     $element = FloorPlanElement::factory()->create();
-    $dish    = Dish::factory()->create(['price' => 12.50]);
-    $order   = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+    $dish = Dish::factory()->create(['price' => 12.50]);
+    $order = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
 
     OrderItem::factory()->create([
-        'order_id'   => $order->id,
-        'dish_id'    => $dish->id,
-        'quantity'   => 3,
+        'order_id' => $order->id,
+        'dish_id' => $dish->id,
+        'quantity' => 3,
         'unit_price' => 12.50,
-        'notes'      => 'Extra sauce',
+        'notes' => 'Extra sauce',
     ]);
 
     $component = Livewire::actingAs(orderUser())

@@ -47,8 +47,15 @@ class OrderPage extends Component
         if ($existingOrder) {
             $this->orderId = $existingOrder->id;
         } else {
+            // Link to active reservation if one exists
+            $activeReservation = $floorPlanElement->reservations()
+                ->whereIn('status', ['scheduled', 'arrived'])
+                ->whereDate('reservation_datetime', today())
+                ->first();
+
             $order = Order::create([
                 'floor_plan_element_id' => $floorPlanElement->id,
+                'reservation_id' => $activeReservation?->id,
                 'status' => OrderStatus::Draft,
             ]);
             $this->orderId = $order->id;
@@ -100,9 +107,9 @@ class OrderPage extends Component
         $cart = [];
         foreach ($order->items()->with('dish')->get() as $item) {
             $cart[$item->dish_id] = [
-                'name'  => $item->dish->name,
+                'name' => $item->dish->name,
                 'price' => (float) $item->unit_price,
-                'qty'   => $item->quantity,
+                'qty' => $item->quantity,
                 'notes' => $item->notes ?? '',
             ];
         }
@@ -140,8 +147,8 @@ class OrderPage extends Component
             })
             ->when($this->search !== '', function ($query): void {
                 $query->where(function ($q): void {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('description', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('description', 'like', '%'.$this->search.'%');
                 });
             })
             ->get();
@@ -227,7 +234,7 @@ class OrderPage extends Component
     /**
      * Receive the Alpine cart, persist all OrderItems, transition the order to active.
      *
-     * @param array<int, array{dish_id: int, qty: int, notes: string}> $cartItems
+     * @param  array<int, array{dish_id: int, qty: int, notes: string}>  $cartItems
      */
     public function placeOrder(array $cartItems, ?string $orderNotes): void
     {
@@ -262,7 +269,7 @@ class OrderPage extends Component
 
         $this->dispatch('toast', message: 'Order placed successfully!', type: 'success');
 
-        $this->js("setTimeout(() => { window.location.href = '" . route('tablemanagement') . "'; }, 2000)");
+        $this->js("setTimeout(() => { window.location.href = '".route('tablemanagement')."'; }, 2000)");
     }
 
     public function cancelOrder(): void
