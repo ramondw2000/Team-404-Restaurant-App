@@ -20,6 +20,10 @@ class DishesPage extends Component
 
     public bool $showDishSheet = false;
 
+    public ?int $editingIngredientId = null;
+
+    public bool $showIngredientSheet = false;
+
     #[On('setView')]
     public function setView(string $view, ?int $menuId = null, ?int $categoryId = null): void
     {
@@ -42,6 +46,20 @@ class DishesPage extends Component
         $this->editingDishId = null;
     }
 
+    #[On('open-ingredient-sheet')]
+    public function openIngredientSheet(?int $ingredientId = null): void
+    {
+        $this->editingIngredientId = $ingredientId;
+        $this->showIngredientSheet = true;
+    }
+
+    #[On('close-ingredient-sheet')]
+    public function closeIngredientSheet(): void
+    {
+        $this->showIngredientSheet = false;
+        $this->editingIngredientId = null;
+    }
+
     #[On('dish-saved')]
     public function onDishSaved(): void
     {
@@ -60,6 +78,14 @@ class DishesPage extends Component
         $this->activeView = 'dishes';
         $this->activeMenuId = null;
         $this->activeCategoryId = null;
+    }
+
+    #[On('ingredient-updated')]
+    #[On('ingredient-created')]
+    #[On('ingredient-deleted')]
+    public function onIngredientSaved(): void
+    {
+        $this->closeIngredientSheet();
     }
 
     public function render(): View

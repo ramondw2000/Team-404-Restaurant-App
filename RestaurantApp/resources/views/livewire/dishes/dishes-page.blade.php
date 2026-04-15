@@ -103,4 +103,12 @@
             wire:key="dish-sheet-{{ $editingDishId ?? 'create' }}"
         />
     @endif
+
+    {{-- Ingredient sheet overlay --}}
+    @if($showIngredientSheet)
+        <livewire:dishes.ingredient-sheet
+            :ingredientId="$editingIngredientId"
+            wire:key="ingredient-sheet-{{ $editingIngredientId ?? 'create' }}"
+        />
+    @endif
 </div>

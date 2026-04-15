@@ -111,9 +111,22 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
                         Price <span class="text-red-400">*</span>
                     </label>
-                    <div class="relative">
+                    <div class="relative" x-data
+                        @input="
+                            const el = $event.target;
+                            let val = el.value;
+                            if (val === '') return;
+                            const dotIndex = val.indexOf('.');
+                            if (dotIndex !== -1 && val.length - dotIndex - 1 > 2) {
+                                el.value = parseFloat(val).toFixed(2);
+                            }
+                            if (parseFloat(el.value) > 9999.99) {
+                                el.value = '9999.99';
+                            }
+                            el.dispatchEvent(new Event('change'));
+                        ">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">&euro;</span>
-                        <x-ui.input wire:model="price" type="number" min="0" step="0.01" class="!pl-7" placeholder="0.00" :error="$errors->has('price')" />
+                        <x-ui.input wire:model="price" type="number" min="0" max="9999.99" step="0.01" pattern="^\d{1,4}(\.\d{0,2})?$" class="!pl-7" placeholder="0.00" :error="$errors->has('price')" />
                     </div>
                     @error('price')
                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>

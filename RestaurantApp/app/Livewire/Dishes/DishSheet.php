@@ -27,7 +27,7 @@ class DishSheet extends Component
     #[Validate('nullable|string')]
     public ?string $description = null;
 
-    #[Validate('required|numeric|min:0')]
+    #[Validate('required|numeric|min:0|max:9999.99|decimal:0,2')]
     public string $price = '';
 
     #[Validate('nullable|string|max:7')]
@@ -212,7 +212,7 @@ class DishSheet extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0|max:9999.99|decimal:0,2',
             'color' => 'nullable|string|max:7',
             'photo' => 'nullable|image|max:5120',
             'description' => 'nullable|string',
