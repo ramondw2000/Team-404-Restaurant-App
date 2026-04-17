@@ -104,13 +104,15 @@
 
                     {{-- Seat count --}}
                     <div class="relative hidden sm:block">
-                        <input
-                            type="number"
-                            min="1"
-                            placeholder="Seats"
-                            class="px-2 py-1 text-xs border border-gray-200 rounded-lg w-16 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                        <select
+                            class="px-2 py-1 text-xs border border-gray-200 rounded-lg w-20 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                             x-model="$store.filters.seats"
                         >
+                            <option value="">Seats</option>
+                            @for($i = 2; $i <= 10; $i += 2)
+                                <option value="{{ $i }}">{{ $i }} seats</option>
+                            @endfor
+                        </select>
                     </div>
 
                     {{-- Status filter toggles (doubles as status summary) --}}
