@@ -276,3 +276,44 @@ it('rolls back database writes made during an impersonation request', function (
 
     expect($target->fresh()->name)->toBe($originalName);
 });
+
+// ── Cache busting ───────────────────────────────────────────────
+
+it('sets no-cache headers on responses during impersonation to prevent stale bfcache pages', function () {
+    $admin = makeAdmin();
+    $target = makeRegularUser();
+
+    $response = $this->actingAs($admin)
+        ->withSession([
+            'impersonation.original_user_id' => $admin->id,
+            'impersonation.user_id' => $target->id,
+        ])
+        ->get(route('dashboard'));
+
+    expect($response->headers->get('Cache-Control'))
+        ->toContain('no-store')
+        ->toContain('no-cache');
+});
+
+it('returns active true from the status endpoint during impersonation', function () {
+    $admin = makeAdmin();
+    $target = makeRegularUser();
+
+    $this->actingAs($admin)
+        ->withSession([
+            'impersonation.original_user_id' => $admin->id,
+            'impersonation.user_id' => $target->id,
+        ])
+        ->getJson(route('impersonation.status'))
+        ->assertSuccessful()
+        ->assertJson(['active' => true]);
+});
+
+it('returns active false from the status endpoint when not impersonating', function () {
+    $admin = makeAdmin();
+
+    $this->actingAs($admin)
+        ->getJson(route('impersonation.status'))
+        ->assertSuccessful()
+        ->assertJson(['active' => false]);
+});

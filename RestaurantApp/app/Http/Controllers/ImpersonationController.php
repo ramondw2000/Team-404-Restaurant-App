@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,5 +35,12 @@ class ImpersonationController extends Controller
         session()->forget(['impersonation.original_user_id', 'impersonation.user_id']);
 
         return redirect()->route('accounts.index');
+    }
+
+    public function status(): JsonResponse
+    {
+        return response()->json([
+            'active' => session()->has('impersonation.original_user_id'),
+        ]);
     }
 }

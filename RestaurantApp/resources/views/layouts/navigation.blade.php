@@ -1,4 +1,15 @@
-<nav x-data="{ open: false }" class="bg-primary border-b border-molveno-blue-700">
+<nav x-data="{ open: false }" data-impersonating="{{ session('impersonation.original_user_id') ? '1' : '0' }}" class="bg-primary border-b border-molveno-blue-700">
+<script>
+    window.addEventListener('pageshow', function () {
+        var nav = document.querySelector('nav[data-impersonating]');
+        if (!nav) return;
+        var rendered = nav.getAttribute('data-impersonating');
+        fetch('{{ route('impersonation.status') }}', { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { if (data.active !== (rendered === '1')) window.location.reload(); })
+            .catch(function () {});
+    });
+</script>
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
