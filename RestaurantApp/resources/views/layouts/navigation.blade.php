@@ -73,9 +73,11 @@
                     @endcan
 
                     {{-- Maintenance --}}
+                    @can('View Maintenance')
                     <x-nav-link :href="route('maintenance')" :active="request()->routeIs('maintenance')">
                         {{ __('Maintenance') }}
                     </x-nav-link>
+                    @endcan
 
                 </div>
             </div>
@@ -210,9 +212,11 @@
             @endcan
 
             {{-- Maintenance --}}
+            @can('View Maintenance')
             <x-responsive-nav-link :href="route('maintenance')" :active="request()->routeIs('maintenance')">
                 {{ __('Maintenance') }}
             </x-responsive-nav-link>
+            @endcan
         </div>
 
         <!-- Responsive Settings Options -->

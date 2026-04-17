@@ -103,7 +103,7 @@ For every page that has a **"View [Page]"** permission:
 - Enabling View does **not** automatically enable action permissions.
 - Disabling View **automatically disables all action permissions** for that page.
 
-Pages with a View gate: Dishes, Kitchen Orders, Orders, Account Management, Table Management, Statistics.
+Pages with a View gate: Dishes, Kitchen Orders, Bar Orders, Orders, Account Management, Table Management, Reservations, Statistics, Maintenance.
 
 Cross-page permissions (`Export Data`, `Manage Availability`) have **no View gate** — they are always independently toggleable.
 
@@ -132,10 +132,10 @@ Cross-page permissions (`Export Data`, `Manage Availability`) have **no View gat
 |---|---|
 | **Management** | Administrator (bypasses all) |
 | **Server** | View Orders, Create Order, Edit Order, Cancel Order, Process Payment, Assign Table · View Table Management |
-| **Chef** | View Dishes · View Kitchen Orders, Mark Orders Ready |
-| **Receptionist** | View Orders, Create Order, Edit Order, Assign Table · View Kitchen Orders · View Table Management, Update Table Status |
-| **Bar Staff** | View Dishes · View Kitchen Orders, Mark Orders Ready |
-| **Maintenance Crew** | View Table Management, Edit Table Layout, Manage Floor Plans |
+| **Chef** | View Dishes, Add Dishes, Edit Dishes, Delete Dishes · View Kitchen Orders, Mark Orders Ready |
+| **Receptionist** | View Orders, Create Order, Edit Order, Assign Table · View Kitchen Orders · View Table Management, Update Table Status · View Reservations, Create Reservation, Edit Reservation, Cancel Reservation |
+| **Bar Staff** | View Dishes, Add Dishes, Edit Dishes, Delete Dishes · View Kitchen Orders, Mark Orders Ready · View Bar Orders, Send Bar Orders |
+| **Maintenance Crew** | View Table Management · View Maintenance, Create Maintenance Task, Edit Maintenance Task, Complete Maintenance Task |
 
 ---
 

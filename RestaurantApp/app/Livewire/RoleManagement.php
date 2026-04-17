@@ -122,6 +122,8 @@ class RoleManagement extends Component
 
     public function saveRole(): void
     {
+        $this->authorize('Manage Roles');
+
         $rules = [
             'formName' => ['required', 'string', 'max:255'],
             'formColor' => ['required', 'string', 'in:'.implode(',', array_keys(self::COLORS))],
@@ -167,6 +169,8 @@ class RoleManagement extends Component
 
     public function toggleAdministrator(): void
     {
+        $this->authorize('Manage Roles');
+
         $role = $this->selectedRole;
 
         if ($role === null) {
@@ -187,6 +191,8 @@ class RoleManagement extends Component
 
     public function togglePermission(string $permissionName): void
     {
+        $this->authorize('Manage Roles');
+
         $role = $this->selectedRole;
 
         if ($role === null || $role->is_administrator) {
@@ -253,6 +259,8 @@ class RoleManagement extends Component
 
     public function deleteRole(): void
     {
+        $this->authorize('Manage Roles');
+
         if ($this->deleteConfirmRoleId === null) {
             return;
         }

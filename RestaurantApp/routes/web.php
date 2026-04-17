@@ -36,9 +36,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('/accounts/impersonate', [ImpersonationController::class, 'stop'])
         ->name('impersonation.stop');
 
-    Route::resource('accounts', AccountController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('permission:View Account Management');
+    Route::get('/accounts', [AccountController::class, 'index'])
+        ->middleware('permission:View Account Management')
+        ->name('accounts.index');
+
+    Route::post('/accounts', [AccountController::class, 'store'])
+        ->middleware('permission:Create User')
+        ->name('accounts.store');
+
+    Route::put('/accounts/{account}', [AccountController::class, 'update'])
+        ->middleware('permission:Edit User')
+        ->name('accounts.update');
+
+    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])
+        ->middleware('permission:Delete User')
+        ->name('accounts.destroy');
 
     Route::get('/statistics', [StatisticsController::class, 'index'])
         ->middleware('permission:View Statistics')
@@ -85,24 +97,31 @@ Route::middleware('auth')->group(function () {
         ->name('dishes');
 
     Route::post('/dishes', [DishController::class, 'store'])
-        ->middleware('role:management|chef|bar_staff')
+        ->middleware('permission:Add Dishes')
         ->name('dishes.store');
 
     Route::post('/dishes/{dish}/update', [DishController::class, 'update'])
-        ->middleware('role:management|chef|bar_staff')
+        ->middleware('permission:Edit Dishes')
         ->name('dishes.update');
 
     Route::delete('/dishes/{dish}', [DishController::class, 'destroy'])
-        ->middleware('role:management|chef|bar_staff')
+        ->middleware('permission:Delete Dishes')
         ->name('dishes.destroy');
 
     Route::get('/maintenance', [MaintenanceController::class, 'index'])
+        ->middleware('permission:View Maintenance')
         ->name('maintenance');
 
+    Route::post('/maintenance', [MaintenanceController::class, 'store'])
+        ->middleware('permission:Create Maintenance Task')
+        ->name('maintenance.store');
+
     Route::patch('/maintenance/{task}/notes', [MaintenanceController::class, 'updateNotes'])
+        ->middleware('permission:Edit Maintenance Task')
         ->name('maintenance.updateNotes');
 
     Route::patch('/maintenance/{task}/done', [MaintenanceController::class, 'markAsDone'])
+        ->middleware('permission:Complete Maintenance Task')
         ->name('maintenance.markAsDone');
 
     Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)

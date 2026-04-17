@@ -154,3 +154,25 @@ it('denies receptionist access to dishes', function () {
 it('denies maintenance_crew access to dishes', function () {
     actingAsRole('maintenance_crew')->get(route('dishes'))->assertForbidden();
 });
+
+// ── Maintenance: management, maintenance_crew ──
+
+it('allows management to access maintenance', function () {
+    actingAsRole('management')->get(route('maintenance'))->assertOk();
+});
+
+it('allows maintenance_crew to access maintenance', function () {
+    actingAsRole('maintenance_crew')->get(route('maintenance'))->assertOk();
+});
+
+it('denies server access to maintenance', function () {
+    actingAsRole('server')->get(route('maintenance'))->assertForbidden();
+});
+
+it('denies chef access to maintenance', function () {
+    actingAsRole('chef')->get(route('maintenance'))->assertForbidden();
+});
+
+it('denies receptionist access to maintenance', function () {
+    actingAsRole('receptionist')->get(route('maintenance'))->assertForbidden();
+});

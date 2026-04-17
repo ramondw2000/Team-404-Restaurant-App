@@ -179,6 +179,8 @@ class DishSheet extends Component
 
     public function createIngredient(): void
     {
+        $this->authorize('Edit Dishes');
+
         $this->validate([
             'newIngredientName' => 'required|string|max:255|unique:ingredients,name',
         ]);
@@ -210,6 +212,8 @@ class DishSheet extends Component
 
     public function save(): void
     {
+        $this->authorize($this->dishId ? 'Edit Dishes' : 'Add Dishes');
+
         $this->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0|max:9999.99|decimal:0,2',
@@ -260,6 +264,8 @@ class DishSheet extends Component
 
     public function deleteDish(): void
     {
+        $this->authorize('Delete Dishes');
+
         if (! $this->dishId) {
             return;
         }

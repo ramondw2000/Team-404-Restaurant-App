@@ -24,6 +24,24 @@ class MaintenanceController extends Controller
     }
 
     /**
+     * Store a newly created maintenance task.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        MaintenanceTask::create([
+            'name'  => $validated['name'],
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->route('maintenance')->with('success', 'Task created.');
+    }
+
+    /**
      * Update the notes for a maintenance task.
      */
     public function updateNotes(Request $request, MaintenanceTask $task): RedirectResponse

@@ -32,7 +32,7 @@ class RoleSeeder extends Seeder
             'color' => 'orange',
             'is_administrator' => false,
             'permissions' => [
-                'View Dishes',
+                'View Dishes', 'Add Dishes', 'Edit Dishes', 'Delete Dishes',
                 'View Kitchen Orders', 'Mark Orders Ready',
             ],
         ],
@@ -50,7 +50,7 @@ class RoleSeeder extends Seeder
             'color' => 'amber',
             'is_administrator' => false,
             'permissions' => [
-                'View Dishes',
+                'View Dishes', 'Add Dishes', 'Edit Dishes', 'Delete Dishes',
                 'View Kitchen Orders', 'Mark Orders Ready',
                 'View Bar Orders', 'Send Bar Orders',
             ],
@@ -59,7 +59,8 @@ class RoleSeeder extends Seeder
             'color' => 'rose',
             'is_administrator' => false,
             'permissions' => [
-                'View Table Management', 'Edit Table Layout', 'Manage Floor Plans',
+                'View Table Management',
+                'View Maintenance', 'Create Maintenance Task', 'Edit Maintenance Task', 'Complete Maintenance Task',
             ],
         ],
     ];

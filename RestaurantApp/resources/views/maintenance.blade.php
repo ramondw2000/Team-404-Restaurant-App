@@ -20,7 +20,20 @@
 
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
 
-            <x-ui.page-header title="Maintenance Team Tasks" subtitle="Overview of all maintenance tasks" />
+            <x-ui.page-header title="Maintenance Team Tasks" subtitle="Overview of all maintenance tasks">
+                @can('Create Maintenance Task')
+                    <x-slot:actions>
+                        <div x-data>
+                            <x-ui.button type="button" @click="window.dispatchEvent(new CustomEvent('open-create-task-sheet'))">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                Add Task
+                            </x-ui.button>
+                        </div>
+                    </x-slot:actions>
+                @endcan
+            </x-ui.page-header>
 
             <!-- Pending Tasks -->
             <div class="flex flex-col gap-2">
@@ -49,6 +62,9 @@
         </div>
 
         <x-maintenance.task-note-sheet />
+        @can('Create Maintenance Task')
+            <x-maintenance.task-create-sheet />
+        @endcan
 
         @livewireScripts
     </body>

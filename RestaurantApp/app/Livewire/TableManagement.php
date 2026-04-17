@@ -406,6 +406,8 @@ class TableManagement extends Component
 
     public function createFloorPlan(): void
     {
+        $this->authorize('Manage Floor Plans');
+
         $this->validate([
             'newFloorPlanName' => ['required', 'string', 'max:255'],
             'newBackgroundImage' => ['required', 'file', 'mimes:png,jpg,jpeg,webp,svg', 'max:51200'],
@@ -442,6 +444,8 @@ class TableManagement extends Component
 
     public function renameFloorPlan(): void
     {
+        $this->authorize('Manage Floor Plans');
+
         $this->validate([
             'renameFloorPlanName' => ['required', 'string', 'max:255'],
         ]);
@@ -453,6 +457,8 @@ class TableManagement extends Component
 
     public function deleteFloorPlan(): void
     {
+        $this->authorize('Manage Floor Plans');
+
         if (! $this->activeFloorPlan) {
             return;
         }
@@ -474,6 +480,8 @@ class TableManagement extends Component
 
     public function replaceBackgroundImage(): void
     {
+        $this->authorize('Manage Floor Plans');
+
         $this->validate([
             'replacementBackgroundImage' => ['required', 'file', 'mimes:png,jpg,jpeg,webp,svg', 'max:51200'],
         ]);
@@ -489,6 +497,8 @@ class TableManagement extends Component
 
     public function enterEditMode(): void
     {
+        $this->authorize('Edit Table Layout');
+
         $this->editMode = true;
         $this->selectedElementId = null;
     }
@@ -507,6 +517,8 @@ class TableManagement extends Component
 
     public function saveChanges(): void
     {
+        $this->authorize('Edit Table Layout');
+
         if (! $this->activeFloorPlanId) {
             return;
         }
@@ -1105,6 +1117,8 @@ class TableManagement extends Component
      */
     public function cancelReservation(int $reservationId): void
     {
+        $this->authorize('Cancel Reservation');
+
         $reservation = Reservation::find($reservationId);
         if (! $reservation) {
             return;

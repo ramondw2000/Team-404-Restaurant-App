@@ -98,12 +98,14 @@ class PermissionRegistry
             ],
         ],
         [
-            'key' => 'general',
-            'label' => 'General',
-            'view_gate' => null,
+            'key' => 'maintenance',
+            'label' => 'Maintenance',
+            'view_gate' => 'View Maintenance',
             'permissions' => [
-                ['name' => 'Export Data', 'description' => 'Download CSV exports of orders or statistical data'],
-                ['name' => 'Manage Availability', 'description' => 'Toggle dish availability on the Dishes page; update table status on Table Management'],
+                ['name' => 'View Maintenance', 'description' => 'Access the Maintenance Tasks page'],
+                ['name' => 'Create Maintenance Task', 'description' => 'Add a new maintenance task'],
+                ['name' => 'Edit Maintenance Task', 'description' => 'Edit notes on a maintenance task'],
+                ['name' => 'Complete Maintenance Task', 'description' => 'Mark a maintenance task as done'],
             ],
         ],
     ];

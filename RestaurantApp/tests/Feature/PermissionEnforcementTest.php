@@ -32,12 +32,13 @@ it('allows an administrator role to access all permission-protected routes', fun
     $this->actingAs($user)->get(route('kitchen-orders'))->assertOk();
     $this->actingAs($user)->get(route('statistics'))->assertOk();
     $this->actingAs($user)->get(route('tablemanagement'))->assertOk();
+    $this->actingAs($user)->get(route('maintenance'))->assertOk();
 });
 
 // ── Dashboard: accessible to all authenticated users ──────────
 
 it('allows any authenticated user to access the dashboard without a permission', function () {
-    $user = userWithRole('maintenance_crew'); // no page-specific permissions
+    $user = userWithRole('server'); // server has no dashboard-specific permission
 
     $this->actingAs($user)->get(route('dashboard'))->assertOk();
 });
@@ -115,6 +116,64 @@ it('revokes access immediately when a permission is removed from a role', functi
     app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
     $this->actingAs($user)->get(route('dishes'))->assertForbidden();
+});
+
+// ── Per-action account route enforcement (#3) ───────────────
+
+it('denies a user with only View Account Management from creating an account', function () {
+    $user = userWithRole('server');
+    $viewOnlyRole = Role::where('name', 'server')->first();
+    $viewOnlyRole->givePermissionTo('View Account Management');
+    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+    $this->actingAs($user)
+        ->post(route('accounts.store'), [
+            'name' => 'New Staff',
+            'email' => 'newstaff@example.com',
+            'password' => 'password123',
+            'roles' => ['server'],
+        ])
+        ->assertForbidden();
+});
+
+it('denies a user with only View Account Management from deleting an account', function () {
+    $target = userWithRole('server');
+    $user = userWithRole('server');
+    $viewOnlyRole = Role::where('name', 'server')->first();
+    $viewOnlyRole->givePermissionTo('View Account Management');
+    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+    $this->actingAs($user)
+        ->delete(route('accounts.destroy', $target))
+        ->assertForbidden();
+});
+
+// ── Dish permission enforcement (#1) ─────────────────────────
+
+it('enforces Add Dishes permission on dish creation route', function () {
+    $user = userWithRole('server'); // no Add Dishes
+
+    $this->actingAs($user)
+        ->post(route('dishes.store'), ['name' => 'Test Dish', 'price' => '10.00'])
+        ->assertForbidden();
+});
+
+it('enforces Edit Dishes permission on dish update route', function () {
+    $dish = \App\Models\Dish::factory()->create();
+    $user = userWithRole('server'); // no Edit Dishes
+
+    $this->actingAs($user)
+        ->post(route('dishes.update', $dish), ['name' => 'Updated', 'price' => '12.00'])
+        ->assertForbidden();
+});
+
+it('enforces Delete Dishes permission on dish destroy route', function () {
+    $dish = \App\Models\Dish::factory()->create();
+    $user = userWithRole('server'); // no Delete Dishes
+
+    $this->actingAs($user)
+        ->delete(route('dishes.destroy', $dish))
+        ->assertForbidden();
 });
 
 // ── Self-lockout prevention ───────────────────────────────────
