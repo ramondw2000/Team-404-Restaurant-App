@@ -4,7 +4,14 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <p class="text-molveno-blue-100 text-sm font-medium uppercase tracking-widest mb-1">Molveno Lake Resort</p>
             <h1 class="text-3xl font-bold text-white">Welcome back, {{ Auth::user()->name }}</h1>
-            <p class="text-white/60 mt-1 text-sm">Select a section to get started.</p>
+            <div class="flex items-center gap-2 mt-2">
+                @foreach(Auth::user()->roles as $role)
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30">
+                        {{ ucfirst(str_replace('_', ' ', $role->name)) }}
+                    </span>
+                @endforeach
+            </div>
+            <p class="text-white/60 mt-2 text-sm">Select a section to get started.</p>
         </div>
     </div>
 
