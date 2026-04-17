@@ -211,6 +211,10 @@ class Reservations extends Component
             return;
         }
 
+        if ($status === 'cancelled') {
+            $this->authorize('Cancel Reservation');
+        }
+
         $reservation = Reservation::findOrFail($id);
         $reservation->update(['status' => $status]);
 
