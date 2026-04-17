@@ -18,7 +18,10 @@
             @endif
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="flex items-center justify-between mt-4">
+            <a href="{{ route('login') }}" class="text-sm text-white/70 hover:text-white transition-colors">
+                {{ session('status') ? __('Back to login') : __('Cancel') }}
+            </a>
             <x-ui.button type="submit" variant="secondary">
                 {{ __('Email Password Reset Link') }}
             </x-ui.button>
