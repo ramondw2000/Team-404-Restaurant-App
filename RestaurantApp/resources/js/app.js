@@ -1,6 +1,10 @@
 import './bootstrap';
 
+import Alpine from 'alpinejs';
 import interact from 'interactjs';
+
+window.Alpine = Alpine;
+Alpine.start();
 
 window.interact = interact;
 
