@@ -27,6 +27,7 @@ final readonly class OrderService
         return Order::with(['items.dish', 'floorPlanElement'])
             ->where('floor_plan_element_id', $elementId)
             ->whereIn('status', [OrderStatus::Draft, OrderStatus::Active])
+            ->whereHas('reservation', fn ($q) => $q->whereIn('status', ['scheduled', 'arrived']))
             ->latest()
             ->first();
     }
@@ -42,6 +43,7 @@ final readonly class OrderService
             ->where('floor_plan_element_id', $elementId)
             ->whereIn('status', [OrderStatus::Active, OrderStatus::Completed])
             ->where('paid', false)
+            ->whereHas('reservation', fn ($q) => $q->whereIn('status', ['scheduled', 'arrived']))
             ->orderBy('created_at')
             ->get();
     }
@@ -56,6 +58,7 @@ final readonly class OrderService
         return Order::with(['items.dish', 'reservation', 'floorPlanElement'])
             ->where('floor_plan_element_id', $elementId)
             ->whereIn('status', [OrderStatus::Active, OrderStatus::Completed])
+            ->whereHas('reservation', fn ($q) => $q->whereIn('status', ['scheduled', 'arrived']))
             ->orderBy('created_at')
             ->get();
     }
