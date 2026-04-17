@@ -36,6 +36,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/accounts/impersonate', [ImpersonationController::class, 'stop'])
         ->name('impersonation.stop');
 
+    Route::get('/impersonation/status', [ImpersonationController::class, 'status'])
+        ->name('impersonation.status');
+
     Route::get('/accounts', [AccountController::class, 'index'])
         ->middleware('permission:View Account Management')
         ->name('accounts.index');

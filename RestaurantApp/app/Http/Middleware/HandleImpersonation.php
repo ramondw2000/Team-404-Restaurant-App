@@ -47,7 +47,11 @@ class HandleImpersonation
         DB::beginTransaction();
         $request->attributes->set('impersonation_active', true);
 
-        return $next($request);
+        $response = $next($request);
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->headers->set('Pragma', 'no-cache');
+
+        return $response;
     }
 
     public function terminate(Request $request, Response $response): void
