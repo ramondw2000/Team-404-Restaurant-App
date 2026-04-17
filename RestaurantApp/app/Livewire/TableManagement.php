@@ -138,6 +138,12 @@ class TableManagement extends Component
     }
 
     #[Computed]
+    public function canManageFloorPlans(): bool
+    {
+        return auth()->user()?->can('Manage Floor Plans') ?? false;
+    }
+
+    #[Computed]
     public function activeFloorPlan(): ?FloorPlan
     {
         if (! $this->activeFloorPlanId) {
@@ -1135,7 +1141,7 @@ class TableManagement extends Component
                 ->exists();
 
             if (! $hasOtherActive) {
-                $reservation->floorPlanElement->update(['status' => \App\Enums\TableStatus::Available]);
+                $reservation->floorPlanElement->update(['status' => TableStatus::Available]);
             }
         }
 
@@ -1164,7 +1170,7 @@ class TableManagement extends Component
                 ->exists();
 
             if (! $hasOtherActive) {
-                $reservation->floorPlanElement->update(['status' => \App\Enums\TableStatus::Available]);
+                $reservation->floorPlanElement->update(['status' => TableStatus::Available]);
             }
         }
 

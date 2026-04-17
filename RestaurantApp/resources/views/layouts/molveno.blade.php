@@ -15,6 +15,7 @@
     @include('layouts.navigation')
     {{ $slot }}
 </div>
+<x-ui.toast />
 @livewireScripts
 </body>
 </html>

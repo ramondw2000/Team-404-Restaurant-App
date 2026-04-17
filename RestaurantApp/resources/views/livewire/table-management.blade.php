@@ -30,15 +30,17 @@
                 </div>
             @endif
 
-            <button
-                wire:click="openCreateFloorPlanModal"
-                title="Add floor plan"
-                class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-            </button>
+            @if($this->canManageFloorPlans)
+                <button
+                    wire:click="openCreateFloorPlanModal"
+                    title="Add floor plan"
+                    class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                </button>
+            @endif
         </div>
 
         {{-- Center: Title + Snap Toggle (edit mode) --}}
@@ -259,16 +261,20 @@
                                       d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">No floor plans yet</h3>
-                        <p class="text-sm text-gray-500 mb-6">Create your first floor plan to start managing your
-                            restaurant tables.</p>
-                        <x-ui.button wire:click="openCreateFloorPlanModal">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Create your first floor plan
-                        </x-ui.button>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">No floor plans available</h3>
+                        @if($this->canManageFloorPlans)
+                            <p class="text-sm text-gray-500 mb-6">Create your first floor plan to start managing your
+                                restaurant tables.</p>
+                            <x-ui.button wire:click="openCreateFloorPlanModal">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Create your first floor plan
+                            </x-ui.button>
+                        @else
+                            <p class="text-sm text-gray-500">There are no floor plans available. Please contact an administrator or someone with permission to upload a floor plan.</p>
+                        @endif
                     </div>
                 </div>
             @else
