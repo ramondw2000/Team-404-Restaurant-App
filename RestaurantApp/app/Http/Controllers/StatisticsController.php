@@ -85,7 +85,7 @@ class StatisticsController extends Controller
 
     private function getOrdersForPeriod(string $period): Collection
     {
-        $query = Order::with(['items.dish', 'floorPlanElement', 'reservation'])
+        $query = Order::with(['items.dish', 'floorPlanElement', 'reservation', 'user'])
             ->where('status', OrderStatus::Completed);
 
         match ($period) {
@@ -108,7 +108,8 @@ class StatisticsController extends Controller
                 'id' => 'ORD-'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
                 'type' => 'restaurant',
                 'location' => $order->floorPlanElement?->table_name ?? '—',
-                'waiter' => $order->reservation?->guest_name ?? '—',
+                'waiter' => $order->user?->name ?? '—',
+                'customer' => $order->reservation?->guest_name ?? '—',
                 'closed_at' => $order->updated_at?->format('H:i') ?? '—',
                 'date' => $order->updated_at?->format('Y-m-d'),
                 'items' => $items,

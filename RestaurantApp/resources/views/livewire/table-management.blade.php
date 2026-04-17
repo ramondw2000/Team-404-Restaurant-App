@@ -815,8 +815,8 @@
 
                 {{-- Sheet Footer --}}
                 <div class="p-5 border-t border-gray-100 flex flex-col gap-2 shrink-0">
-                    {{-- View Orders button (if table has active orders) --}}
-                    @if($currentStatus && $currentStatus->value === 'Occupied')
+                    {{-- Order overview: available whenever any order (paid or unpaid) exists on this table --}}
+                    @if($this->tableSheetHasAnyOrders)
                         <x-ui.button
                             wire:click="openOrderInfo({{ $tableEl['id'] }})"
                             variant="secondary"
@@ -828,6 +828,9 @@
                             </svg>
                             View Order Info
                         </x-ui.button>
+                    @endif
+                    {{-- Receipt: unpaid orders only (paid orders should not re-print) --}}
+                    @if($this->tableSheetHasUnpaidOrders)
                         <x-ui.button
                             wire:click="openReceipt({{ $tableEl['id'] }})"
                             variant="secondary"
@@ -941,37 +944,20 @@
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="closeDepartureConfirm"></div>
             <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" @click.stop>
                 <h2 class="text-lg font-bold text-gray-900 mb-1">Confirm Departure</h2>
-                <p class="text-sm text-gray-500 mb-5">Mark the guest as departed and set payment status for their orders.</p>
+                <p class="text-sm text-gray-500 mb-5">
+                    Mark the guest as departed. The table becomes <strong>Reserved</strong> if another reservation is scheduled today, otherwise <strong>Available</strong>.
+                </p>
+                <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-5">
+                    Any unpaid orders stay unpaid — settle them from <strong>View Order Info</strong>.
+                </p>
 
-                <div class="space-y-4">
-                    {{-- Payment Status Toggle --}}
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">Payment Received</p>
-                                <p class="text-xs text-gray-500">Mark orders as paid</p>
-                            </div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" wire:model="departurePaid" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                        </label>
-                    </div>
-
-                    {{-- Action Buttons --}}
-                    <div class="flex gap-3 pt-2">
-                        <x-ui.button variant="secondary" class="flex-1" wire:click="closeDepartureConfirm">
-                            Cancel
-                        </x-ui.button>
-                        <x-ui.button class="flex-1" wire:click="confirmDeparture">
-                            Confirm Departure
-                        </x-ui.button>
-                    </div>
+                <div class="flex gap-3">
+                    <x-ui.button variant="secondary" class="flex-1" wire:click="closeDepartureConfirm">
+                        Cancel
+                    </x-ui.button>
+                    <x-ui.button class="flex-1" wire:click="confirmDeparture">
+                        Confirm Departure
+                    </x-ui.button>
                 </div>
             </div>
         </div>

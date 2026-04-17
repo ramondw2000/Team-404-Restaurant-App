@@ -54,8 +54,6 @@ class TableManagement extends Component
 
     public ?int $orderInfoElementId = null;
 
-    public ?int $orderInfoOrderId = null;
-
     // Receipt modal
     public bool $showReceiptModal = false;
 
@@ -90,8 +88,6 @@ class TableManagement extends Component
     public bool $showDepartureConfirm = false;
 
     public ?int $pendingDepartureReservationId = null;
-
-    public bool $departurePaid = true;
 
     // Create floor plan form
     public string $newFloorPlanName = '';
@@ -327,30 +323,18 @@ class TableManagement extends Component
     }
 
     /**
-     * Order info for the currently viewed table element.
+     * Full paid/unpaid order overview for the currently viewed table element.
      *
      * @return array<string, mixed>|null
      */
     #[Computed]
     public function orderInfo(): ?array
     {
-        if (! $this->orderInfoOrderId && ! $this->orderInfoElementId) {
+        if (! $this->orderInfoElementId) {
             return null;
         }
 
-        $orderService = app(OrderService::class);
-
-        if ($this->orderInfoOrderId) {
-            return $orderService->getOrderDetails($this->orderInfoOrderId);
-        }
-
-        // Fallback: find most recent non-cancelled order for the element
-        $order = Order::where('floor_plan_element_id', $this->orderInfoElementId)
-            ->whereNotIn('status', [OrderStatus::Cancelled])
-            ->latest()
-            ->first();
-
-        return $order ? $orderService->getOrderDetails($order->id) : null;
+        return app(OrderService::class)->getOrderSummaryForElement($this->orderInfoElementId);
     }
 
     /**
@@ -366,6 +350,33 @@ class TableManagement extends Component
         }
 
         return app(ReservationService::class)->getTodayReservationsForElement($this->tableSheetElementId);
+    }
+
+    /**
+     * True when the currently open table sheet has unpaid orders on it.
+     */
+    #[Computed]
+    public function tableSheetHasUnpaidOrders(): bool
+    {
+        if (! $this->tableSheetElementId) {
+            return false;
+        }
+
+        return app(OrderService::class)->getUnpaidOrdersForElement($this->tableSheetElementId)->isNotEmpty();
+    }
+
+    /**
+     * True when the currently open table sheet has any Active/Completed orders
+     * (paid or unpaid) — used to expose the Order Info overview.
+     */
+    #[Computed]
+    public function tableSheetHasAnyOrders(): bool
+    {
+        if (! $this->tableSheetElementId) {
+            return false;
+        }
+
+        return app(OrderService::class)->getOrdersForElementExcludingDraft($this->tableSheetElementId)->isNotEmpty();
     }
 
     /**
@@ -846,13 +857,13 @@ class TableManagement extends Component
             return;
         }
 
-        $activeOrder = $element->orders()
-            ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+        $draftOrder = $element->orders()
+            ->where('status', OrderStatus::Draft->value)
             ->has('items')
             ->latest()
             ->first();
 
-        if ($activeOrder) {
+        if ($draftOrder) {
             $this->pendingOrderElementId = $elementId;
             $this->showResumeOrderConfirm = true;
         } else {
@@ -890,7 +901,7 @@ class TableManagement extends Component
         $element = FloorPlanElement::find($this->pendingOrderElementId);
         if ($element) {
             $element->orders()
-                ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+                ->where('status', OrderStatus::Draft->value)
                 ->update(['status' => OrderStatus::Cancelled->value]);
         }
 
@@ -912,19 +923,14 @@ class TableManagement extends Component
 
     public function openOrderInfo(int $elementId): void
     {
-        // Prefer the most recent non-cancelled order (including completed)
-        $order = Order::where('floor_plan_element_id', $elementId)
-            ->whereNotIn('status', [OrderStatus::Cancelled])
-            ->latest()
-            ->first();
+        $summary = app(OrderService::class)->getOrderSummaryForElement($elementId);
 
-        if (! $order) {
-            $this->dispatch('notify', message: 'No order found for this table.', type: 'error');
+        if (! $summary) {
+            $this->dispatch('notify', message: 'No orders for this table.', type: 'error');
 
             return;
         }
 
-        $this->orderInfoOrderId = $order->id;
         $this->orderInfoElementId = $elementId;
         $this->showOrderInfoModal = true;
     }
@@ -933,55 +939,39 @@ class TableManagement extends Component
     {
         $this->showOrderInfoModal = false;
         $this->orderInfoElementId = null;
-        $this->orderInfoOrderId = null;
     }
 
     /**
-     * Complete the active order for a table and update statistics.
+     * Mark every unpaid order for a table as paid + completed.
+     * Fires OrderCompleted per order so analytics/kitchen listeners update.
      */
     public function completeOrderForTable(int $elementId): void
     {
-        $order = Order::where('floor_plan_element_id', $elementId)
-            ->whereIn('status', [OrderStatus::Active->value, OrderStatus::Completed->value])
-            ->where('paid', false)
-            ->latest()
-            ->first();
+        $count = app(OrderService::class)->markUnpaidOrdersPaidForElement($elementId);
 
-        if (! $order) {
-            $this->dispatch('notify', message: 'No unpaid order found for this table.', type: 'error');
+        if ($count === 0) {
+            $this->dispatch('notify', message: 'No unpaid orders for this table.', type: 'error');
 
             return;
         }
 
-        $order->update(['paid' => true]);
-
         $this->closeOrderInfo();
         $this->unsetComputed();
-        $this->dispatch('notify', message: 'Order marked as paid.');
+        $this->dispatch('notify', message: $count === 1
+            ? 'Order marked as paid.'
+            : "{$count} orders marked as paid.");
     }
 
     // ─── View Mode: Receipt ────────────────────────────────────────────
 
     public function openReceipt(int $elementId): void
     {
-        $orderService = app(OrderService::class);
-        $reservationService = app(ReservationService::class);
-
-        $activeReservation = $reservationService->getActiveReservationForElement($elementId);
-
-        if ($activeReservation) {
-            $this->receiptData = $orderService->getReceiptForReservation($activeReservation->id);
-        } else {
-            $activeOrder = $orderService->getActiveOrderForElement($elementId);
-            if ($activeOrder) {
-                $this->receiptData = $orderService->getReceiptForOrder($activeOrder->id);
-            }
-        }
+        $this->receiptData = app(OrderService::class)->getUnpaidReceiptForElement($elementId);
 
         if ($this->receiptData) {
             $this->showReceiptModal = true;
         } else {
-            $this->dispatch('notify', message: 'No orders found to generate receipt.', type: 'error');
+            $this->dispatch('notify', message: 'No unpaid orders to print.', type: 'error');
         }
     }
 
@@ -1082,7 +1072,6 @@ class TableManagement extends Component
     public function openDepartureConfirm(int $reservationId): void
     {
         $this->pendingDepartureReservationId = $reservationId;
-        $this->departurePaid = true;
         $this->showDepartureConfirm = true;
     }
 
@@ -1093,11 +1082,11 @@ class TableManagement extends Component
     {
         $this->showDepartureConfirm = false;
         $this->pendingDepartureReservationId = null;
-        $this->departurePaid = true;
     }
 
     /**
-     * Complete a reservation (mark as departed) with payment status.
+     * Mark reservation as departed. Table status is recomputed from remaining
+     * today-reservations. Any unpaid orders stay unpaid — pay them via Order Info.
      */
     public function confirmDeparture(): void
     {
@@ -1112,10 +1101,10 @@ class TableManagement extends Component
             return;
         }
 
-        app(ReservationService::class)->completeReservation($reservation, $this->departurePaid);
+        app(ReservationService::class)->completeReservation($reservation);
         $this->closeDepartureConfirm();
         $this->unsetComputed();
-        $this->dispatch('notify', message: $reservation->guest_name.' has departed. Orders marked as '.($this->departurePaid ? 'paid' : 'unpaid').'.');
+        $this->dispatch('notify', message: $reservation->guest_name.' has departed.');
     }
 
     /**
@@ -1131,19 +1120,7 @@ class TableManagement extends Component
         }
 
         $reservation->update(['status' => 'cancelled']);
-
-        // Free up the table if this was the only active reservation
-        if ($reservation->floorPlanElement) {
-            $hasOtherActive = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
-                ->where('id', '!=', $reservation->id)
-                ->whereIn('status', ['scheduled', 'arrived'])
-                ->whereDate('reservation_datetime', today())
-                ->exists();
-
-            if (! $hasOtherActive) {
-                $reservation->floorPlanElement->update(['status' => TableStatus::Available]);
-            }
-        }
+        app(ReservationService::class)->syncTableStatusFromReservations($reservation);
 
         $this->unsetComputed();
         $this->dispatch('notify', message: $reservation->guest_name.' reservation cancelled.');
@@ -1160,19 +1137,7 @@ class TableManagement extends Component
         }
 
         $reservation->update(['status' => 'no_show']);
-
-        // Free up the table if this was the only active reservation
-        if ($reservation->floorPlanElement) {
-            $hasOtherActive = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
-                ->where('id', '!=', $reservation->id)
-                ->whereIn('status', ['scheduled', 'arrived'])
-                ->whereDate('reservation_datetime', today())
-                ->exists();
-
-            if (! $hasOtherActive) {
-                $reservation->floorPlanElement->update(['status' => TableStatus::Available]);
-            }
-        }
+        app(ReservationService::class)->syncTableStatusFromReservations($reservation);
 
         $this->unsetComputed();
         $this->dispatch('notify', message: $reservation->guest_name.' marked as no-show.');
@@ -1343,6 +1308,8 @@ class TableManagement extends Component
             $this->reservationMap,
             $this->orderInfo,
             $this->tableSheetReservations,
+            $this->tableSheetHasUnpaidOrders,
+            $this->tableSheetHasAnyOrders,
         );
     }
 

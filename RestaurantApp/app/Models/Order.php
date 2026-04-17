@@ -17,6 +17,7 @@ class Order extends Model
     protected $fillable = [
         'floor_plan_element_id',
         'reservation_id',
+        'user_id',
         'status',
         'paid',
         'notes',
@@ -52,5 +53,13 @@ class Order extends Model
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

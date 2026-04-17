@@ -32,126 +32,223 @@ final readonly class OrderService
     }
 
     /**
-     * Get order details formatted for display.
+     * Get unpaid orders (Active or Completed with paid=false) for a table element.
+     *
+     * @return Collection<int, Order>
+     */
+    public function getUnpaidOrdersForElement(int $elementId): Collection
+    {
+        return Order::with(['items.dish', 'reservation', 'floorPlanElement'])
+            ->where('floor_plan_element_id', $elementId)
+            ->whereIn('status', [OrderStatus::Active, OrderStatus::Completed])
+            ->where('paid', false)
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * Get every Active/Completed order for a table element (paid and unpaid).
+     *
+     * @return Collection<int, Order>
+     */
+    public function getOrdersForElementExcludingDraft(int $elementId): Collection
+    {
+        return Order::with(['items.dish', 'reservation', 'floorPlanElement'])
+            ->where('floor_plan_element_id', $elementId)
+            ->whereIn('status', [OrderStatus::Active, OrderStatus::Completed])
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * Full order overview for a table element — paid and unpaid items aggregated
+     * separately, plus a grand total across both.
      *
      * @return array<string, mixed>|null
      */
-    public function getOrderDetails(int $orderId): ?array
+    public function getOrderSummaryForElement(int $elementId): ?array
     {
-        $order = Order::with(['items.dish', 'floorPlanElement', 'reservation'])->find($orderId);
+        $orders = $this->getOrdersForElementExcludingDraft($elementId);
 
-        if (! $order) {
+        if ($orders->isEmpty()) {
             return null;
         }
 
-        $items = $order->items->map(fn (OrderItem $item): array => [
-            'id' => $item->id,
-            'name' => $item->dish?->name ?? 'Unknown Dish',
-            'quantity' => $item->quantity,
-            'unit_price' => (float) $item->unit_price,
-            'total' => round($item->quantity * (float) $item->unit_price, 2),
-            'status' => $item->status->value,
-            'notes' => $item->notes,
-        ])->all();
+        $unpaidOrders = $orders->where('paid', false)->values();
+        $paidOrders = $orders->where('paid', true)->values();
 
-        $subtotal = collect($items)->sum('total');
-        $tax = round($subtotal * 0.1, 2);
-        $total = round($subtotal + $tax, 2);
+        $unpaid = $this->aggregateItems($unpaidOrders);
+        $paid = $this->aggregateItems($paidOrders);
+
+        $grandSubtotal = round($unpaid['subtotal'] + $paid['subtotal'], 2);
+        $grandTax = round($grandSubtotal * 0.1, 2);
+        $grandTotal = round($grandSubtotal + $grandTax, 2);
+
+        $first = $orders->first();
+        $last = $orders->last();
 
         return [
-            'id' => $order->id,
-            'order_number' => 'ORD-'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
-            'status' => $order->status->value,
-            'paid' => (bool) $order->paid,
-            'table_name' => $order->floorPlanElement?->table_name ?? 'Unknown',
-            'guest_name' => $order->reservation?->guest_name,
-            'created_at' => $order->created_at?->format('d M Y H:i'),
-            'items' => $items,
-            'subtotal' => $subtotal,
-            'tax' => $tax,
-            'total' => $total,
-            'item_count' => count($items),
+            'table_name' => $first->floorPlanElement?->table_name ?? 'Unknown',
+            'guest_name' => $first->reservation?->guest_name,
+            'order_count' => $orders->count(),
+            'unpaid_order_count' => $unpaidOrders->count(),
+            'paid_order_count' => $paidOrders->count(),
+            'first_order_at' => $first->created_at?->format('d M Y H:i'),
+            'latest_order_at' => $last->created_at?->format('d M Y H:i'),
+            'unpaid' => $unpaid,
+            'paid' => $paid,
+            'grand_subtotal' => $grandSubtotal,
+            'grand_tax' => $grandTax,
+            'grand_total' => $grandTotal,
         ];
     }
 
     /**
-     * Get receipt data for all orders under a reservation.
+     * Aggregate items from a collection of orders. Returns empty items + zero totals
+     * for an empty collection.
      *
-     * @return array<string, mixed>|null
+     * @param  Collection<int, Order>  $orders
+     * @return array{items: array<int, array<string, mixed>>, subtotal: float, tax: float, total: float}
      */
-    public function getReceiptForReservation(int $reservationId): ?array
+    private function aggregateItems(Collection $orders): array
     {
-        $reservation = Reservation::with(['floorPlanElement'])->find($reservationId);
-
-        if (! $reservation) {
-            return null;
-        }
-
-        $orders = Order::with(['items.dish'])
-            ->where('reservation_id', $reservationId)
-            ->whereIn('status', [OrderStatus::Active, OrderStatus::Completed])
-            ->orderBy('created_at')
-            ->get();
-
-        $allItems = [];
+        $buckets = [];
         foreach ($orders as $order) {
             foreach ($order->items as $item) {
-                $key = $item->dish_id.'-'.$item->unit_price;
-                if (isset($allItems[$key])) {
-                    $allItems[$key]['quantity'] += $item->quantity;
-                    $allItems[$key]['total'] = round($allItems[$key]['quantity'] * (float) $item->unit_price, 2);
+                $key = $item->dish_id.'-'.$item->unit_price.'-'.($item->notes ?? '');
+                if (isset($buckets[$key])) {
+                    $buckets[$key]['quantity'] += $item->quantity;
+                    $buckets[$key]['total'] = round($buckets[$key]['quantity'] * (float) $item->unit_price, 2);
                 } else {
-                    $allItems[$key] = [
+                    $buckets[$key] = [
                         'name' => $item->dish?->name ?? 'Unknown Dish',
                         'quantity' => $item->quantity,
                         'unit_price' => (float) $item->unit_price,
                         'total' => round($item->quantity * (float) $item->unit_price, 2),
+                        'notes' => $item->notes,
                     ];
                 }
             }
         }
 
-        $items = array_values($allItems);
-        $subtotal = collect($items)->sum('total');
+        $items = array_values($buckets);
+        $subtotal = round(collect($items)->sum('total'), 2);
         $tax = round($subtotal * 0.1, 2);
         $total = round($subtotal + $tax, 2);
 
         return [
-            'guest_name' => $reservation->guest_name,
-            'table_name' => $reservation->floorPlanElement?->table_name ?? $reservation->table_number ?? 'Unknown',
-            'party_size' => $reservation->party_size,
-            'reservation_time' => $reservation->reservation_datetime->format('d M Y H:i'),
-            'order_count' => $orders->count(),
             'items' => $items,
             'subtotal' => $subtotal,
             'tax' => $tax,
             'total' => $total,
-            'printed_at' => now()->format('d M Y H:i'),
         ];
     }
 
     /**
-     * Get receipt data for a single order (when no reservation).
+     * Aggregate unpaid items for a table element for display in Order Info.
      *
      * @return array<string, mixed>|null
      */
-    public function getReceiptForOrder(int $orderId): ?array
+    public function getUnpaidOrderSummaryForElement(int $elementId): ?array
     {
-        $details = $this->getOrderDetails($orderId);
-        if (! $details) {
+        $orders = $this->getUnpaidOrdersForElement($elementId);
+
+        if ($orders->isEmpty()) {
             return null;
         }
 
+        $aggregated = [];
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $key = $item->dish_id.'-'.$item->unit_price.'-'.($item->notes ?? '');
+                if (isset($aggregated[$key])) {
+                    $aggregated[$key]['quantity'] += $item->quantity;
+                    $aggregated[$key]['total'] = round($aggregated[$key]['quantity'] * (float) $item->unit_price, 2);
+                } else {
+                    $aggregated[$key] = [
+                        'name' => $item->dish?->name ?? 'Unknown Dish',
+                        'quantity' => $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                        'total' => round($item->quantity * (float) $item->unit_price, 2),
+                        'notes' => $item->notes,
+                    ];
+                }
+            }
+        }
+
+        $items = array_values($aggregated);
+        $subtotal = round(collect($items)->sum('total'), 2);
+        $tax = round($subtotal * 0.1, 2);
+        $total = round($subtotal + $tax, 2);
+
+        $firstOrder = $orders->first();
+        $lastOrder = $orders->last();
+
         return [
-            'guest_name' => $details['guest_name'] ?? 'Walk-in Guest',
-            'table_name' => $details['table_name'],
-            'party_size' => null,
-            'reservation_time' => null,
-            'order_count' => 1,
-            'items' => $details['items'],
-            'subtotal' => $details['subtotal'],
-            'tax' => $details['tax'],
-            'total' => $details['total'],
+            'table_name' => $firstOrder->floorPlanElement?->table_name ?? 'Unknown',
+            'guest_name' => $firstOrder->reservation?->guest_name,
+            'order_count' => $orders->count(),
+            'item_count' => count($items),
+            'first_order_at' => $firstOrder->created_at?->format('d M Y H:i'),
+            'latest_order_at' => $lastOrder->created_at?->format('d M Y H:i'),
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'tax' => $tax,
+            'total' => $total,
+        ];
+    }
+
+    /**
+     * Mark all unpaid Active/Completed orders for a table element as paid and completed.
+     * Fires OrderCompleted per order so listeners (analytics, kitchen) can react.
+     */
+    public function markUnpaidOrdersPaidForElement(int $elementId): int
+    {
+        return DB::transaction(function () use ($elementId): int {
+            $orders = $this->getUnpaidOrdersForElement($elementId);
+
+            foreach ($orders as $order) {
+                $wasCompleted = $order->status === OrderStatus::Completed;
+                $order->update([
+                    'status' => OrderStatus::Completed,
+                    'paid' => true,
+                ]);
+
+                if (! $wasCompleted) {
+                    event(new OrderCompleted($order->fresh()));
+                }
+            }
+
+            return $orders->count();
+        });
+    }
+
+    /**
+     * Build receipt payload from unpaid orders for a table element.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getUnpaidReceiptForElement(int $elementId): ?array
+    {
+        $summary = $this->getUnpaidOrderSummaryForElement($elementId);
+
+        if (! $summary) {
+            return null;
+        }
+
+        $firstOrder = $this->getUnpaidOrdersForElement($elementId)->first();
+        $reservation = $firstOrder?->reservation;
+
+        return [
+            'guest_name' => $summary['guest_name'] ?? 'Walk-in Guest',
+            'table_name' => $summary['table_name'],
+            'party_size' => $reservation?->party_size,
+            'reservation_time' => $reservation?->reservation_datetime?->format('d M Y H:i'),
+            'order_count' => $summary['order_count'],
+            'items' => $summary['items'],
+            'subtotal' => $summary['subtotal'],
+            'tax' => $summary['tax'],
+            'total' => $summary['total'],
             'printed_at' => now()->format('d M Y H:i'),
         ];
     }

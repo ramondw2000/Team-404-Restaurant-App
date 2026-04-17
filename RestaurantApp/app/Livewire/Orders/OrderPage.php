@@ -40,7 +40,7 @@ class OrderPage extends Component
         $this->table = $floorPlanElement->load('floorPlan');
 
         $existingOrder = $floorPlanElement->orders()
-            ->whereIn('status', [OrderStatus::Draft->value, OrderStatus::Active->value])
+            ->where('status', OrderStatus::Draft->value)
             ->latest()
             ->first();
 
@@ -56,6 +56,7 @@ class OrderPage extends Component
             $order = Order::create([
                 'floor_plan_element_id' => $floorPlanElement->id,
                 'reservation_id' => $activeReservation?->id,
+                'user_id' => auth()->id(),
                 'status' => OrderStatus::Draft,
             ]);
             $this->orderId = $order->id;
@@ -265,6 +266,7 @@ class OrderPage extends Component
         $order->update([
             'status' => OrderStatus::Active,
             'notes' => $orderNotes,
+            'user_id' => auth()->id(),
         ]);
 
         $this->dispatch('toast', message: 'Order placed successfully!', type: 'success');

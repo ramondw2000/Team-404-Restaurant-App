@@ -162,7 +162,7 @@
                                     <span class="text-sm font-semibold text-gray-900">{{ $order['id'] }}</span>
                                     <span class="text-xs text-gray-400">{{ $order['closed_at'] }}</span>
                                 </div>
-                                <p class="text-xs text-gray-400">{{ $order['location'] }} &middot; {{ $order['waiter'] }}</p>
+                                <p class="text-xs text-gray-400">{{ $order['location'] }} &middot; {{ $order['waiter'] }} &middot; {{ $order['customer'] }}</p>
                                 <div class="flex items-center justify-between pt-1">
                                     <span class="text-xs text-gray-400">{{ count($order['items']) }} items</span>
                                     <x-ui.badge variant="primary" class="bg-molveno-blue-700 text-white">€ {{ number_format($order['total'], 2) }}</x-ui.badge>

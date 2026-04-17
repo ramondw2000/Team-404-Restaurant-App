@@ -45,7 +45,12 @@ $cardStateClass = $order['overall'] === 'completed'
                     </span>
                     <span class="text-sm font-bold tracking-wide">{{ $order['id'] }}</span>
                 </div>
-                <p class="text-xs opacity-70 mt-0.5">{{ $order['waiter'] }}</p>
+                <p class="text-xs opacity-70 mt-0.5">
+                    {{ $order['waiter'] }}
+                    @if(!empty($order['customer']) && $order['customer'] !== '—')
+                        &middot; {{ $order['customer'] }}
+                    @endif
+                </p>
             </div>
 
             <!-- Right: time + summary -->

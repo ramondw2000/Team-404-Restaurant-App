@@ -260,20 +260,21 @@ class CompletedOrderTable extends Component
             ? $this->filteredOrders
             : $this->filteredOrders->whereIn('id', $this->selectedOrders);
 
-        $filename = 'completed-orders-' . now()->format('Y-m-d-His') . '.csv';
+        $filename = 'completed-orders-'.now()->format('Y-m-d-His').'.csv';
 
         return response()->streamDownload(function () use ($orders): void {
             $handle = fopen('php://output', 'w');
 
-            fputcsv($handle, ['Order ID', 'Location', 'Waiter', 'Items', 'Total', 'Payment Method', 'Completed At']);
+            fputcsv($handle, ['Order ID', 'Location', 'Waiter', 'Customer', 'Items', 'Total', 'Payment Method', 'Completed At']);
 
             foreach ($orders as $order) {
                 fputcsv($handle, [
                     $order['id'],
                     $order['location'],
                     $order['waiter'],
-                    count($order['items']) . ' items',
-                    '€' . number_format($order['total'], 2),
+                    $order['customer'] ?? '',
+                    count($order['items']).' items',
+                    '€'.number_format($order['total'], 2),
                     $order['payment_method'] ?? '',
                     $order['closed_at'],
                 ]);
@@ -320,7 +321,7 @@ class CompletedOrderTable extends Component
     }
 
     /**
-     * @param array<string, mixed> $order
+     * @param  array<string, mixed>  $order
      */
     public function rowClasses(array $order): string
     {
@@ -362,7 +363,7 @@ class CompletedOrderTable extends Component
     }
 
     /**
-     * @param array<string, mixed> $order
+     * @param  array<string, mixed>  $order
      */
     private function isStale(array $order): bool
     {
@@ -393,7 +394,7 @@ class CompletedOrderTable extends Component
      */
     private function getCompletedOrders(): Collection
     {
-        $query = Order::with(['items.dish', 'floorPlanElement'])
+        $query = Order::with(['items.dish', 'floorPlanElement', 'user', 'reservation'])
             ->where('status', OrderStatus::Completed);
 
         if ($this->dateRange === 'today') {
@@ -420,11 +421,11 @@ class CompletedOrderTable extends Component
                 ->reduce(fn (float $carry, array $item): float => $carry + ($item['qty'] * $item['price']), 0.0);
 
             return [
-                'id' => 'ORD-' . str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
+                'id' => 'ORD-'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
                 'type' => 'restaurant',
                 'location' => $order->floorPlanElement?->table_name ?? '—',
-                'waiter' => '—',
-                'customer' => '—',
+                'waiter' => $order->user?->name ?? '—',
+                'customer' => $order->reservation?->guest_name ?? '—',
                 'closed_at' => $completedAt?->format('H:i') ?? '—',
                 'completed_at' => $completedAt?->toDateTimeString(),
                 'completed_at_carbon' => $completedAt,
