@@ -6,6 +6,8 @@ use App\Models\Dish;
 use App\Models\Ingredient;
 use App\Models\Menu;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class DishSeeder extends Seeder
 {
@@ -75,6 +77,58 @@ class DishSeeder extends Seeder
     }
 
     /**
+     * Maps each dish name to its source image filename in docs/images/.
+     *
+     * @var array<string, string>
+     */
+    private const array DISH_IMAGES = [
+        'Bruschetta al Pomodoro'    => 'bruschetta al pomodoro.jpg',
+        'Caprese Salad'             => 'caprese salad.jpg',
+        'Caesar Salad'              => 'caesar salad.jpg',
+        'Minestrone Soup'           => 'minestrone soep.jpg',
+        'Arancini di Riso'          => 'arancini di riso.jpg',
+        'Antipasto Misto'           => 'antipasto misto.jpg',
+        'Insalata di Mare'          => 'insalata di mare.jpg',
+        'Panzanella'                => 'panzanella.jpg',
+        'Focaccia al Rosmarino'     => 'focaccia al rosmarino.jpg',
+        'Spaghetti Bolognese'       => 'spaghetti bolognese.jpg',
+        'Margherita Pizza'          => 'margherita pizza.jpg',
+        'Grilled Salmon'            => 'grilled salmon.jpg',
+        'Mushroom Risotto'          => 'mushroom risotto.jpg',
+        'Penne Arrabbiata'          => 'penne arrabbiata.jpg',
+        'Beef Tenderloin'           => 'beef tenderloin.jpg',
+        'Pasta Carbonara'           => 'pasta carbonara.jpg',
+        'Vegan Buddha Bowl'         => 'vegan buddha bowl.jpg',
+        'Tagliatelle al Ragù'       => 'tagliatelle al ragù.jpg',
+        'Lasagne al Forno'          => 'lasagne al forno.jpg',
+        'Osso Buco'                 => 'osso buco.jpg',
+        'Saltimbocca alla Romana'   => 'saltimbocca alla romana.jpg',
+        'Branzino al Forno'         => 'branzino al forno.jpg',
+        'Pollo alla Cacciatora'     => 'Pollo alla Cacciatora.jpg',
+        'Gnocchi al Gorgonzola'     => 'gnocchi al gorgonzola.jpg',
+        'Ribollita'                 => 'ribollita.jpg',
+        'Polenta e Funghi'          => 'polenta e funghi.jpg',
+        'Tiramisu'                  => 'tiramisu.jpg',
+        'Panna Cotta'               => 'panna cotta.jpg',
+        'Mixed Nut Tart'            => 'mixed nut tart.jpg',
+        'Cannoli Siciliani'         => 'cannoli siciliani.jpg',
+        'Torta della Nonna'         => 'torta della nonna.jpg',
+        'Gelato al Limone'          => 'gelato al limone.jpg',
+        'Semifreddo al Cioccolato'  => 'semifreddo al cioccolato.jpg',
+        'Crostata di Ricotta'       => 'crostata di ricotta.jpg',
+        'Caffè Affogato'            => 'caffè affogato.jpg',
+        'Acqua Minerale'            => 'acqua minerale.jpg',
+        'Vino Rosso della Casa'     => 'vino rosso della casa.jpg',
+        'Vino Bianco della Casa'    => 'vino bianco della casa.jpg',
+        'Limoncello'                => 'limoncello.jpg',
+        'Spritz Aperol'             => 'spritz aperol.jpg',
+        'Succo di Frutta'           => 'succo di frutta.jpg',
+        'Pane e Coperto'            => 'pane e coperto.jpg',
+        'Verdure Grigliate'         => 'verdure grigliate.jpg',
+        'Patate al Forno'           => 'patate al forno.jpg',
+    ];
+
+    /**
      * @param  array<string, Ingredient>  $ing
      * @return array<string, Dish>
      */
@@ -137,13 +191,18 @@ class DishSeeder extends Seeder
             'Patate al Forno' => ['price' => 5.50, 'color' => '#c09030', 'ingredients' => ['Potato', 'Olive Oil']],
         ];
 
+        Storage::disk('public')->makeDirectory('dishes');
+
         $map = [];
 
         foreach ($data as $name => $attrs) {
+            $photoPath = $this->copyDishImage($name);
+
             $dish = Dish::create([
                 'name' => $name,
                 'price' => $attrs['price'],
                 'color' => $attrs['color'],
+                'photo_path' => $photoPath,
             ]);
 
             $ingredientIds = collect($attrs['ingredients'])->map(fn (string $n): int => $ing[$n]->id);
@@ -153,6 +212,30 @@ class DishSeeder extends Seeder
         }
 
         return $map;
+    }
+
+    /**
+     * Copy the source image for the given dish name into storage/app/public/dishes/
+     * and return the relative storage path, or null if no source file exists.
+     */
+    private function copyDishImage(string $dishName): ?string
+    {
+        $filename = self::DISH_IMAGES[$dishName] ?? null;
+
+        if ($filename === null) {
+            return null;
+        }
+
+        $sourcePath = base_path('../../docs/images/' . $filename);
+
+        if (! File::exists($sourcePath)) {
+            return null;
+        }
+
+        $storageName = 'dishes/' . $filename;
+        Storage::disk('public')->put($storageName, File::get($sourcePath));
+
+        return $storageName;
     }
 
     /**
