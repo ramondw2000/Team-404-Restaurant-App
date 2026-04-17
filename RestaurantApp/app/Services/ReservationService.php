@@ -114,29 +114,43 @@ final readonly class ReservationService
     }
 
     /**
-     * Complete a reservation (mark as departed, set table to Available if no other active reservations).
-     * Also marks all orders for this reservation as paid.
+     * Complete a reservation (mark as departed). Table status is recomputed from
+     * remaining today-reservations: Occupied > Reserved > Available.
+     * Order payment is handled separately via the Order Info flow.
      */
-    public function completeReservation(Reservation $reservation, bool $paid = true): Reservation
+    public function completeReservation(Reservation $reservation): Reservation
     {
         $reservation->update(['status' => 'departed']);
 
-        if ($reservation->floorPlanElement) {
-            $hasOtherActive = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
-                ->where('id', '!=', $reservation->id)
-                ->whereIn('status', ['scheduled', 'arrived'])
-                ->whereDate('reservation_datetime', today())
-                ->exists();
-
-            if (! $hasOtherActive) {
-                $reservation->floorPlanElement->update(['status' => TableStatus::Available]);
-            }
-        }
-
-        // Mark all orders for this reservation as paid
-        $reservation->orders()->update(['paid' => $paid]);
+        $this->syncTableStatusFromReservations($reservation);
 
         return $reservation->fresh();
+    }
+
+    /**
+     * Recompute and persist the table status for a reservation's floor plan element
+     * based on today's remaining reservations.
+     */
+    public function syncTableStatusFromReservations(Reservation $reservation): void
+    {
+        $element = $reservation->floorPlanElement;
+        if (! $element) {
+            return;
+        }
+
+        $remaining = Reservation::where('floor_plan_element_id', $element->id)
+            ->where('id', '!=', $reservation->id)
+            ->whereIn('status', ['scheduled', 'arrived'])
+            ->whereDate('reservation_datetime', today())
+            ->get();
+
+        $status = match (true) {
+            $remaining->contains(fn (Reservation $r): bool => $r->status === 'arrived') => TableStatus::Occupied,
+            $remaining->contains(fn (Reservation $r): bool => $r->status === 'scheduled') => TableStatus::Reserved,
+            default => TableStatus::Available,
+        };
+
+        $element->update(['status' => $status]);
     }
 
     /**
@@ -205,7 +219,7 @@ final readonly class ReservationService
     public function getReservationMapForFloorPlanAt(int $floorPlanId, Carbon $datetime): array
     {
         $windowStart = $datetime->copy()->subHours(2);
-        $windowEnd   = $datetime->copy()->addHours(2);
+        $windowEnd = $datetime->copy()->addHours(2);
 
         $reservations = Reservation::whereHas('floorPlanElement', function ($query) use ($floorPlanId) {
             $query->where('floor_plan_id', $floorPlanId);

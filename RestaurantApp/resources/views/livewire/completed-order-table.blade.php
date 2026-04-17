@@ -203,6 +203,14 @@
                                 @endif
                             </span>
                         </th>
+                        <th wire:click="sortBy('customer')" class="text-left pb-3 pt-4 text-xs font-semibold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600 select-none">
+                            <span class="inline-flex items-center gap-1">
+                                Customer
+                                @if($sortField === 'customer')
+                                    <svg class="w-3 h-3 {{ $sortDirection === 'asc' ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                                @endif
+                            </span>
+                        </th>
                         <th class="text-center pb-3 pt-4 text-xs font-semibold uppercase tracking-widest text-gray-400">Items</th>
                         <th wire:click="sortBy('total')" class="text-right pb-3 pt-4 text-xs font-semibold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600 select-none">
                             <span class="inline-flex items-center gap-1 justify-end">
@@ -249,6 +257,7 @@
                             <td class="py-3 font-semibold text-gray-900">{{ $order['id'] }}</td>
                             <td class="py-3 text-gray-500">{{ $order['location'] }}</td>
                             <td class="py-3 text-gray-500">{{ $order['waiter'] }}</td>
+                            <td class="py-3 text-gray-500">{{ $order['customer'] }}</td>
                             <td class="py-3 text-center text-gray-500">{{ count($order['items']) }} items</td>
                             <td class="py-3 text-right font-semibold text-molveno-blue-700">&euro; {{ number_format($order['total'], 2) }}</td>
                             <td class="py-3 text-right text-gray-400">{{ $relativeTime }}</td>
@@ -273,7 +282,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <x-ui.empty-state title="No completed orders found" description="No completed orders found for the selected criteria.">
                                     <x-slot:icon>
                                         <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>

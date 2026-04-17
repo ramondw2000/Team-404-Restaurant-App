@@ -100,7 +100,6 @@
     </div>
 
     <x-slot:footer>
-        <x-ui.button variant="secondary" @click="$dispatch('close-sheet', 'edit-reservation')">Cancel</x-ui.button>
         <x-ui.button wire:click="updateReservation">Save Changes</x-ui.button>
     </x-slot:footer>
 </x-ui.sheet>
