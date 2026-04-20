@@ -4,34 +4,38 @@
     const KITCHEN_POLL_URL       = '{{ route('kitchen-orders.poll') }}';
     const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content;
     const POLL_INTERVAL_MS       = 5000; // Poll every 5 seconds
-    const TAB_ACTIVE_CLASSES = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
-    const TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
-    const TAB_COUNT_ACTIVE_CLASSES = ['bg-white/25', 'text-white'];
-    const TAB_COUNT_INACTIVE_CLASSES = ['bg-gray-100', 'text-gray-500'];
+    const KITCHEN_TAB_ACTIVE_CLASSES = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
+    const KITCHEN_TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
+    const KITCHEN_TAB_COUNT_ACTIVE_CLASSES = ['bg-white/25', 'text-white'];
+    const KITCHEN_TAB_COUNT_INACTIVE_CLASSES = ['bg-gray-100', 'text-gray-500'];
 
     document.addEventListener('DOMContentLoaded', () => {
-        const defaultTab = document.querySelector('button[data-default="true"]') || document.querySelector('button[data-tab]');
+        const kitchenPanel = document.getElementById('kitchen-panel');
+        const scope = kitchenPanel || document;
+        const defaultTab = scope.querySelector('button[data-default="true"]') || scope.querySelector('button[data-tab]');
         if (defaultTab) {
-            switchTab(defaultTab);
+            kitchenSwitchTab(defaultTab);
         }
-        document.querySelectorAll('.mark-ready-btn').forEach(btn => {
-            setMarkReadyAppearance(btn, btn.dataset.dishStatus === 'ready' ? 'ready' : 'pending');
+        scope.querySelectorAll('.mark-ready-btn').forEach(btn => {
+            kitchenSetMarkReadyAppearance(btn, btn.dataset.dishStatus === 'ready' ? 'ready' : 'pending');
         });
-        document.querySelectorAll('.order-card').forEach(card => {
-            updateOrderSendState(card);
-            syncCardVisualState(card);
+        scope.querySelectorAll('.order-card').forEach(card => {
+            kitchenUpdateOrderSendState(card);
+            kitchenSyncCardVisualState(card);
         });
-        document.addEventListener('click', handleActionClick);
+        document.addEventListener('click', kitchenHandleActionClick);
     });
 
-    const CARD_COMPLETED_CLASSES = ['bg-emerald-50', 'border-emerald-200', 'shadow-md'];
-    const CARD_DEFAULT_CLASSES = ['bg-white', 'border-gray-200', 'shadow-sm'];
+    const KITCHEN_CARD_COMPLETED_CLASSES = ['bg-emerald-50', 'border-emerald-200', 'shadow-md'];
+    const KITCHEN_CARD_DEFAULT_CLASSES = ['bg-white', 'border-gray-200', 'shadow-sm'];
 
-    function switchTab(btn) {
+    function kitchenSwitchTab(btn) {
         const tab = btn.dataset.tab;
-        document.querySelectorAll('button[data-tab]').forEach(b => setTabAppearance(b, b === btn));
+        const kitchenPanel = document.getElementById('kitchen-panel');
+        const scope = kitchenPanel || document;
+        scope.querySelectorAll('button[data-tab]').forEach(b => kitchenSetTabAppearance(b, b === btn));
         let visible = 0;
-        document.querySelectorAll('.order-card').forEach(card => {
+        scope.querySelectorAll('.order-card').forEach(card => {
             const overall = card.dataset.overall;
             const type    = card.dataset.type;
             const show    = tab === 'all'          ? true
@@ -43,10 +47,14 @@
             card.style.display = show ? '' : 'none';
             if (show) visible++;
         });
-        document.getElementById('no-orders').classList.toggle('hidden', visible > 0);
+        const emptyEl = scope.querySelector('#kitchen-empty') || document.getElementById('no-orders');
+        if (emptyEl) emptyEl.classList.toggle('hidden', visible > 0);
     }
 
-    function handleActionClick(event) {
+    function kitchenHandleActionClick(event) {
+        const kitchenPanel = document.getElementById('kitchen-panel');
+        if (!kitchenPanel || !kitchenPanel.contains(event.target)) return;
+
         const target = event.target instanceof Element ? event.target : event.target.parentElement;
         if (!target) return;
 
@@ -61,23 +69,23 @@
         if (sendBtn) {
             event.preventDefault();
             if (!sendBtn.disabled) {
-                completeOrder(sendBtn);
+                kitchenCompleteOrder(sendBtn);
             }
         }
     }
 
     function markDishReady(button) {
         const nextState = button.dataset.dishStatus === 'ready' ? 'pending' : 'ready';
-        setMarkReadyAppearance(button, nextState);
+        kitchenSetMarkReadyAppearance(button, nextState);
         button.dataset.dishStatus = nextState;
 
         const label = button.querySelector('.mark-ready-label');
         if (label) label.textContent = nextState === 'ready' ? 'Ready' : 'Mark Ready';
 
         const dishAction = button.closest('.dish-action');
-        updateDishVisualState(dishAction, nextState);
+        kitchenUpdateDishVisualState(dishAction, nextState);
 
-        updateOrderSendState(button.closest('.order-card'));
+        kitchenUpdateOrderSendState(button.closest('.order-card'));
 
         const itemId = dishAction?.dataset.itemId;
         if (itemId) {
@@ -88,15 +96,15 @@
         }
     }
 
-    function completeOrder(button) {
-        setSendButtonState(button, 'sent');
+    function kitchenCompleteOrder(button) {
+        kitchenSetSendButtonState(button, 'sent');
         const card = button.closest('.order-card');
         if (card) {
             card.dataset.overall = 'completed';
-            hideOrderActions(card);
+            kitchenHideOrderActions(card);
             markAllDishesServed(card);
-            syncCardVisualState(card);
-            updateFilterCounts('completed');
+            kitchenSyncCardVisualState(card);
+            kitchenUpdateFilterCounts('completed');
         }
 
         const dbId = card?.dataset.orderDbId;
@@ -108,10 +116,11 @@
         }
     }
 
-    function updateFilterCounts(direction) {
-        const activeCountEl = document.querySelector('button[data-count-type="active"] span');
-        const completedCountEl = document.querySelector('button[data-count-type="completed"] span');
-        const allCountEl = document.querySelector('button[data-tab="all"] span');
+    function kitchenUpdateFilterCounts(direction) {
+        const kitchenPanel = document.getElementById('kitchen-panel') || document;
+        const activeCountEl = kitchenPanel.querySelector('button[data-count-type="active"] span');
+        const completedCountEl = kitchenPanel.querySelector('button[data-count-type="completed"] span');
+        const allCountEl = kitchenPanel.querySelector('button[data-tab="all"] span');
 
         if (direction === 'completed') {
             if (activeCountEl) {
@@ -139,7 +148,7 @@
 
             // Update status dot
             const dot = wrapper.querySelector('[data-role="status-dot"]');
-            if (dot) setStatusDotAppearance(dot, 'served');
+            if (dot) kitchenSetStatusDotAppearance(dot, 'served');
 
             // Replace mark-ready button with served badge
             const action = wrapper.querySelector('.dish-action');
@@ -154,7 +163,7 @@
         });
     }
 
-    function updateOrderSendState(card) {
+    function kitchenUpdateOrderSendState(card) {
         if (!card) return;
 
         const dishActions = Array.from(card.querySelectorAll('.dish-action'));
@@ -167,7 +176,7 @@
             const currentState = card.dataset.overall === 'completed' ? 'sent'
                                 : allReadyOrServed ? 'ready'
                                 : 'disabled';
-            setSendButtonState(sendBtn, currentState);
+            kitchenSetSendButtonState(sendBtn, currentState);
         }
 
         if (card.dataset.overall !== 'completed') {
@@ -175,27 +184,27 @@
         }
 
         if (card.dataset.overall === 'completed') {
-            hideOrderActions(card);
+            kitchenHideOrderActions(card);
         } else {
-            showOrderActions(card);
+            kitchenShowOrderActions(card);
         }
 
-        syncCardVisualState(card);
+        kitchenSyncCardVisualState(card);
     }
 
-    function setTabAppearance(button, isActive) {
+    function kitchenSetTabAppearance(button, isActive) {
         if (!button) return;
-        button.classList.remove(...TAB_ACTIVE_CLASSES, ...TAB_INACTIVE_CLASSES);
-        button.classList.add(...(isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES));
+        button.classList.remove(...KITCHEN_TAB_ACTIVE_CLASSES, ...KITCHEN_TAB_INACTIVE_CLASSES);
+        button.classList.add(...(isActive ? KITCHEN_TAB_ACTIVE_CLASSES : KITCHEN_TAB_INACTIVE_CLASSES));
 
         const count = button.querySelector('span');
         if (count) {
-            count.classList.remove(...TAB_COUNT_ACTIVE_CLASSES, ...TAB_COUNT_INACTIVE_CLASSES);
-            count.classList.add(...(isActive ? TAB_COUNT_ACTIVE_CLASSES : TAB_COUNT_INACTIVE_CLASSES));
+            count.classList.remove(...KITCHEN_TAB_COUNT_ACTIVE_CLASSES, ...KITCHEN_TAB_COUNT_INACTIVE_CLASSES);
+            count.classList.add(...(isActive ? KITCHEN_TAB_COUNT_ACTIVE_CLASSES : KITCHEN_TAB_COUNT_INACTIVE_CLASSES));
         }
     }
 
-    function updateDishVisualState(dishAction, state) {
+    function kitchenUpdateDishVisualState(dishAction, state) {
         if (!dishAction) return;
         dishAction.dataset.dishStatus = state;
 
@@ -204,15 +213,15 @@
             wrapper.dataset.dishStatus = state;
             const dot = wrapper.querySelector('[data-role="status-dot"]');
             if (dot) {
-                setStatusDotAppearance(dot, state);
+                kitchenSetStatusDotAppearance(dot, state);
             }
         }
     }
 
-    function setMarkReadyAppearance(button, state) {
+    function kitchenSetMarkReadyAppearance(button, state) {
         if (!button) return;
-        const pending = parseClasses(button.dataset.classPending);
-        const ready = parseClasses(button.dataset.classReady);
+        const pending = kitchenParseClasses(button.dataset.classPending);
+        const ready = kitchenParseClasses(button.dataset.classReady);
         button.classList.remove(...pending, ...ready);
 
         if (state === 'ready') {
@@ -222,11 +231,11 @@
         }
     }
 
-    function setStatusDotAppearance(dot, state) {
+    function kitchenSetStatusDotAppearance(dot, state) {
         if (!dot) return;
-        const pending = parseClasses(dot.dataset.classPending);
-        const ready = parseClasses(dot.dataset.classReady);
-        const served = parseClasses(dot.dataset.classServed);
+        const pending = kitchenParseClasses(dot.dataset.classPending);
+        const ready = kitchenParseClasses(dot.dataset.classReady);
+        const served = kitchenParseClasses(dot.dataset.classServed);
         dot.classList.remove(...pending, ...ready, ...served);
 
         if (state === 'ready') {
@@ -240,11 +249,11 @@
         dot.dataset.status = state;
     }
 
-    function setSendButtonState(button, state) {
+    function kitchenSetSendButtonState(button, state) {
         if (!button) return;
-        const disabled = parseClasses(button.dataset.classDisabled);
-        const ready = parseClasses(button.dataset.classReady);
-        const sent = parseClasses(button.dataset.classSent);
+        const disabled = kitchenParseClasses(button.dataset.classDisabled);
+        const ready = kitchenParseClasses(button.dataset.classReady);
+        const sent = kitchenParseClasses(button.dataset.classSent);
         button.classList.remove(...disabled, ...ready, ...sent);
 
         if (state === 'sent') {
@@ -263,16 +272,16 @@
         if (label) label.textContent = state === 'sent' ? 'Sent' : 'Send Out';
     }
 
-    function syncCardVisualState(card) {
+    function kitchenSyncCardVisualState(card) {
         if (!card) return;
-        card.classList.remove(...CARD_COMPLETED_CLASSES, ...CARD_DEFAULT_CLASSES);
+        card.classList.remove(...KITCHEN_CARD_COMPLETED_CLASSES, ...KITCHEN_CARD_DEFAULT_CLASSES);
 
         const isCompleted = card.dataset.overall === 'completed';
 
         if (isCompleted) {
-            card.classList.add(...CARD_COMPLETED_CLASSES);
+            card.classList.add(...KITCHEN_CARD_COMPLETED_CLASSES);
         } else {
-            card.classList.add(...CARD_DEFAULT_CLASSES);
+            card.classList.add(...KITCHEN_CARD_DEFAULT_CLASSES);
         }
 
         // Sync header background & summary text
@@ -305,17 +314,17 @@
         }
     }
 
-    function hideOrderActions(card) {
+    function kitchenHideOrderActions(card) {
         const actions = card.querySelector('[data-role="order-actions"]');
         if (actions) actions.classList.add('hidden');
     }
 
-    function showOrderActions(card) {
+    function kitchenShowOrderActions(card) {
         const actions = card.querySelector('[data-role="order-actions"]');
         if (actions) actions.classList.remove('hidden');
     }
 
-    function parseClasses(value) {
+    function kitchenParseClasses(value) {
         return (value || '').split(' ').filter(Boolean);
     }
 
@@ -348,9 +357,9 @@
 
             const data = await response.json();
             mergeOrders(data.orders);
-            updateSummaryCounts(data.totalPending, data.totalReady, data.countCompleted);
-            updateTabCounts(data.countActive, data.countCompleted);
-            applyCurrentFilter();
+            kitchenUpdateSummaryCounts(data.totalPending, data.totalReady, data.countCompleted);
+            kitchenUpdateTabCounts(data.countActive, data.countCompleted);
+            kitchenApplyCurrentFilter();
         } catch (e) {
             // Silently fail - don't disrupt the user on network errors
         } finally {
@@ -377,10 +386,10 @@
 
                 // Initialize the new card
                 newCard.querySelectorAll('.mark-ready-btn').forEach(btn => {
-                    setMarkReadyAppearance(btn, btn.dataset.dishStatus === 'ready' ? 'ready' : 'pending');
+                    kitchenSetMarkReadyAppearance(btn, btn.dataset.dishStatus === 'ready' ? 'ready' : 'pending');
                 });
-                updateOrderSendState(newCard);
-                syncCardVisualState(newCard);
+                kitchenUpdateOrderSendState(newCard);
+                kitchenSyncCardVisualState(newCard);
 
                 // Add to beginning of grid (latest orders first)
                 grid.insertBefore(newCard, grid.firstChild);
@@ -528,7 +537,7 @@
         return div.innerHTML;
     }
 
-    function updateSummaryCounts(totalPending, totalReady, countCompleted) {
+    function kitchenUpdateSummaryCounts(totalPending, totalReady, countCompleted) {
         const pendingEl = document.querySelector('[data-summary="pending"]');
         const readyEl = document.querySelector('[data-summary="ready"]');
         const completedEl = document.querySelector('[data-summary="completed"]');
@@ -538,10 +547,11 @@
         if (completedEl) completedEl.textContent = countCompleted;
     }
 
-    function updateTabCounts(countActive, countCompleted) {
-        const activeCountEl = document.querySelector('button[data-count-type="active"] span');
-        const completedCountEl = document.querySelector('button[data-count-type="completed"] span');
-        const allCountEl = document.querySelector('button[data-tab="all"] span');
+    function kitchenUpdateTabCounts(countActive, countCompleted) {
+        const kitchenPanel = document.getElementById('kitchen-panel') || document;
+        const activeCountEl = kitchenPanel.querySelector('button[data-count-type="active"] span');
+        const completedCountEl = kitchenPanel.querySelector('button[data-count-type="completed"] span');
+        const allCountEl = kitchenPanel.querySelector('button[data-tab="all"] span');
 
         if (activeCountEl) activeCountEl.textContent = countActive;
         if (completedCountEl) completedCountEl.textContent = countCompleted;
@@ -552,10 +562,11 @@
         }
     }
 
-    function applyCurrentFilter() {
-        const activeTab = document.querySelector('button[data-tab].bg-molveno-blue-500');
+    function kitchenApplyCurrentFilter() {
+        const kitchenPanel = document.getElementById('kitchen-panel') || document;
+        const activeTab = kitchenPanel.querySelector('button[data-tab].bg-molveno-blue-500');
         if (activeTab) {
-            switchTab(activeTab);
+            kitchenSwitchTab(activeTab);
         }
     }
 

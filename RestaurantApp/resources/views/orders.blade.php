@@ -280,8 +280,12 @@
                 // Re-initialize tabs for the visible panel
                 const panel = document.getElementById(mode + '-panel');
                 const defaultTab = panel?.querySelector('button[data-default="true"]') || panel?.querySelector('button[data-tab]');
-                if (defaultTab && typeof switchTab === 'function') {
-                    switchTab(defaultTab);
+                if (defaultTab) {
+                    if (mode === 'bar' && typeof barSwitchTab === 'function') {
+                        barSwitchTab(defaultTab);
+                    } else if (mode === 'kitchen' && typeof kitchenSwitchTab === 'function') {
+                        kitchenSwitchTab(defaultTab);
+                    }
                 }
 
                 localStorage.setItem('ordersMode', mode);
