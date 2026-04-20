@@ -1,29 +1,36 @@
 <script>
-    const TAB_ACTIVE_CLASSES = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
-    const TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
-    const TAB_COUNT_ACTIVE_CLASSES = ['bg-white/25', 'text-white'];
-    const TAB_COUNT_INACTIVE_CLASSES = ['bg-gray-100', 'text-gray-500'];
+    const BAR_TAB_ACTIVE_CLASSES = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
+    const BAR_TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
+    const BAR_TAB_COUNT_ACTIVE_CLASSES = ['bg-white/25', 'text-white'];
+    const BAR_TAB_COUNT_INACTIVE_CLASSES = ['bg-gray-100', 'text-gray-500'];
 
     document.addEventListener('DOMContentLoaded', () => {
-        const defaultTab = document.querySelector('button[data-default="true"]') || document.querySelector('button[data-tab]');
+        const barPanel = document.getElementById('bar-panel');
+        const scope = barPanel || document;
+        const defaultTab = scope.querySelector('button[data-default="true"]') || scope.querySelector('button[data-tab]');
         if (defaultTab) {
-            switchTab(defaultTab);
+            barSwitchTab(defaultTab);
         }
-        document.querySelectorAll('.order-card').forEach(card => {
-            updateOrderSendState(card);
-            syncCardVisualState(card);
+        scope.querySelectorAll('.mark-ready-btn').forEach(btn => {
+            barSetMarkReadyAppearance(btn, btn.dataset.drinkStatus === 'ready' ? 'ready' : 'pending');
         });
-        document.addEventListener('click', handleActionClick);
+        scope.querySelectorAll('.order-card').forEach(card => {
+            barUpdateOrderSendState(card);
+            barSyncCardVisualState(card);
+        });
+        document.addEventListener('click', barHandleActionClick);
     });
 
-    const CARD_COMPLETED_CLASSES = ['bg-emerald-50', 'border-emerald-200', 'shadow-md'];
-    const CARD_DEFAULT_CLASSES = ['bg-white', 'border-gray-200', 'shadow-sm'];
+    const BAR_CARD_COMPLETED_CLASSES = ['bg-emerald-50', 'border-emerald-200', 'shadow-md'];
+    const BAR_CARD_DEFAULT_CLASSES = ['bg-white', 'border-gray-200', 'shadow-sm'];
 
-    function switchTab(btn) {
+    function barSwitchTab(btn) {
         const tab = btn.dataset.tab;
-        document.querySelectorAll('button[data-tab]').forEach(b => setTabAppearance(b, b === btn));
+        const barPanel = document.getElementById('bar-panel');
+        const scope = barPanel || document;
+        scope.querySelectorAll('button[data-tab]').forEach(b => barSetTabAppearance(b, b === btn));
         let visible = 0;
-        document.querySelectorAll('.order-card').forEach(card => {
+        scope.querySelectorAll('.order-card').forEach(card => {
             const overall = card.dataset.overall;
             const type    = card.dataset.type;
             const show    = tab === 'all'       ? true
@@ -35,31 +42,65 @@
             card.style.display = show ? '' : 'none';
             if (show) visible++;
         });
-        document.getElementById('no-orders').classList.toggle('hidden', visible > 0);
+        const emptyEl = scope.querySelector('#bar-empty') || document.getElementById('no-orders');
+        if (emptyEl) emptyEl.classList.toggle('hidden', visible > 0);
     }
 
-    function handleActionClick(event) {
+    function barHandleActionClick(event) {
+        const barPanel = document.getElementById('bar-panel');
+        if (!barPanel || !barPanel.contains(event.target)) return;
+
         const target = event.target instanceof Element ? event.target : event.target.parentElement;
         if (!target) return;
+
+        const markBtn = target.closest('.mark-ready-btn');
+        if (markBtn) {
+            event.preventDefault();
+            markDrinkReady(markBtn);
+            return;
+        }
 
         const sendBtn = target.closest('.order-send-btn');
         if (sendBtn) {
             event.preventDefault();
             if (!sendBtn.disabled) {
-                completeOrder(sendBtn);
+                barCompleteOrder(sendBtn);
             }
         }
     }
 
-    function completeOrder(button) {
-        setSendButtonState(button, 'sent');
+    function barCompleteOrder(button) {
+        barSetSendButtonState(button, 'sent');
         const card = button.closest('.order-card');
         if (card) {
             card.dataset.overall = 'completed';
-            hideOrderActions(card);
+            barHideOrderActions(card);
             markAllDrinksServed(card);
-            syncCardVisualState(card);
+            barSyncCardVisualState(card);
         }
+    }
+
+    function markDrinkReady(button) {
+        const nextState = button.dataset.drinkStatus === 'ready' ? 'pending' : 'ready';
+        barSetMarkReadyAppearance(button, nextState);
+        button.dataset.drinkStatus = nextState;
+
+        const label = button.querySelector('.mark-ready-label');
+        if (label) label.textContent = nextState === 'ready' ? 'Ready' : 'Mark Ready';
+
+        const drinkStatus = button.closest('.drink-status');
+        if (drinkStatus) {
+            drinkStatus.dataset.drinkStatus = nextState;
+        }
+
+        const wrapper = button.closest('[data-drink-wrapper]');
+        if (wrapper) {
+            wrapper.dataset.drinkStatus = nextState;
+            const dot = wrapper.querySelector('[data-role="status-dot"]');
+            if (dot) barSetStatusDotAppearance(dot, nextState);
+        }
+
+        barUpdateOrderSendState(button.closest('.order-card'));
     }
 
     function markAllDrinksServed(card) {
@@ -68,7 +109,7 @@
 
             // Update status dot
             const dot = wrapper.querySelector('[data-role="status-dot"]');
-            if (dot) setStatusDotAppearance(dot, 'served');
+            if (dot) barSetStatusDotAppearance(dot, 'served');
 
             // Replace status badge with served badge
             const status = wrapper.querySelector('.drink-status');
@@ -83,43 +124,48 @@
         });
     }
 
-    function updateOrderSendState(card) {
+    function barUpdateOrderSendState(card) {
         if (!card) return;
 
         const drinkStatuses = Array.from(card.querySelectorAll('.drink-status'));
         const hasPending = drinkStatuses.some(s => s.dataset.drinkStatus === 'pending');
         const allServed = drinkStatuses.length > 0 && drinkStatuses.every(s => s.dataset.drinkStatus === 'served');
+        const allReadyOrServed = drinkStatuses.length > 0 && drinkStatuses.every(s => ['ready', 'served'].includes(s.dataset.drinkStatus));
 
         const sendBtn = card.querySelector('.order-send-btn');
 
         if (sendBtn) {
             const currentState = card.dataset.overall === 'completed' ? 'sent'
-                                : (!hasPending && !allServed) ? 'ready'
                                 : allServed ? 'sent'
+                                : allReadyOrServed ? 'ready'
                                 : 'disabled';
-            setSendButtonState(sendBtn, currentState);
+            barSetSendButtonState(sendBtn, currentState);
         }
 
-        syncCardVisualState(card);
+        if (card.dataset.overall !== 'completed') {
+            card.dataset.overall = allReadyOrServed ? 'ready' : (hasPending ? 'pending' : card.dataset.overall);
+        }
+
+        barSyncCardVisualState(card);
     }
 
-    function setTabAppearance(button, isActive) {
+    function barSetTabAppearance(button, isActive) {
         if (!button) return;
-        button.classList.remove(...TAB_ACTIVE_CLASSES, ...TAB_INACTIVE_CLASSES);
-        button.classList.add(...(isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES));
+        button.classList.remove(...BAR_TAB_ACTIVE_CLASSES, ...BAR_TAB_INACTIVE_CLASSES);
+        button.classList.add(...(isActive ? BAR_TAB_ACTIVE_CLASSES : BAR_TAB_INACTIVE_CLASSES));
 
         const count = button.querySelector('span');
         if (count) {
-            count.classList.remove(...TAB_COUNT_ACTIVE_CLASSES, ...TAB_COUNT_INACTIVE_CLASSES);
-            count.classList.add(...(isActive ? TAB_COUNT_ACTIVE_CLASSES : TAB_COUNT_INACTIVE_CLASSES));
+            count.classList.remove(...BAR_TAB_COUNT_ACTIVE_CLASSES, ...BAR_TAB_COUNT_INACTIVE_CLASSES);
+            count.classList.add(...(isActive ? BAR_TAB_COUNT_ACTIVE_CLASSES : BAR_TAB_COUNT_INACTIVE_CLASSES));
         }
     }
 
-    function setStatusDotAppearance(dot, state) {
+    function barSetStatusDotAppearance(dot, state) {
         if (!dot) return;
-        const pending = parseClasses(dot.dataset.classPending);
-        const ready = parseClasses(dot.dataset.classReady);
-        const served = parseClasses(dot.dataset.classServed);
+        const pending = barParseClasses(dot.dataset.classPending);
+        const ready = barParseClasses(dot.dataset.classReady);
+        const served = barParseClasses(dot.dataset.classServed);
         dot.classList.remove(...pending, ...ready, ...served);
 
         if (state === 'ready') {
@@ -133,11 +179,11 @@
         dot.dataset.status = state;
     }
 
-    function setSendButtonState(button, state) {
+    function barSetSendButtonState(button, state) {
         if (!button) return;
-        const disabled = parseClasses(button.dataset.classDisabled);
-        const ready = parseClasses(button.dataset.classReady);
-        const sent = parseClasses(button.dataset.classSent);
+        const disabled = barParseClasses(button.dataset.classDisabled);
+        const ready = barParseClasses(button.dataset.classReady);
+        const sent = barParseClasses(button.dataset.classSent);
         button.classList.remove(...disabled, ...ready, ...sent);
 
         if (state === 'sent') {
@@ -156,16 +202,16 @@
         if (label) label.textContent = state === 'sent' ? 'Sent' : 'Send Out';
     }
 
-    function syncCardVisualState(card) {
+    function barSyncCardVisualState(card) {
         if (!card) return;
-        card.classList.remove(...CARD_COMPLETED_CLASSES, ...CARD_DEFAULT_CLASSES);
+        card.classList.remove(...BAR_CARD_COMPLETED_CLASSES, ...BAR_CARD_DEFAULT_CLASSES);
 
         const isCompleted = card.dataset.overall === 'completed';
 
         if (isCompleted) {
-            card.classList.add(...CARD_COMPLETED_CLASSES);
+            card.classList.add(...BAR_CARD_COMPLETED_CLASSES);
         } else {
-            card.classList.add(...CARD_DEFAULT_CLASSES);
+            card.classList.add(...BAR_CARD_DEFAULT_CLASSES);
         }
 
         // Sync header background & summary text
@@ -198,17 +244,29 @@
         }
     }
 
-    function hideOrderActions(card) {
+    function barHideOrderActions(card) {
         const actions = card.querySelector('[data-role="order-actions"]');
         if (actions) actions.classList.add('hidden');
     }
 
-    function showOrderActions(card) {
+    function barShowOrderActions(card) {
         const actions = card.querySelector('[data-role="order-actions"]');
         if (actions) actions.classList.remove('hidden');
     }
 
-    function parseClasses(value) {
+    function barSetMarkReadyAppearance(button, state) {
+        if (!button) return;
+        const pending = barParseClasses(button.dataset.classPending);
+        const ready = barParseClasses(button.dataset.classReady);
+        button.classList.remove(...pending, ...ready);
+        if (state === 'ready') {
+            button.classList.add(...ready);
+        } else {
+            button.classList.add(...pending);
+        }
+    }
+
+    function barParseClasses(value) {
         return (value || '').split(' ').filter(Boolean);
     }
 </script>
