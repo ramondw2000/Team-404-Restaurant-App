@@ -16,7 +16,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="block bg-molveno-blue-100/70 rounded-lg">
+                    <a href="{{ route('dashboard') }}" class="block rounded-lg" style="background-color: rgb(234, 244, 250);">
                         <x-application-logo class="block h-9 w-auto" />
                     </a>
                 </div>
