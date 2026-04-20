@@ -31,14 +31,16 @@
     .dish-card-image {
         width: 108px;
         min-width: 108px;
+        height: 120px;
         position: relative;
         background: #f3f4f6;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
     }
     @media (max-width: 479px) {
-        .dish-card-image { width: 88px; min-width: 88px; }
+        .dish-card-image { width: 88px; min-width: 88px; height: 100px; }
     }
 
     .dish-card-image img {
