@@ -4,6 +4,7 @@ use App\Livewire\Dishes\DishesPage;
 use App\Livewire\Dishes\DishGrid;
 use App\Livewire\Dishes\DishSheet;
 use App\Livewire\Dishes\IngredientLibrary;
+use App\Livewire\Dishes\IngredientSheet;
 use App\Livewire\Dishes\MenuView;
 use App\Livewire\Dishes\Sidebar;
 use App\Models\Dish;
@@ -273,31 +274,126 @@ it('renders ingredient library', function () {
         ->assertSee('Test Garlic');
 });
 
-it('creates a new ingredient', function () {
+it('creates a new ingredient via ingredient sheet', function () {
     $user = dishesUser();
 
     Livewire::actingAs($user)
-        ->test(IngredientLibrary::class)
-        ->call('openCreateForm')
-        ->set('formName', 'New Pepper')
-        ->set('formAllergens', [])
-        ->set('formDietary', ['vegan'])
-        ->call('saveIngredient');
+        ->test(IngredientSheet::class)
+        ->set('name', 'New Pepper')
+        ->set('allergens', [])
+        ->set('dietary', ['vegan'])
+        ->call('save')
+        ->assertDispatched('ingredient-created');
 
     expect(Ingredient::where('name', 'New Pepper')->exists())->toBeTrue();
 });
 
-it('updates an ingredient', function () {
+it('updates an ingredient via ingredient sheet', function () {
     $user = dishesUser();
     $ingredient = Ingredient::factory()->create(['name' => 'Old Spice']);
 
     Livewire::actingAs($user)
-        ->test(IngredientLibrary::class)
-        ->call('openEditForm', $ingredient->id)
-        ->set('formName', 'New Spice')
-        ->call('saveIngredient');
+        ->test(IngredientSheet::class, ['ingredientId' => $ingredient->id])
+        ->set('name', 'New Spice')
+        ->call('save')
+        ->assertDispatched('ingredient-updated');
 
     expect($ingredient->fresh()->name)->toBe('New Spice');
+});
+
+it('pins newly created ingredient to top of list', function () {
+    $user = dishesUser();
+    Ingredient::factory()->create(['name' => 'Aaaa Existing']);
+
+    $component = Livewire::actingAs($user)
+        ->test(IngredientLibrary::class);
+
+    $newIngredient = Ingredient::factory()->create(['name' => 'Zzzz New']);
+
+    $component->dispatch('ingredient-created', id: $newIngredient->id);
+
+    expect($component->get('newIngredientIds'))->toContain($newIngredient->id);
+
+    $ids = $component->get('ingredients')->pluck('id')->all();
+    expect($ids[0])->toBe($newIngredient->id);
+});
+
+it('pins all newly created ingredients to top of list', function () {
+    $user = dishesUser();
+    Ingredient::factory()->create(['name' => 'Aaaa Existing']);
+
+    $component = Livewire::actingAs($user)
+        ->test(IngredientLibrary::class);
+
+    $first = Ingredient::factory()->create(['name' => 'Zzzz First']);
+    $second = Ingredient::factory()->create(['name' => 'Yyyy Second']);
+
+    $component->dispatch('ingredient-created', id: $first->id)
+        ->dispatch('ingredient-created', id: $second->id);
+
+    expect($component->get('newIngredientIds'))->toBe([$first->id, $second->id]);
+
+    $ids = $component->get('ingredients')->pluck('id')->all();
+    expect($ids[0])->toBeIn([$first->id, $second->id])
+        ->and($ids[1])->toBeIn([$first->id, $second->id]);
+});
+
+it('pins updated ingredient to top of list', function () {
+    $user = dishesUser();
+    Ingredient::factory()->create(['name' => 'Aaaa Existing']);
+    $updated = Ingredient::factory()->create(['name' => 'Zzzz Updated']);
+
+    $component = Livewire::actingAs($user)
+        ->test(IngredientLibrary::class)
+        ->dispatch('ingredient-updated', id: $updated->id);
+
+    expect($component->get('updatedIngredientIds'))->toContain($updated->id);
+
+    $ids = $component->get('ingredients')->pluck('id')->all();
+    expect($ids[0])->toBe($updated->id);
+});
+
+it('preserves new pin and sets updated pin when a different ingredient is updated', function () {
+    $user = dishesUser();
+    $created = Ingredient::factory()->create(['name' => 'Zzzz Created']);
+    $updated = Ingredient::factory()->create(['name' => 'Yyyy Updated']);
+
+    $component = Livewire::actingAs($user)
+        ->test(IngredientLibrary::class)
+        ->dispatch('ingredient-created', id: $created->id)
+        ->dispatch('ingredient-updated', id: $updated->id);
+
+    expect($component->get('newIngredientIds'))->toContain($created->id)
+        ->and($component->get('updatedIngredientIds'))->toContain($updated->id);
+});
+
+it('does not duplicate a created ingredient into updated list', function () {
+    $user = dishesUser();
+    $ingredient = Ingredient::factory()->create();
+
+    $component = Livewire::actingAs($user)
+        ->test(IngredientLibrary::class)
+        ->dispatch('ingredient-created', id: $ingredient->id)
+        ->dispatch('ingredient-updated', id: $ingredient->id);
+
+    expect($component->get('newIngredientIds'))->toContain($ingredient->id)
+        ->and($component->get('updatedIngredientIds'))->not->toContain($ingredient->id);
+});
+
+it('orders ingredients as new then updated then existing alphabetically', function () {
+    $user = dishesUser();
+    Ingredient::factory()->create(['name' => 'Aaaa Existing']);
+    $created = Ingredient::factory()->create(['name' => 'Zzzz Created']);
+    $updated = Ingredient::factory()->create(['name' => 'Yyyy Updated']);
+
+    $component = Livewire::actingAs($user)
+        ->test(IngredientLibrary::class)
+        ->dispatch('ingredient-created', id: $created->id)
+        ->dispatch('ingredient-updated', id: $updated->id);
+
+    $ids = $component->get('ingredients')->pluck('id')->all();
+    expect($ids[0])->toBe($created->id)
+        ->and($ids[1])->toBe($updated->id);
 });
 
 // ── Sidebar Component ──────────────────────────────────────────

@@ -37,7 +37,16 @@
             <tbody>
                 @forelse($this->ingredients as $ingredient)
                     <tr wire:key="ing-{{ $ingredient->id }}" class="hover:bg-gray-50">
-                        <x-ui.td class="font-medium text-gray-900">{{ $ingredient->name }}</x-ui.td>
+                        <x-ui.td class="font-medium text-gray-900">
+                            <div class="flex items-center gap-2">
+                                {{ $ingredient->name }}
+                                @if(in_array($ingredient->id, $newIngredientIds))
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">New</span>
+                                @elseif(in_array($ingredient->id, $updatedIngredientIds))
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Updated</span>
+                                @endif
+                            </div>
+                        </x-ui.td>
                         <x-ui.td>
                             <div class="flex items-center gap-1">
                                 @foreach($ingredient->allergens as $a)
