@@ -31,14 +31,19 @@ class UserSeeder extends Seeder
             'role'  => 'chef',
         ],
         [
+            'name'  => 'Demo Bartender',
+            'email' => 'bartender@demo.com',
+            'role'  => 'bartender',
+        ],
+        [
             'name'  => 'Demo Receptionist',
             'email' => 'receptionist@demo.com',
             'role'  => 'receptionist',
         ],
         [
-            'name'  => 'Demo Bar Staff',
-            'email' => 'barstaff@demo.com',
-            'role'  => 'bar_staff',
+            'name'  => 'Demo Barista',
+            'email' => 'barista@demo.com',
+            'role'  => 'barista',
         ],
         [
             'name'  => 'Demo Maintenance',

@@ -19,9 +19,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
-            {{-- Kitchen Orders --}}
-            @hasanyrole('management|receptionist|chef|bar_staff')
-            <a href="{{ route('kitchen-orders') }}"
+            {{-- Orders (Combined Kitchen & Bar) --}}
+            @canany(['View Kitchen Orders', 'View Bar Orders'])
+            <a href="{{ route('orders') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -30,17 +30,17 @@
                     </svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h3 class="font-semibold text-gray-900 group-hover:text-molveno-blue-700 transition-colors duration-200">Kitchen Orders</h3>
-                    <p class="text-sm text-gray-500 mt-1 leading-relaxed">Monitor and track live orders from the kitchen queue.</p>
+                    <h3 class="font-semibold text-gray-900 group-hover:text-molveno-blue-700 transition-colors duration-200">Orders</h3>
+                    <p class="text-sm text-gray-500 mt-1 leading-relaxed">Monitor and track live orders from kitchen and bar queues.</p>
                 </div>
                 <svg class="shrink-0 w-4 h-4 text-gray-300 group-hover:text-molveno-blue-500 mt-1 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
-            @endhasanyrole
+            @endcanany
 
             {{-- Dishes --}}
-            @hasanyrole('management|chef|bar_staff')
+            @can('View Dishes')
             <a href="{{ route('dishes') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -58,10 +58,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
-            @endhasanyrole
+            @endcan
 
             {{-- Account Management --}}
-            @hasanyrole('management')
+            @can('View Account Management')
             <a href="{{ route('accounts.index') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -80,10 +80,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
-            @endhasanyrole
+            @endcan
 
             {{-- Table Management --}}
-            @hasanyrole('management|receptionist|server|maintenance_crew')
+            @can('View Table Management')
             <a href="{{ route('tablemanagement') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -102,9 +102,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
-            @endhasanyrole
+            @endcan
 
             {{-- Maintenance --}}
+            @can('View Maintenance')
             <a href="{{ route('maintenance') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -120,9 +121,10 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
+            @endcan
 
             {{-- Statistics --}}
-            @hasanyrole('management')
+            @can('View Statistics')
             <a href="{{ route('statistics') }}"
                class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
                 <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
@@ -141,7 +143,7 @@
                     <path d="M9 18l6-6-6-6"/>
                 </svg>
             </a>
-            @endhasanyrole
+            @endcan
 
         </div>
     </div>

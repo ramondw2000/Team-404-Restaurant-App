@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\BarOrderController;
+use App\Http\Controllers\DishController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\OrderManagementController;
@@ -78,7 +79,7 @@ Route::middleware('auth')->group(function () {
     // Combined Orders page with Kitchen/Bar toggle
     Route::get('/orders', function () {
         return view('orders');
-    })->middleware('permission:View Kitchen Orders')
+    })->middleware('permission:View Kitchen Orders|View Bar Orders')
       ->name('orders');
 
     Route::patch('/kitchenorders/items/{orderItem}/ready', [KitchenOrderController::class, 'markDishReady'])

@@ -24,7 +24,11 @@ class RoleSeeder extends Seeder
             'color' => 'blue',
             'is_administrator' => false,
             'permissions' => [
+                // Order management: servers create and manage orders
                 'View Orders', 'Create Order', 'Edit Order', 'Cancel Order', 'Process Payment', 'Assign Table',
+                // Can view kitchen and bar orders to check status
+                'View Kitchen Orders', 'View Bar Orders',
+                // Table management for seating guests
                 'View Table Management',
             ],
         ],
@@ -32,33 +36,44 @@ class RoleSeeder extends Seeder
             'color' => 'orange',
             'is_administrator' => false,
             'permissions' => [
+                // Dish management
                 'View Dishes', 'Add Dishes', 'Edit Dishes', 'Delete Dishes',
+                // Kitchen order fulfillment
                 'View Kitchen Orders', 'Mark Orders Ready',
+            ],
+        ],
+        'bartender' => [
+            'color' => 'amber',
+            'is_administrator' => false,
+            'permissions' => [
+                // Bar order fulfillment
+                'View Bar Orders', 'Send Bar Orders',
             ],
         ],
         'receptionist' => [
             'color' => 'green',
             'is_administrator' => false,
             'permissions' => [
-                'View Orders', 'Create Order', 'Edit Order', 'Assign Table',
-                'View Kitchen Orders',
-                'View Table Management', 'Update Table Status',
+                // Reservations management
                 'View Reservations', 'Create Reservation', 'Edit Reservation', 'Cancel Reservation',
+                // Table management for seating
+                'View Table Management', 'Update Table Status',
             ],
         ],
-        'bar_staff' => [
-            'color' => 'amber',
+        'barista' => [
+            'color' => 'cyan',
             'is_administrator' => false,
             'permissions' => [
-                'View Dishes', 'Add Dishes', 'Edit Dishes', 'Delete Dishes',
-                'View Kitchen Orders', 'Mark Orders Ready',
-                'View Bar Orders', 'Send Bar Orders',
+                // Hybrid role: helps with both kitchen and bar
+                'View Kitchen Orders', 'View Bar Orders',
+                'Mark Orders Ready', 'Send Bar Orders',
             ],
         ],
         'maintenance_crew' => [
             'color' => 'rose',
             'is_administrator' => false,
             'permissions' => [
+                // Can view table management to see which tables need attention
                 'View Table Management',
                 'View Maintenance', 'Create Maintenance Task', 'Edit Maintenance Task', 'Complete Maintenance Task',
             ],
