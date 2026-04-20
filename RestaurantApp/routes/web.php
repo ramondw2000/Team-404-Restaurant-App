@@ -75,6 +75,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Bar Orders')
         ->name('bar-orders');
 
+    // Combined Orders page with Kitchen/Bar toggle
+    Route::get('/orders', function () {
+        return view('orders');
+    })->middleware('permission:View Kitchen Orders')
+      ->name('orders');
+
     Route::patch('/kitchenorders/items/{orderItem}/ready', [KitchenOrderController::class, 'markDishReady'])
         ->middleware('permission:Mark Orders Ready')
         ->name('kitchen-orders.dish.ready');
