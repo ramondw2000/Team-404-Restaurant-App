@@ -226,13 +226,19 @@ class DishSeeder extends Seeder
             return null;
         }
 
-        $sourcePath = base_path('../../docs/images/' . $filename);
+        $storageName = 'dishes/' . $filename;
+
+        // If image already exists in storage (e.g., copied by onboarding script), use it
+        if (Storage::disk('public')->exists($storageName)) {
+            return $storageName;
+        }
+
+        $sourcePath = base_path('../docs/images/' . $filename);
 
         if (! File::exists($sourcePath)) {
             return null;
         }
 
-        $storageName = 'dishes/' . $filename;
         Storage::disk('public')->put($storageName, File::get($sourcePath));
 
         return $storageName;

@@ -19,6 +19,17 @@ else
     echo ".env already exists, skipping copy."
 fi
 
+# ─── Copy dish images ─────────────────────────────────────────────────────────
+echo "Copying dish images to storage..."
+mkdir -p storage/app/public/dishes
+if [ -d "../docs/images" ]; then
+    cp "../docs/images"/*.jpg storage/app/public/dishes/
+    cp "../docs/images"/*.webp storage/app/public/dishes/ 2>/dev/null || true
+    echo "Images copied successfully."
+else
+    echo "Warning: ../docs/images directory not found. Images may not be available for seeding."
+fi
+
 # ─── Install dependencies ─────────────────────────────────────────────────────
 echo "Running npm install..."
 npm install
@@ -26,10 +37,12 @@ npm install
 echo "Running composer install..."
 composer install
 
+echo "Creating storage link..."
+php artisan storage:link
+
 echo "Migrating database and seeding..."
 php artisan key:generate
 php artisan migrate:fresh --seed
-php artisan storage:link
 
 # ─── Start dev server ─────────────────────────────────────────────────────────
 echo "Starting development server..."
