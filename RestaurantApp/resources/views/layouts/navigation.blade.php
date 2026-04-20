@@ -51,7 +51,14 @@
 
                     {{-- Production Units --}}
                     @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes'])
-                    <x-nav-dropdown label="Production Units" :active="request()->routeIs('kitchen-orders') || request()->routeIs('bar-orders') || request()->routeIs('dishes')">
+                    <x-nav-dropdown label="Production Units" :active="request()->routeIs('orders') || request()->routeIs('kitchen-orders') || request()->routeIs('bar-orders') || request()->routeIs('dishes')">
+                        @can('View Kitchen Orders')
+                        <x-nav-dropdown-item
+                            :href="route('orders')"
+                            title="Orders"
+                            description="Combined Kitchen and Bar orders with toggle."
+                            :active="request()->routeIs('orders')" />
+                        @endcan
                         @can('View Kitchen Orders')
                         <x-nav-dropdown-item
                             :href="route('kitchen-orders')"
@@ -198,6 +205,11 @@
             {{-- Production Units --}}
             @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes'])
             <div class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Production Units</div>
+            @can('View Kitchen Orders')
+            <x-responsive-nav-link :href="route('orders')" :active="request()->routeIs('orders')">
+                {{ __('Orders') }}
+            </x-responsive-nav-link>
+            @endcan
             @can('View Kitchen Orders')
             <x-responsive-nav-link :href="route('kitchen-orders')" :active="request()->routeIs('kitchen-orders')">
                 {{ __('Kitchen Orders') }}
