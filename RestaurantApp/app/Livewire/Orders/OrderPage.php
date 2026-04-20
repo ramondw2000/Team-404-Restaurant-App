@@ -41,7 +41,10 @@ class OrderPage extends Component
 
         $existingOrder = $floorPlanElement->orders()
             ->where('status', OrderStatus::Draft->value)
-            ->whereHas('reservation', fn ($q) => $q->whereIn('status', ['scheduled', 'arrived']))
+            ->where(function ($q) {
+                $q->whereDoesntHave('reservation')
+                    ->orWhereHas('reservation', fn ($r) => $r->whereIn('status', ['scheduled', 'arrived']));
+            })
             ->latest()
             ->first();
 
