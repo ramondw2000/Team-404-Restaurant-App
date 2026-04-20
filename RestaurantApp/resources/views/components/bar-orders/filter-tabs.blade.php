@@ -1,8 +1,8 @@
 @props(['orderCount', 'countActive', 'countCompleted'])
 
 <x-ui.tab-group>
-    <x-ui.tab :active="true" :count="$orderCount" value="all" data-tab="all" data-default="true" onclick="barSwitchTab(this)">All</x-ui.tab>
-    <x-ui.tab :active="false" :count="$countActive" value="active" data-tab="active" onclick="barSwitchTab(this)">Active</x-ui.tab>
+    <x-ui.tab :active="true" :count="$orderCount" value="all" data-tab="all" onclick="barSwitchTab(this)">All</x-ui.tab>
+    <x-ui.tab :active="false" :count="$countActive" value="active" data-default="true" data-tab="active" onclick="barSwitchTab(this)">Active</x-ui.tab>
     <x-ui.tab :active="false" :count="$countCompleted" value="completed" data-tab="completed" onclick="barSwitchTab(this)">Completed</x-ui.tab>
     <x-ui.divider orientation="vertical" class="h-5 mx-1 hidden sm:block" />
     <x-ui.tab :active="false" value="table" data-tab="table" onclick="barSwitchTab(this)">
