@@ -48,10 +48,10 @@ class IngredientSheet extends Component
 
         if ($this->ingredientId) {
             Ingredient::where('id', $this->ingredientId)->update($data);
-            $this->dispatch('ingredient-updated');
+            $this->dispatch('ingredient-updated', id: $this->ingredientId);
         } else {
-            Ingredient::create($data);
-            $this->dispatch('ingredient-created');
+            $ingredient = Ingredient::create($data);
+            $this->dispatch('ingredient-created', id: $ingredient->id);
         }
 
         $this->dispatch('close-ingredient-sheet');

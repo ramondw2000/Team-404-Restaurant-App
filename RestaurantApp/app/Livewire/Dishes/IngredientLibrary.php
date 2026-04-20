@@ -18,6 +18,12 @@ class IngredientLibrary extends Component
     #[Url]
     public string $search = '';
 
+    /** @var int[] */
+    public array $newIngredientIds = [];
+
+    /** @var int[] */
+    public array $updatedIngredientIds = [];
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -35,7 +41,19 @@ class IngredientLibrary extends Component
             $query->where('name', 'like', '%'.$this->search.'%');
         }
 
-        return $query->orderBy('name')->paginate(20);
+        if ($this->newIngredientIds !== [] || $this->updatedIngredientIds !== []) {
+            $newPlaceholders = implode(',', array_fill(0, max(count($this->newIngredientIds), 1), '?'));
+            $updatedPlaceholders = implode(',', array_fill(0, max(count($this->updatedIngredientIds), 1), '?'));
+
+            $query->orderByRaw(
+                "CASE WHEN id IN ({$newPlaceholders}) THEN 0 WHEN id IN ({$updatedPlaceholders}) THEN 1 ELSE 2 END",
+                [...($this->newIngredientIds ?: [0]), ...($this->updatedIngredientIds ?: [0])]
+            )->orderBy('name');
+        } else {
+            $query->orderBy('name');
+        }
+
+        return $query->paginate(20);
     }
 
     public function deleteIngredient(int $id): void
@@ -54,11 +72,32 @@ class IngredientLibrary extends Component
 
     #[On('dish-saved')]
     #[On('dish-deleted')]
-    #[On('ingredient-updated')]
-    #[On('ingredient-created')]
-    #[On('ingredient-deleted')]
     public function refreshIngredients(): void
     {
+        unset($this->ingredients);
+    }
+
+    #[On('ingredient-created')]
+    public function onIngredientCreated(int $id): void
+    {
+        $this->newIngredientIds[] = $id;
+        unset($this->ingredients);
+    }
+
+    #[On('ingredient-updated')]
+    public function onIngredientUpdated(int $id): void
+    {
+        if (!in_array($id, $this->newIngredientIds, true)) {
+            $this->updatedIngredientIds[] = $id;
+        }
+        unset($this->ingredients);
+    }
+
+    #[On('ingredient-deleted')]
+    public function onIngredientDeleted(): void
+    {
+        $this->newIngredientIds = [];
+        $this->updatedIngredientIds = [];
         unset($this->ingredients);
     }
 
