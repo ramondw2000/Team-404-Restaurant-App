@@ -67,6 +67,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders');
 
+    Route::get('/kitchenorders/poll', [KitchenOrderController::class, 'poll'])
+        ->middleware('permission:View Kitchen Orders')
+        ->name('kitchen-orders.poll');
+
     Route::get('/barorders', [BarOrderController::class, 'index'])
         ->middleware('permission:View Bar Orders')
         ->name('bar-orders');
