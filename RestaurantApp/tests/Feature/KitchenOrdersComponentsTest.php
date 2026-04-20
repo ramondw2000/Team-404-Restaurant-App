@@ -30,9 +30,9 @@ it('renders the orders status-summary component with counts', function () {
     );
 
     expect($html)
-        ->toContain('5 preparing')
-        ->toContain('2 ready')
-        ->toContain('3 done');
+        ->toContain('data-summary="pending">5</span> preparing')
+        ->toContain('data-summary="ready">2</span> ready')
+        ->toContain('data-summary="completed">3</span> done');
 });
 
 it('renders the orders filter-tabs component with all tab options', function () {

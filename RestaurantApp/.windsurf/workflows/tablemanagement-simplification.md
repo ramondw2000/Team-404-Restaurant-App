@@ -1,3 +1,7 @@
+---
+description: 
+---
+
 # Table Management Simplification — Specification
 
 ## Overview
