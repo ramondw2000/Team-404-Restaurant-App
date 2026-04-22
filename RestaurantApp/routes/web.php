@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ImpersonationController;
-use App\Http\Controllers\BarOrderController;
 use App\Http\Controllers\DishController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\MaintenanceController;
@@ -64,23 +63,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Table Management')
         ->name('tablemanagement');
 
-    Route::get('/kitchenorders', [KitchenOrderController::class, 'index'])
-        ->middleware('permission:View Kitchen Orders')
-        ->name('kitchen-orders');
-
     Route::get('/kitchenorders/poll', [KitchenOrderController::class, 'poll'])
         ->middleware('permission:View Kitchen Orders')
         ->name('kitchen-orders.poll');
-
-    Route::get('/barorders', [BarOrderController::class, 'index'])
-        ->middleware('permission:View Bar Orders')
-        ->name('bar-orders');
-
-    // Combined Orders page with Kitchen/Bar toggle
-    Route::get('/orders', function () {
-        return view('orders');
-    })->middleware('permission:View Kitchen Orders|View Bar Orders')
-      ->name('orders');
 
     Route::patch('/kitchenorders/items/{orderItem}/ready', [KitchenOrderController::class, 'markDishReady'])
         ->middleware('permission:Mark Orders Ready')
@@ -89,6 +74,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/kitchenorders/orders/{order}/complete', [KitchenOrderController::class, 'completeOrder'])
         ->middleware('permission:Mark Orders Ready')
         ->name('kitchen-orders.order.complete');
+
+    // Combined Orders page with Kitchen/Bar toggle
+    Route::get('/orders', function () {
+        return view('orders');
+    })->middleware('permission:View Kitchen Orders|View Bar Orders')
+      ->name('orders');
 
     Route::livewire('/reservations', Reservations::class)
         ->middleware('permission:View Reservations')
