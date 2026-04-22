@@ -18,9 +18,18 @@ class StatisticsController extends Controller
             $period = 'day';
         }
 
-        $completedOrders = $this->getOrdersForPeriod($period)->map(function (array $order): array {
-            $order['total'] = collect($order['items'])
-                ->reduce(fn (float $carry, array $item): float => $carry + ($item['qty'] * $item['price']), 0);
+        $taxRate = (float) config('tax.rate');
+
+        $completedOrders = $this->getOrdersForPeriod($period)->map(function (array $order) use ($taxRate): array {
+            $subtotal = collect($order['items'])
+                ->reduce(fn (float $carry, array $item): float => $carry + ($item['qty'] * $item['price']), 0.0);
+
+            $tax = round($subtotal * $taxRate, 2);
+            $subtotal = round($subtotal, 2);
+
+            $order['subtotal'] = $subtotal;
+            $order['tax'] = $tax;
+            $order['total'] = round($subtotal + $tax, 2);
 
             return $order;
         });
@@ -53,12 +62,13 @@ class StatisticsController extends Controller
         $topItems = $completedOrders
             ->flatMap(fn (array $order) => $order['items'])
             ->groupBy('name')
-            ->map(function (Collection $items, string $name) {
+            ->map(function (Collection $items, string $name) use ($taxRate) {
                 $qty = $items->sum('qty');
-                $revenue = $items->reduce(
+                $subtotal = $items->reduce(
                     fn (float $carry, array $item): float => $carry + ($item['qty'] * $item['price']),
-                    0,
+                    0.0,
                 );
+                $revenue = round($subtotal * (1 + $taxRate), 2);
 
                 return [
                     'name' => $name,

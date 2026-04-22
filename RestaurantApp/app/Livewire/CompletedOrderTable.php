@@ -417,8 +417,13 @@ class CompletedOrderTable extends Component
                 'price' => (float) $item->unit_price,
             ])->all();
 
-            $total = collect($items)
+            $subtotal = collect($items)
                 ->reduce(fn (float $carry, array $item): float => $carry + ($item['qty'] * $item['price']), 0.0);
+
+            $taxRate = (float) config('tax.rate');
+            $tax = round($subtotal * $taxRate, 2);
+            $subtotal = round($subtotal, 2);
+            $total = round($subtotal + $tax, 2);
 
             return [
                 'id' => 'ORD-'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
@@ -432,6 +437,8 @@ class CompletedOrderTable extends Component
                 'payment_method' => null,
                 'is_refunded' => false,
                 'items' => $items,
+                'subtotal' => $subtotal,
+                'tax' => $tax,
                 'total' => $total,
             ];
         });

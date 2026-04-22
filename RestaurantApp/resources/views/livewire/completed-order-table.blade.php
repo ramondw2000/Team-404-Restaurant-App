@@ -400,21 +400,19 @@
                     {{-- Summary --}}
                     <div class="border-t border-dashed border-gray-200 pt-4 space-y-2">
                         @php
-                            $subtotal = $this->receiptOrder['total'];
-                            $tax = round($subtotal * 0.09, 2);
-                            $total = $subtotal;
+                            $taxPercent = (int) round(((float) config('tax.rate')) * 100);
                         @endphp
                         <div class="flex justify-between text-sm text-gray-500">
                             <span>Subtotal</span>
-                            <span>&euro; {{ number_format($subtotal - $tax, 2) }}</span>
+                            <span>&euro; {{ number_format($this->receiptOrder['subtotal'], 2) }}</span>
                         </div>
                         <div class="flex justify-between text-sm text-gray-500">
-                            <span>Tax (9%)</span>
-                            <span>&euro; {{ number_format($tax, 2) }}</span>
+                            <span>Tax ({{ $taxPercent }}%)</span>
+                            <span>&euro; {{ number_format($this->receiptOrder['tax'], 2) }}</span>
                         </div>
                         <div class="flex justify-between text-base font-bold text-gray-900 pt-1 border-t border-gray-200">
                             <span>Total</span>
-                            <span>&euro; {{ number_format($total, 2) }}</span>
+                            <span>&euro; {{ number_format($this->receiptOrder['total'], 2) }}</span>
                         </div>
                     </div>
 

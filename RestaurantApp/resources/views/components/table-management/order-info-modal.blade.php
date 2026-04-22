@@ -135,7 +135,7 @@
                         <span>&euro; {{ number_format($orderInfo['grand_subtotal'], 2) }}</span>
                     </div>
                     <div class="flex justify-between text-sm text-gray-600">
-                        <span>Tax (10%)</span>
+                        <span>Tax ({{ (int) round(((float) config('tax.rate')) * 100) }}%)</span>
                         <span>&euro; {{ number_format($orderInfo['grand_tax'], 2) }}</span>
                     </div>
                     <div class="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">

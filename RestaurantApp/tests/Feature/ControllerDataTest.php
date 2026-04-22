@@ -23,8 +23,8 @@ it('dishes page renders as Livewire component', function () {
 
 it('KitchenOrderController passes orders and computed counts', function () {
     $element = FloorPlanElement::factory()->create();
-    $dish    = Dish::factory()->create();
-    $order   = Order::factory()->active()->create(['floor_plan_element_id' => $element->id]);
+    $dish = Dish::factory()->create();
+    $order = Order::factory()->active()->create(['floor_plan_element_id' => $element->id]);
     OrderItem::factory()->create(['order_id' => $order->id, 'dish_id' => $dish->id]);
 
     $response = $this->get(route('kitchen-orders'));
@@ -51,6 +51,5 @@ it('AccountController passes users, roleConfig, and counts', function () {
     $response->assertViewHas('counts');
 
     $counts = $response->viewData('counts');
-    expect($counts)->toBeArray()->toHaveKeys(['all', 'management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew']);
+    expect($counts)->toBeArray()->toHaveKeys(['all', 'management', 'server', 'chef', 'receptionist', 'bartender', 'barista', 'maintenance_crew']);
 });
-

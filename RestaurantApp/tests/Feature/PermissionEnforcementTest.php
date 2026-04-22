@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Dish;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -58,7 +59,7 @@ it('allows a role with View Dishes to access the dishes route', function () {
 });
 
 it('enforces View Kitchen Orders permission on the kitchen orders route', function () {
-    $user = userWithRole('server'); // no View Kitchen Orders permission
+    $user = userWithRole('bartender'); // no View Kitchen Orders permission
 
     $this->actingAs($user)->get(route('kitchen-orders'))->assertForbidden();
 });
@@ -124,7 +125,7 @@ it('denies a user with only View Account Management from creating an account', f
     $user = userWithRole('server');
     $viewOnlyRole = Role::where('name', 'server')->first();
     $viewOnlyRole->givePermissionTo('View Account Management');
-    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
     $this->actingAs($user)
         ->post(route('accounts.store'), [
@@ -141,7 +142,7 @@ it('denies a user with only View Account Management from deleting an account', f
     $user = userWithRole('server');
     $viewOnlyRole = Role::where('name', 'server')->first();
     $viewOnlyRole->givePermissionTo('View Account Management');
-    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
     $this->actingAs($user)
         ->delete(route('accounts.destroy', $target))
@@ -159,7 +160,7 @@ it('enforces Add Dishes permission on dish creation route', function () {
 });
 
 it('enforces Edit Dishes permission on dish update route', function () {
-    $dish = \App\Models\Dish::factory()->create();
+    $dish = Dish::factory()->create();
     $user = userWithRole('server'); // no Edit Dishes
 
     $this->actingAs($user)
@@ -168,7 +169,7 @@ it('enforces Edit Dishes permission on dish update route', function () {
 });
 
 it('enforces Delete Dishes permission on dish destroy route', function () {
-    $dish = \App\Models\Dish::factory()->create();
+    $dish = Dish::factory()->create();
     $user = userWithRole('server'); // no Delete Dishes
 
     $this->actingAs($user)
