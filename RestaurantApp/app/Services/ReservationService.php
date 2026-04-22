@@ -202,6 +202,17 @@ final readonly class ReservationService
     }
 
     /**
+     * Find the smallest available table that fits the party size at the given datetime.
+     * Ties broken by id for deterministic selection.
+     */
+    public function findBestAvailableTableAt(Carbon $dateTime, int $partySize): ?FloorPlanElement
+    {
+        return $this->getAvailableTablesAt($dateTime, $partySize)
+            ->sortBy([['seat_count', 'asc'], ['id', 'asc']])
+            ->first();
+    }
+
+    /**
      * Get reservation-to-element mapping for a floor plan (today's active reservations).
      *
      * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, status: string}>

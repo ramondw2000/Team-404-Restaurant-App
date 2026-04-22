@@ -1,6 +1,8 @@
 <?php
 
 use App\Livewire\Reservations;
+use App\Models\FloorPlan;
+use App\Models\FloorPlanElement;
 use App\Models\Reservation;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -74,7 +76,7 @@ it('filters list by status', function () {
     $date = now()->toDateString();
 
     $scheduled = Reservation::factory()->forDate($date, '19:30')->create(['guest_name' => 'Sched Person', 'status' => 'scheduled']);
-    $arrived   = Reservation::factory()->forDate($date, '19:30')->create(['guest_name' => 'Arrived Person', 'status' => 'arrived']);
+    $arrived = Reservation::factory()->forDate($date, '19:30')->create(['guest_name' => 'Arrived Person', 'status' => 'arrived']);
 
     Livewire::actingAs(reservationsUser())
         ->test(Reservations::class)
@@ -149,6 +151,58 @@ it('creates a reservation via the Livewire component', function () {
         ->call('createReservation');
 
     expect(Reservation::where('guest_name', 'Jane Doe')->exists())->toBeTrue();
+});
+
+it('auto-assigns the smallest fitting table when no preference given', function () {
+    $plan = FloorPlan::factory()->create();
+    $small = FloorPlanElement::factory()->create([
+        'floor_plan_id' => $plan->id,
+        'seat_count' => 2,
+        'table_name' => 'T-small',
+    ]);
+    $large = FloorPlanElement::factory()->create([
+        'floor_plan_id' => $plan->id,
+        'seat_count' => 6,
+        'table_name' => 'T-large',
+    ]);
+
+    $datetime = now()->addDay()->setHour(19)->setMinute(0)->format('Y-m-d\TH:i');
+
+    Livewire::actingAs(reservationsUser())
+        ->test(Reservations::class)
+        ->set('createGuestName', 'Party Of Two')
+        ->set('createPartySize', 2)
+        ->set('createDatetime', $datetime)
+        ->call('createReservation');
+
+    $reservation = Reservation::where('guest_name', 'Party Of Two')->first();
+
+    expect($reservation)->not->toBeNull()
+        ->and($reservation->floor_plan_element_id)->toBe($small->id)
+        ->and($reservation->table_number)->toBe($small->table_name);
+});
+
+it('falls back to no table when no table fits the party', function () {
+    $plan = FloorPlan::factory()->create();
+    FloorPlanElement::factory()->create([
+        'floor_plan_id' => $plan->id,
+        'seat_count' => 2,
+        'table_name' => 'T-only',
+    ]);
+
+    $datetime = now()->addDay()->setHour(19)->setMinute(0)->format('Y-m-d\TH:i');
+
+    Livewire::actingAs(reservationsUser())
+        ->test(Reservations::class)
+        ->set('createGuestName', 'Huge Party')
+        ->set('createPartySize', 8)
+        ->set('createDatetime', $datetime)
+        ->call('createReservation');
+
+    $reservation = Reservation::where('guest_name', 'Huge Party')->first();
+
+    expect($reservation)->not->toBeNull()
+        ->and($reservation->floor_plan_element_id)->toBeNull();
 });
 
 it('fails create validation when datetime is in the past', function () {
