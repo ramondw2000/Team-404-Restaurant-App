@@ -84,7 +84,7 @@ final readonly class OrderService
         $paid = $this->aggregateItems($paidOrders);
 
         $grandSubtotal = round($unpaid['subtotal'] + $paid['subtotal'], 2);
-        $grandTax = round($grandSubtotal * 0.1, 2);
+        $grandTax = round($grandSubtotal * (float) config('tax.rate'), 2);
         $grandTotal = round($grandSubtotal + $grandTax, 2);
 
         $first = $orders->first();
@@ -136,7 +136,7 @@ final readonly class OrderService
 
         $items = array_values($buckets);
         $subtotal = round(collect($items)->sum('total'), 2);
-        $tax = round($subtotal * 0.1, 2);
+        $tax = round($subtotal * (float) config('tax.rate'), 2);
         $total = round($subtotal + $tax, 2);
 
         return [
@@ -181,7 +181,7 @@ final readonly class OrderService
 
         $items = array_values($aggregated);
         $subtotal = round(collect($items)->sum('total'), 2);
-        $tax = round($subtotal * 0.1, 2);
+        $tax = round($subtotal * (float) config('tax.rate'), 2);
         $total = round($subtotal + $tax, 2);
 
         $firstOrder = $orders->first();
