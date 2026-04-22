@@ -37,8 +37,12 @@ it('allows chef to access the dashboard', function () {
     actingAsRole('chef')->get(route('dashboard'))->assertOk();
 });
 
-it('allows bar_staff to access the dashboard', function () {
-    actingAsRole('bar_staff')->get(route('dashboard'))->assertOk();
+it('allows bartender to access the dashboard', function () {
+    actingAsRole('bartender')->get(route('dashboard'))->assertOk();
+});
+
+it('allows barista to access the dashboard', function () {
+    actingAsRole('barista')->get(route('dashboard'))->assertOk();
 });
 
 it('allows maintenance_crew to access the dashboard', function () {
@@ -99,37 +103,45 @@ it('denies chef access to table management', function () {
     actingAsRole('chef')->get(route('tablemanagement'))->assertForbidden();
 });
 
-it('denies bar_staff access to table management', function () {
-    actingAsRole('bar_staff')->get(route('tablemanagement'))->assertForbidden();
+it('denies bartender access to table management', function () {
+    actingAsRole('bartender')->get(route('tablemanagement'))->assertForbidden();
 });
 
-// ── Kitchen Orders: management, receptionist, chef, bar_staff ──
+it('denies barista access to table management', function () {
+    actingAsRole('barista')->get(route('tablemanagement'))->assertForbidden();
+});
+
+// ── Kitchen Orders: management, server, chef, barista ──
 
 it('allows management to access kitchen orders', function () {
     actingAsRole('management')->get(route('kitchen-orders'))->assertOk();
 });
 
-it('allows receptionist to access kitchen orders', function () {
-    actingAsRole('receptionist')->get(route('kitchen-orders'))->assertOk();
+it('allows server to access kitchen orders', function () {
+    actingAsRole('server')->get(route('kitchen-orders'))->assertOk();
 });
 
 it('allows chef to access kitchen orders', function () {
     actingAsRole('chef')->get(route('kitchen-orders'))->assertOk();
 });
 
-it('allows bar_staff to access kitchen orders', function () {
-    actingAsRole('bar_staff')->get(route('kitchen-orders'))->assertOk();
+it('allows barista to access kitchen orders', function () {
+    actingAsRole('barista')->get(route('kitchen-orders'))->assertOk();
 });
 
-it('denies server access to kitchen orders', function () {
-    actingAsRole('server')->get(route('kitchen-orders'))->assertForbidden();
+it('denies receptionist access to kitchen orders', function () {
+    actingAsRole('receptionist')->get(route('kitchen-orders'))->assertForbidden();
+});
+
+it('denies bartender access to kitchen orders', function () {
+    actingAsRole('bartender')->get(route('kitchen-orders'))->assertForbidden();
 });
 
 it('denies maintenance_crew access to kitchen orders', function () {
     actingAsRole('maintenance_crew')->get(route('kitchen-orders'))->assertForbidden();
 });
 
-// ── Dishes: management, chef, bar_staff ──
+// ── Dishes: management, chef ──
 
 it('allows management to access dishes', function () {
     actingAsRole('management')->get(route('dishes'))->assertOk();
@@ -139,8 +151,8 @@ it('allows chef to access dishes', function () {
     actingAsRole('chef')->get(route('dishes'))->assertOk();
 });
 
-it('allows bar_staff to access dishes', function () {
-    actingAsRole('bar_staff')->get(route('dishes'))->assertOk();
+it('denies bartender access to dishes', function () {
+    actingAsRole('bartender')->get(route('dishes'))->assertForbidden();
 });
 
 it('denies server access to dishes', function () {

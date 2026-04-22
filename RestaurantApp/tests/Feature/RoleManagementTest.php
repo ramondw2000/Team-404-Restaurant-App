@@ -37,7 +37,7 @@ it('shows all seeded roles in the sidebar', function () {
 
     $component = Livewire::actingAs($user)->test(RoleManagement::class);
 
-    foreach (['management', 'server', 'chef', 'receptionist', 'bar_staff', 'maintenance_crew'] as $roleName) {
+    foreach (['management', 'server', 'chef', 'receptionist', 'bartender', 'barista', 'maintenance_crew'] as $roleName) {
         $component->assertSee(ucwords(str_replace(['_', '-'], ' ', $roleName)));
     }
 });

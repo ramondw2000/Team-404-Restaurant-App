@@ -7,20 +7,20 @@ it('renders the orders scripts component with JS functions', function () {
 
     expect($html)
         ->toContain('<script>')
-        ->toContain('switchTab')
-        ->toContain('handleActionClick')
+        ->toContain('kitchenSwitchTab')
+        ->toContain('kitchenHandleActionClick')
         ->toContain('markDishReady')
-        ->toContain('completeOrder')
-        ->toContain('updateOrderSendState')
-        ->toContain('setTabAppearance')
-        ->toContain('updateDishVisualState')
-        ->toContain('setMarkReadyAppearance')
-        ->toContain('setStatusDotAppearance')
-        ->toContain('setSendButtonState')
-        ->toContain('syncCardVisualState')
-        ->toContain('hideOrderActions')
-        ->toContain('showOrderActions')
-        ->toContain('parseClasses');
+        ->toContain('kitchenCompleteOrder')
+        ->toContain('kitchenUpdateOrderSendState')
+        ->toContain('kitchenSetTabAppearance')
+        ->toContain('kitchenUpdateDishVisualState')
+        ->toContain('kitchenSetMarkReadyAppearance')
+        ->toContain('kitchenSetStatusDotAppearance')
+        ->toContain('kitchenSetSendButtonState')
+        ->toContain('kitchenSyncCardVisualState')
+        ->toContain('kitchenHideOrderActions')
+        ->toContain('kitchenShowOrderActions')
+        ->toContain('kitchenParseClasses');
 });
 
 it('renders the orders status-summary component with counts', function () {
@@ -52,7 +52,7 @@ it('renders the orders filter-tabs component with all tab options', function () 
         ->toContain('data-tab="completed"')
         ->toContain('data-tab="restaurant"')
         ->toContain('data-tab="room_service"')
-        ->toContain('switchTab(this)');
+        ->toContain('kitchenSwitchTab(this)');
 });
 
 it('renders the orders order-grid component as a slot wrapper', function () {
