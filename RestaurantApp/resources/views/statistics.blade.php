@@ -120,29 +120,73 @@
                     </div>
                     </x-ui.card>
 
-                    {{-- Top dishes --}}
+                    {{-- Dish statistics --}}
                     <x-ui.card padding="none" class="bg-slate-100 border-0">
                     <div class="p-6">
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Top Dishes</p>
-                        <div class="flex flex-col gap-2">
-                            @forelse($topItems as $index => $item)
-                                <div class="flex items-center justify-between bg-white rounded-xl px-4 py-3">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <span class="shrink-0 w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
-                                            {{ $index + 1 }}
-                                        </span>
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $item['name'] }}</p>
-                                            <p class="text-xs text-gray-400">{{ $item['qty'] }} servings sold</p>
+                        <div class="flex items-center justify-between gap-3 mb-5">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Dish Performance</p>
+                                <h3 class="text-base font-semibold text-gray-900 mt-0.5">Kitchen dishes</h3>
+                            </div>
+                            <x-ui.badge variant="primary" class="bg-primary text-white">
+                                € {{ number_format($totalDishRevenue, 2) }} revenue
+                            </x-ui.badge>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-5">
+                            {{-- Most sold dishes --}}
+                            <div>
+                                <p class="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                    Most Sold
+                                </p>
+                                <div class="flex flex-col gap-2">
+                                    @forelse($topItems as $index => $item)
+                                        <div class="flex items-center justify-between bg-white rounded-xl px-4 py-3">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <span class="shrink-0 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">
+                                                    {{ $index + 1 }}
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $item['name'] }}</p>
+                                                    <p class="text-xs text-gray-400">{{ $item['qty'] }} sold</p>
+                                                </div>
+                                            </div>
+                                            <x-ui.badge variant="primary" class="shrink-0 bg-primary text-white">
+                                                € {{ number_format($item['revenue'], 2) }}
+                                            </x-ui.badge>
                                         </div>
-                                    </div>
-                                    <x-ui.badge variant="primary" class="shrink-0 bg-primary text-white">
-                                        € {{ number_format($item['revenue'], 2) }}
-                                    </x-ui.badge>
+                                    @empty
+                                        <p class="text-sm text-gray-400">No dish sales recorded yet.</p>
+                                    @endforelse
                                 </div>
-                            @empty
-                                <p class="text-sm text-gray-400">No sales recorded yet.</p>
-                            @endforelse
+                            </div>
+                            {{-- Least sold dishes --}}
+                            <div>
+                                <p class="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                    Least Sold
+                                </p>
+                                <div class="flex flex-col gap-2">
+                                    @forelse($leastSoldDishes as $index => $item)
+                                        <div class="flex items-center justify-between bg-white rounded-xl px-4 py-3">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <span class="shrink-0 w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">
+                                                    {{ $index + 1 }}
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $item['name'] }}</p>
+                                                    <p class="text-xs text-gray-400">{{ $item['qty'] }} sold</p>
+                                                </div>
+                                            </div>
+                                            <x-ui.badge variant="primary" class="shrink-0 bg-primary text-white">
+                                                € {{ number_format($item['revenue'], 2) }}
+                                            </x-ui.badge>
+                                        </div>
+                                    @empty
+                                        <p class="text-sm text-gray-400">No dish sales recorded yet.</p>
+                                    @endforelse
+                                </div>
+                            </div>
                         </div>
                     </div>
                     </x-ui.card>
@@ -173,6 +217,138 @@
                 </div>
                 </x-ui.card>
             </div>
+
+            {{-- Bar drinks statistics --}}
+            <x-ui.card padding="none" class="bg-slate-100 border-0">
+            <div class="p-6">
+                <div class="flex items-center justify-between gap-3 mb-5">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Bar Performance</p>
+                        <h3 class="text-base font-semibold text-gray-900 mt-0.5">Bar drinks</h3>
+                    </div>
+                    <x-ui.badge variant="primary" class="bg-molveno-blue-700 text-white">
+                        € {{ number_format($totalBarRevenue, 2) }} revenue
+                    </x-ui.badge>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-5">
+                    {{-- Most sold bar drinks --}}
+                    <div>
+                        <p class="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                            Most Sold
+                        </p>
+                        <div class="flex flex-col gap-2">
+                            @forelse($topBarDrinks as $index => $item)
+                                <div class="flex items-center justify-between bg-white rounded-xl px-4 py-3">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="shrink-0 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">
+                                            {{ $index + 1 }}
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $item['name'] }}</p>
+                                            <p class="text-xs text-gray-400">{{ $item['qty'] }} sold</p>
+                                        </div>
+                                    </div>
+                                    <x-ui.badge variant="primary" class="shrink-0 bg-molveno-blue-700 text-white">
+                                        € {{ number_format($item['revenue'], 2) }}
+                                    </x-ui.badge>
+                                </div>
+                            @empty
+                                <p class="text-sm text-gray-400">No bar drink sales recorded yet.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                    {{-- Least sold bar drinks --}}
+                    <div>
+                        <p class="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            Least Sold
+                        </p>
+                        <div class="flex flex-col gap-2">
+                            @forelse($leastSoldBarDrinks as $index => $item)
+                                <div class="flex items-center justify-between bg-white rounded-xl px-4 py-3">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="shrink-0 w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">
+                                            {{ $index + 1 }}
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $item['name'] }}</p>
+                                            <p class="text-xs text-gray-400">{{ $item['qty'] }} sold</p>
+                                        </div>
+                                    </div>
+                                    <x-ui.badge variant="primary" class="shrink-0 bg-molveno-blue-700 text-white">
+                                        € {{ number_format($item['revenue'], 2) }}
+                                    </x-ui.badge>
+                                </div>
+                            @empty
+                                <p class="text-sm text-gray-400">No bar drink sales recorded yet.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </x-ui.card>
+
+            {{-- Unsold items (compact) --}}
+            @if($unsoldDishes->isNotEmpty() || $unsoldBarDrinks->isNotEmpty())
+            <x-ui.card padding="none" class="bg-slate-100 border-0">
+            <div class="p-6">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Zero Sales</p>
+                        <h3 class="text-base font-semibold text-gray-900 mt-0.5">Not sold this {{ $period === 'day' ? 'day' : $period }}</h3>
+                    </div>
+                    <x-ui.badge variant="primary" class="bg-red-500 text-white">
+                        {{ $unsoldDishes->count() + $unsoldBarDrinks->count() }} items
+                    </x-ui.badge>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    {{-- Unsold dishes --}}
+                    <div x-data="{ limit: 8 }">
+                        <p class="text-xs font-semibold text-red-500 uppercase tracking-widest mb-2">Unsold Dishes ({{ $unsoldDishes->count() }})</p>
+                        @if($unsoldDishes->isEmpty())
+                            <p class="text-xs text-gray-400">All dishes have been sold!</p>
+                        @else
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($unsoldDishes as $index => $name)
+                                    <span x-show="{{ $index }} < limit" class="inline-flex items-center rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-200">{{ $name }}</span>
+                                @endforeach
+                            </div>
+                            @if($unsoldDishes->count() > 8)
+                                <button x-show="limit === 8" x-on:click="limit = {{ $unsoldDishes->count() }}" class="mt-2 text-xs font-medium text-primary hover:underline">
+                                    Show all {{ $unsoldDishes->count() }} &rarr;
+                                </button>
+                                <button x-show="limit !== 8" x-on:click="limit = 8" x-cloak class="mt-2 text-xs font-medium text-primary hover:underline">
+                                    Show less &larr;
+                                </button>
+                            @endif
+                        @endif
+                    </div>
+                    {{-- Unsold bar drinks --}}
+                    <div x-data="{ limit: 8 }">
+                        <p class="text-xs font-semibold text-red-500 uppercase tracking-widest mb-2">Unsold Bar Drinks ({{ $unsoldBarDrinks->count() }})</p>
+                        @if($unsoldBarDrinks->isEmpty())
+                            <p class="text-xs text-gray-400">All bar drinks have been sold!</p>
+                        @else
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($unsoldBarDrinks as $index => $name)
+                                    <span x-show="{{ $index }} < limit" class="inline-flex items-center rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-200">{{ $name }}</span>
+                                @endforeach
+                            </div>
+                            @if($unsoldBarDrinks->count() > 8)
+                                <button x-show="limit === 8" x-on:click="limit = {{ $unsoldBarDrinks->count() }}" class="mt-2 text-xs font-medium text-primary hover:underline">
+                                    Show all {{ $unsoldBarDrinks->count() }} &rarr;
+                                </button>
+                                <button x-show="limit !== 8" x-on:click="limit = 8" x-cloak class="mt-2 text-xs font-medium text-primary hover:underline">
+                                    Show less &larr;
+                                </button>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            </div>
+            </x-ui.card>
+            @endif
 
             {{-- Completed orders table (Livewire component) --}}
             <livewire:completed-order-table />
