@@ -29,22 +29,24 @@ class Reservations extends Component
     /** Snapshot of the selected reservation for the detail sheet (frozen while open). */
     public ?array $selectedReservation = null;
 
-    /** Fields for the create form. */
-    public string $createGuestName = '';
+    /** Fields for the create modal. */
+    public bool $showReservationModal = false;
 
-    public string $createPhone = '';
+    public string $reservationGuestName = '';
 
-    public string $createEmail = '';
+    public string $reservationPhone = '';
 
-    public int $createPartySize = 2;
+    public string $reservationEmail = '';
 
-    public string $createDatetime = '';
+    public int $reservationPartySize = 2;
 
-    public string $createRoomNumber = '';
+    public string $reservationDatetime = '';
 
-    public string $createNotes = '';
+    public string $reservationRoomNumber = '';
 
-    public ?int $createFloorPlanElementId = null;
+    public string $reservationNotes = '';
+
+    public ?int $reservationFloorPlanElementId = null;
 
     /** Fields for the edit form. */
     public string $editGuestName = '';
@@ -68,7 +70,6 @@ class Reservations extends Component
     public function mount(): void
     {
         $this->selectedDate = Carbon::today()->toDateString();
-        $this->createDatetime = now()->addHour()->format('Y-m-d\TH:i');
     }
 
     // ─── Computed ──────────────────────────────────────────────────────
@@ -128,20 +129,20 @@ class Reservations extends Component
     }
 
     /**
-     * Available tables for the create form, fetched reactively.
+     * Available tables for the create modal, fetched reactively.
      *
      * @return SupportCollection<int, FloorPlanElement>
      */
     #[Computed]
     public function availableTables(): SupportCollection
     {
-        if ($this->createDatetime === '' || $this->createPartySize < 1) {
+        if ($this->reservationDatetime === '' || $this->reservationPartySize < 1) {
             return collect();
         }
 
         return app(ReservationService::class)->getAvailableTablesAt(
-            Carbon::parse($this->createDatetime),
-            $this->createPartySize
+            Carbon::parse($this->reservationDatetime),
+            $this->reservationPartySize
         );
     }
 
@@ -239,54 +240,64 @@ class Reservations extends Component
 
     // ─── Create ────────────────────────────────────────────────────────
 
-    public function openCreateSheet(): void
+    public function openReservationModal(): void
     {
-        $this->createGuestName = '';
-        $this->createPhone = '';
-        $this->createEmail = '';
-        $this->createPartySize = 2;
-        $this->createDatetime = Carbon::parse($this->selectedDate)->setHour(19)->setMinute(0)->format('Y-m-d\TH:i');
-        $this->createRoomNumber = '';
-        $this->createNotes = '';
-        $this->createFloorPlanElementId = null;
+        $this->reservationGuestName = '';
+        $this->reservationPhone = '';
+        $this->reservationEmail = '';
+        $this->reservationPartySize = 2;
+        $this->reservationDatetime = Carbon::parse($this->selectedDate)->setHour(19)->setMinute(0)->format('Y-m-d\TH:i');
+        $this->reservationRoomNumber = '';
+        $this->reservationNotes = '';
+        $this->reservationFloorPlanElementId = null;
         $this->resetValidation();
-        $this->dispatch('open-sheet', name: 'create-reservation');
+        $this->showReservationModal = true;
+    }
+
+    public function closeReservationModal(): void
+    {
+        $this->showReservationModal = false;
+        $this->resetValidation();
     }
 
     public function createReservation(): void
     {
         $this->validate([
-            'createGuestName' => ['required', 'string', 'max:255'],
-            'createPhone' => ['nullable', 'string', 'max:50'],
-            'createEmail' => ['nullable', 'email', 'max:255'],
-            'createPartySize' => ['required', 'integer', 'min:1', 'max:20'],
-            'createDatetime' => ['required', 'date', 'after:now'],
-            'createRoomNumber' => ['nullable', 'string', 'max:50'],
-            'createNotes' => ['nullable', 'string', 'max:1000'],
-            'createFloorPlanElementId' => ['nullable', 'integer', 'exists:floor_plan_elements,id'],
+            'reservationGuestName' => ['required', 'string', 'max:255'],
+            'reservationPhone' => ['nullable', 'string', 'max:50', 'regex:/^\+?[\d\s\-().]{7,}$/'],
+            'reservationEmail' => ['nullable', 'email', 'max:255'],
+            'reservationPartySize' => ['required', 'integer', 'min:2', 'max:20'],
+            'reservationDatetime' => ['required', 'date', 'after:now'],
+            'reservationRoomNumber' => ['nullable', 'string', 'max:50'],
+            'reservationNotes' => ['nullable', 'string', 'max:1000'],
+            'reservationFloorPlanElementId' => ['nullable', 'integer', 'exists:floor_plan_elements,id'],
         ], [
-            'createDatetime.after' => 'Reservation time cannot be in the past.',
+            'reservationDatetime.after' => 'Reservation time cannot be in the past.',
         ]);
 
         $service = app(ReservationService::class);
+        $dateTime = Carbon::parse($this->reservationDatetime);
         $data = [
-            'guest_name' => $this->createGuestName,
-            'phone' => $this->createPhone ?: null,
-            'email' => $this->createEmail ?: null,
-            'party_size' => $this->createPartySize,
-            'reservation_datetime' => $this->createDatetime,
-            'room_number' => $this->createRoomNumber ?: null,
-            'internal_notes' => $this->createNotes ?: null,
+            'guest_name' => $this->reservationGuestName,
+            'phone' => $this->reservationPhone ?: null,
+            'email' => $this->reservationEmail ?: null,
+            'party_size' => $this->reservationPartySize,
+            'reservation_datetime' => $this->reservationDatetime,
+            'room_number' => $this->reservationRoomNumber ?: null,
+            'internal_notes' => $this->reservationNotes ?: null,
             'status' => 'scheduled',
         ];
 
-        if ($this->createFloorPlanElementId) {
-            $service->createForTable($this->createFloorPlanElementId, $data);
+        if ($this->reservationFloorPlanElementId) {
+            if (! $service->isTableAvailableAt($this->reservationFloorPlanElementId, $dateTime)) {
+                $this->addError('reservationDatetime', 'This table is already reserved around that time (2-hour window).');
+
+                return;
+            }
+
+            $service->createForTable($this->reservationFloorPlanElementId, $data);
         } else {
-            $bestTable = $service->findBestAvailableTableAt(
-                Carbon::parse($this->createDatetime),
-                $this->createPartySize
-            );
+            $bestTable = $service->findBestAvailableTableAt($dateTime, $this->reservationPartySize);
 
             if ($bestTable !== null) {
                 $service->createForTable($bestTable->id, $data);
@@ -296,8 +307,8 @@ class Reservations extends Component
             }
         }
 
-        $this->dispatch('close-sheet', name: 'create-reservation');
-        $this->dispatch('toast', message: "Reservation created for {$this->createGuestName}", type: 'success');
+        $this->closeReservationModal();
+        $this->dispatch('toast', message: "Reservation created for {$this->reservationGuestName}", type: 'success');
     }
 
     // ─── Edit ──────────────────────────────────────────────────────────
@@ -325,7 +336,7 @@ class Reservations extends Component
     {
         $this->validate([
             'editGuestName' => ['required', 'string', 'max:255'],
-            'editPhone' => ['nullable', 'string', 'max:50'],
+            'editPhone' => ['nullable', 'string', 'max:50', 'regex:/^\+?[\d\s\-().]{7,}$/'],
             'editEmail' => ['nullable', 'email', 'max:255'],
             'editPartySize' => ['required', 'integer', 'min:1', 'max:20'],
             'editDatetime' => ['required', 'date'],
@@ -348,6 +359,22 @@ class Reservations extends Component
 
         $this->dispatch('close-sheet', name: 'edit-reservation');
         $this->dispatch('toast', message: "Reservation for {$this->editGuestName} updated", type: 'success');
+    }
+
+    public function deleteReservation(): void
+    {
+        $id = $this->editReservationId ?? $this->selectedReservation['id'] ?? null;
+        if (! $id) {
+            return;
+        }
+
+        $reservation = Reservation::findOrFail($id);
+        $guestName = $reservation->guest_name;
+        $reservation->delete();
+
+        $this->dispatch('close-sheet', name: 'detail-reservation');
+        $this->dispatch('close-sheet', name: 'edit-reservation');
+        $this->dispatch('toast', message: "Reservation for {$guestName} deleted.", type: 'success');
     }
 
     // ─── Render ────────────────────────────────────────────────────────
