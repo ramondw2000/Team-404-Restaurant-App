@@ -9,7 +9,7 @@
                 {{ $barMode ? 'bg-molveno-blue-500 text-white' : 'text-gray-700 hover:bg-gray-50 border border-gray-200' }}"
         >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 2h8l-4 9v11"/><path d="M4 2h16"/><path d="M6 22h12"/>
+                <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>
             </svg>
             <span class="truncate flex-1 text-left">Bar (Drinks)</span>
         </button>

@@ -81,7 +81,7 @@
                                             <img src="{{ Storage::url($dish->photo_path) }}" alt="{{ $dish->name }}">
                                         @else
                                             <svg class="text-gray-300" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
-                                                <path d="M8 2h8l-4 9v11"/><path d="M4 2h16"/><path d="M6 22h12"/>
+                                                <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>
                                             </svg>
                                         @endif
 
@@ -198,7 +198,7 @@
         <div class="max-w-screen-xl mx-auto flex items-center justify-between gap-4">
             <div class="flex items-center gap-4 min-w-0">
                 <div class="w-9 h-9 rounded-full bg-molveno-blue-500 flex items-center justify-center shrink-0 shadow-sm">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l-4 9v11"/><path d="M4 2h16"/><path d="M6 22h12"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/></svg>
                 </div>
                 <div class="min-w-0">
                     <p class="text-sm font-bold text-gray-800 truncate">

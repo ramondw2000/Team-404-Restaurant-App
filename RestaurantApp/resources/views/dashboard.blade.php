@@ -123,6 +123,25 @@
             </a>
             @endcan
 
+            {{-- Bar Orders --}}
+            @can('Create Bar Order')
+            <a href="{{ route('bar-orders.create') }}"
+               class="group bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-start gap-4 hover:border-molveno-blue-500 hover:shadow-md transition-all duration-200">
+                <div class="shrink-0 w-11 h-11 rounded-lg bg-molveno-blue-500/10 flex items-center justify-center text-molveno-blue-500 group-hover:bg-molveno-blue-500 group-hover:text-white transition-colors duration-200">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-gray-900 group-hover:text-molveno-blue-700 transition-colors duration-200">New Bar Order</h3>
+                    <p class="text-sm text-gray-500 mt-1 leading-relaxed">Create and manage new bar drink orders.</p>
+                </div>
+                <svg class="shrink-0 w-4 h-4 text-gray-300 group-hover:text-molveno-blue-500 mt-1 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </a>
+            @endcan
+
             {{-- Statistics --}}
             @can('View Statistics')
             <a href="{{ route('statistics') }}"
