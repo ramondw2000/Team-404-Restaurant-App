@@ -209,6 +209,16 @@
                 Delete Dish
             </x-ui.button>
         </form>
+
+        <!-- Availability Toggle Form -->
+        <form id="toggle-availability-form" method="POST" class="hidden mr-3">
+            @csrf
+            @method('PATCH')
+            <x-ui.button type="submit" id="sheet-availability-btn" size="sm" variant="secondary">
+                Mark Unavailable
+            </x-ui.button>
+        </form>
+
         <x-ui.button variant="secondary" onclick="closeSheet()" class="ml-auto" size="sm">
             Cancel
         </x-ui.button>

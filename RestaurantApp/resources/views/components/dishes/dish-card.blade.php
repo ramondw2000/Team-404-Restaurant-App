@@ -2,7 +2,7 @@
 
 <div class="dish-card rounded-2xl shadow-md overflow-hidden flex flex-col
             cursor-pointer select-none transition-all duration-150
-            hover:shadow-xl hover:-translate-y-1"
+            hover:shadow-xl hover:-translate-y-1 {{ $dish['is_available'] ? '' : 'opacity-60' }}"
      data-id="{{ $dish['id'] }}"
      data-name="{{ strtolower($dish['name']) }}"
      data-description="{{ $dish['description'] ?? '' }}"
@@ -12,6 +12,7 @@
      data-price="{{ $dish['price'] }}"
      data-color="{{ $dish['color'] }}"
      data-photo="{{ $dish['photo_path'] ? asset('storage/' . $dish['photo_path']) : '' }}"
+     data-available="{{ $dish['is_available'] ? '1' : '0' }}"
      onclick="openEditSheet(this)">
 
     <!-- Image / placeholder -->
@@ -34,7 +35,14 @@
 
     <!-- Info strip -->
     <div class="shrink-0 bg-white px-3 py-2 flex flex-col gap-1">
-        <p class="font-bold text-molveno-blue-700 text-xs leading-tight line-clamp-2">{{ $dish['name'] }}</p>
+        <div class="flex items-start justify-between gap-1">
+            <p class="font-bold text-molveno-blue-700 text-xs leading-tight line-clamp-2">{{ $dish['name'] }}</p>
+            @if(!$dish['is_available'])
+                <span class="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-200 text-gray-600">
+                    Unavailable
+                </span>
+            @endif
+        </div>
         <p class="text-primary font-black text-xs">&euro;{{ number_format($dish['price'], 2) }}</p>
         <div class="flex items-center gap-1 flex-wrap">
             @foreach($dish['allergens'] as $allergen)

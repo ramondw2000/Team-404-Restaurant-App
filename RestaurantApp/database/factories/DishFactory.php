@@ -21,6 +21,7 @@ class DishFactory extends Factory
             'price' => fake()->randomFloat(2, 3, 30),
             'color' => '#309bcf',
             'photo_path' => null,
+            'is_available' => true,
         ];
     }
 }

@@ -143,6 +143,7 @@ class OrderPage extends Component
 
         $dishes = Dish::query()
             ->with('ingredients')
+            ->where('is_available', true)
             ->whereHas('menuCategories', function ($query): void {
                 $query->where('menu_categories.menu_id', $this->activeMenuId);
 

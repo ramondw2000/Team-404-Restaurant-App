@@ -113,6 +113,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:Delete Dishes')
         ->name('dishes.destroy');
 
+    Route::patch('/dishes/{dish}/toggle-availability', [DishController::class, 'toggleAvailability'])
+        ->middleware('permission:Edit Dishes')
+        ->name('dishes.toggle-availability');
+
     Route::get('/maintenance', [MaintenanceController::class, 'index'])
         ->middleware('permission:View Maintenance')
         ->name('maintenance');
