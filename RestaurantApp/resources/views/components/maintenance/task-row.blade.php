@@ -4,6 +4,7 @@
     <x-ui.td>
         <span class="font-semibold text-gray-900">{{ $task->name }}</span>
     </x-ui.td>
+    <x-ui.td class="text-gray-600 text-sm whitespace-nowrap">{{ $task->location }}</x-ui.td>
     <x-ui.td class="text-gray-400 text-xs whitespace-nowrap">
         {{ $task->created_at->format('M d, Y') }}
     </x-ui.td>
