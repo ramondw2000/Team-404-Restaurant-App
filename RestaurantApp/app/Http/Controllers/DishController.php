@@ -100,4 +100,16 @@ class DishController extends Controller
 
         return redirect()->route('dishes')->with('success', 'Dish deleted successfully.');
     }
+
+    /**
+     * Toggle the availability status of the specified dish.
+     */
+    public function toggleAvailability(Dish $dish): RedirectResponse
+    {
+        $dish->update(['is_available' => !$dish->is_available]);
+
+        $status = $dish->is_available ? 'available' : 'unavailable';
+
+        return redirect()->route('dishes')->with('success', "Dish marked as {$status}.");
+    }
 }

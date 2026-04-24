@@ -333,6 +333,15 @@
                 >
                     Delete Dish
                 </x-ui.button>
+
+                {{-- Availability Toggle --}}
+                <x-ui.button
+                    variant="{{ $isAvailable ? 'secondary' : 'primary' }}"
+                    size="sm"
+                    wire:click="toggleAvailability"
+                >
+                    {{ $isAvailable ? 'Mark Unavailable' : 'Mark Available' }}
+                </x-ui.button>
             @endif
             <x-ui.button variant="secondary" wire:click="close" class="{{ $dishId ? '' : 'ml-auto' }}" size="sm">
                 Cancel

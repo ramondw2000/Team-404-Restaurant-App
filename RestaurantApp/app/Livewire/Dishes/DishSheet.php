@@ -38,6 +38,9 @@ class DishSheet extends Component
 
     public ?string $existingPhotoPath = null;
 
+    #[Validate('boolean')]
+    public bool $isAvailable = true;
+
     // Ingredients
     /** @var list<int> */
     public array $ingredientIds = [];
@@ -70,6 +73,7 @@ class DishSheet extends Component
             $this->price = $dish->price;
             $this->color = $dish->color;
             $this->existingPhotoPath = $dish->photo_path;
+            $this->isAvailable = $dish->is_available;
             $this->ingredientIds = $dish->ingredients->pluck('id')->all();
 
             $this->menuAssignments = $dish->menuCategories->map(fn (MenuCategory $mc): array => [
@@ -227,6 +231,7 @@ class DishSheet extends Component
             'description' => $this->description,
             'price' => $this->price,
             'color' => $this->color ?: '#309bcf',
+            'is_available' => $this->isAvailable,
         ];
 
         if ($this->photo) {
@@ -274,6 +279,21 @@ class DishSheet extends Component
         $dish->delete();
 
         $this->dispatch('dish-deleted');
+    }
+
+    public function toggleAvailability(): void
+    {
+        $this->authorize('Edit Dishes');
+
+        if (! $this->dishId) {
+            return;
+        }
+
+        $dish = Dish::findOrFail($this->dishId);
+        $this->isAvailable = !$dish->is_available;
+        $dish->update(['is_available' => $this->isAvailable]);
+
+        $this->dispatch('dish-saved');
     }
 
     public function close(): void

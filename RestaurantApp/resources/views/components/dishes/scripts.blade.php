@@ -12,6 +12,7 @@
         document.getElementById('sheet-panel').classList.remove('open');
         document.body.style.overflow = '';
         currentDishId = null;
+        document.getElementById('toggle-availability-form').classList.add('hidden');
     }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
@@ -86,6 +87,7 @@
         document.getElementById('sheet-subtitle').textContent = 'Fill in the details below to add a dish to the menu.';
         document.getElementById('sheet-save-btn').textContent = 'Save Dish';
         document.getElementById('delete-dish-form').classList.add('hidden');
+        document.getElementById('toggle-availability-form').classList.add('hidden');
         document.getElementById('current-photo-preview').classList.add('hidden');
         document.getElementById('upload-zone-wrapper').classList.remove('hidden');
         document.getElementById('dish-name').value   = '';
@@ -103,14 +105,23 @@
     function openEditSheet(card) {
         const name = card.querySelector('.font-bold').textContent.trim();
         currentDishId = card.dataset.id;
+        const isAvailable = card.dataset.available === '1';
 
         document.getElementById('dish-form').action = '/dishes/' + currentDishId + '/update';
         document.getElementById('delete-dish-form').action = '/dishes/' + currentDishId;
+        document.getElementById('toggle-availability-form').action = '/dishes/' + currentDishId + '/toggle-availability';
         document.getElementById('sheet-title').textContent    = 'Edit Dish';
         document.getElementById('sheet-subtitle').innerHTML   =
             'Editing: <span class="font-semibold text-gray-600">' + name + '</span>';
         document.getElementById('sheet-save-btn').textContent = 'Update Dish';
         document.getElementById('delete-dish-form').classList.remove('hidden');
+        document.getElementById('toggle-availability-form').classList.remove('hidden');
+
+        // Update availability button text
+        const availabilityBtn = document.getElementById('sheet-availability-btn');
+        availabilityBtn.textContent = isAvailable ? 'Mark Unavailable' : 'Mark Available';
+        availabilityBtn.classList.toggle('variant-secondary', isAvailable);
+        availabilityBtn.classList.toggle('variant-primary', !isAvailable);
 
         document.getElementById('upload-zone-wrapper').classList.add('hidden');
         document.getElementById('current-photo-preview').classList.remove('hidden');
