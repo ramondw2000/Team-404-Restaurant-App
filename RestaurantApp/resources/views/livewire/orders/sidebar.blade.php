@@ -2,6 +2,18 @@
 
     {{-- Menu list --}}
     <div class="flex-1 overflow-y-auto px-3 py-4">
+        {{-- Bar shortcut --}}
+        <button
+            wire:click="selectBar"
+            class="w-full flex items-center gap-2 px-3 py-2 mb-3 rounded-lg text-sm font-medium transition-colors
+                {{ $barMode ? 'bg-molveno-blue-500 text-white' : 'text-gray-700 hover:bg-gray-50 border border-gray-200' }}"
+        >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2h8l-4 9v11"/><path d="M4 2h16"/><path d="M6 22h12"/>
+            </svg>
+            <span class="truncate flex-1 text-left">Bar (Drinks)</span>
+        </button>
+
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Menus</h3>
 
         @if($this->menus->isEmpty())

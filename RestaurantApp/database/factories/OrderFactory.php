@@ -22,8 +22,14 @@ class OrderFactory extends Factory
         return [
             'floor_plan_element_id' => FloorPlanElement::factory(),
             'status' => OrderStatus::Draft,
+            'origin' => 'restaurant',
             'notes' => fake()->optional()->sentence(),
         ];
+    }
+
+    public function bar(): static
+    {
+        return $this->state(['origin' => 'bar', 'floor_plan_element_id' => null]);
     }
 
     public function draft(): static

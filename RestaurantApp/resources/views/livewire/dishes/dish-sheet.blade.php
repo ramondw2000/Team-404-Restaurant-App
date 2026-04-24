@@ -274,6 +274,21 @@
                 @endif
             </div>
 
+            {{-- Bar item toggle --}}
+            <div>
+                <label class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                        type="checkbox"
+                        wire:model.live="isBarItem"
+                        class="mt-0.5 w-4 h-4 rounded border-gray-300 text-molveno-blue-600 focus:ring-molveno-blue-500"
+                    >
+                    <span class="flex-1">
+                        <span class="block text-sm font-semibold text-gray-700">Available at the bar</span>
+                        <span class="block text-xs text-gray-400 mt-0.5">Show this dish on the standalone Bar order page and on the Bar tab when ordering for a table.</span>
+                    </span>
+                </label>
+            </div>
+
             {{-- Menu Assignments --}}
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Menu Assignments</label>

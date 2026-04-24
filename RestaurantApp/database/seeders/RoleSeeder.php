@@ -28,6 +28,8 @@ class RoleSeeder extends Seeder
                 'View Orders', 'Create Order', 'Edit Order', 'Cancel Order', 'Process Payment', 'Assign Table',
                 // Can view kitchen and bar orders to check status
                 'View Kitchen Orders', 'View Bar Orders',
+                // Servers can also start a standalone bar order for walk-up guests
+                'Create Bar Order',
                 // Table management for seating guests
                 'View Table Management',
             ],
@@ -46,8 +48,8 @@ class RoleSeeder extends Seeder
             'color' => 'amber',
             'is_administrator' => false,
             'permissions' => [
-                // Bar order fulfillment
-                'View Bar Orders', 'Send Bar Orders',
+                // Bar order fulfillment + walk-up bar orders
+                'View Bar Orders', 'Send Bar Orders', 'Create Bar Order',
             ],
         ],
         'receptionist' => [
@@ -66,7 +68,7 @@ class RoleSeeder extends Seeder
             'permissions' => [
                 // Hybrid role: helps with both kitchen and bar
                 'View Kitchen Orders', 'View Bar Orders',
-                'Mark Orders Ready', 'Send Bar Orders',
+                'Mark Orders Ready', 'Send Bar Orders', 'Create Bar Order',
             ],
         ],
         'maintenance_crew' => [

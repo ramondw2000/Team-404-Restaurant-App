@@ -23,6 +23,7 @@
                 <livewire:orders.sidebar
                     :activeMenuId="$activeMenuId"
                     :activeCategoryId="$activeCategoryId"
+                    :barMode="$barMode"
                     :floorPlanId="$table->floor_plan_id"
                     wire:key="order-sidebar-{{ $table->id }}"
                 />
@@ -68,6 +69,7 @@
                 <livewire:orders.sidebar
                     :activeMenuId="$activeMenuId"
                     :activeCategoryId="$activeCategoryId"
+                    :barMode="$barMode"
                     :floorPlanId="$table->floor_plan_id"
                     wire:key="order-sidebar-mobile-{{ $table->id }}"
                 />
@@ -106,7 +108,7 @@
                         </x-slot:actions>
                     </x-ui.page-header>
 
-                    @if(!$activeMenuId)
+                    @if(!$activeMenuId && !$barMode)
                         {{-- No menu selected --}}
                         <x-ui.empty-state
                             icon="book-open"
@@ -120,11 +122,11 @@
                             {{-- Search --}}
                             <x-ui.search-input
                                 wire:model.live.debounce.300ms="search"
-                                placeholder="Search dishes…"
+                                placeholder="{{ $barMode ? 'Search drinks…' : 'Search dishes…' }}"
                             />
 
-                            {{-- Category tabs --}}
-                            @if($this->categories->isNotEmpty())
+                            {{-- Category tabs (hidden in bar mode) --}}
+                            @if(!$barMode && $this->categories->isNotEmpty())
                                 <x-ui.tab-group class="overflow-x-auto scrollbar-hide pb-0.5">
                                     <x-ui.tab
                                         :active="$activeCategoryId === null"

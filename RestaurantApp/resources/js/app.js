@@ -484,14 +484,18 @@ window.canvasElement = function (elementData) {
 
         syncToLivewire() {
             this.isDirty = false;
-            this.$dispatch('element-transformed', {
-                elementId: this.elementId,
-                x: this.x,
-                y: this.y,
-                width: this.width,
-                height: this.height,
-                rotation: this.rotation,
-            });
+            // Call the Livewire method directly. Alpine's $dispatch creates a DOM
+            // CustomEvent that the #[On('element-transformed')] PHP listener does
+            // not receive — using $wire ensures the args reach the component and
+            // pendingChanges is populated, so Save Changes actually persists.
+            this.$wire.updateElementTransform(
+                this.elementId,
+                this.x,
+                this.y,
+                this.width,
+                this.height,
+                this.rotation,
+            );
         },
 
         startRotate(event) {
