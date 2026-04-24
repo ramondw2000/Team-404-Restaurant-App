@@ -2,9 +2,11 @@
     x-data="{
         show: false,
         name: '',
+        location: '',
         notes: '',
         open() {
             this.name = '';
+            this.location = '';
             this.notes = '';
             this.show = true;
             document.body.style.overflow = 'hidden';
@@ -96,6 +98,32 @@
                     <p x-show="name.length >= maxLen" class="text-xs text-red-500">Maximum of 255 characters reached.</p>
                 </div>
 
+                <div x-data="{ maxLen: 255 }" class="flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-semibold text-gray-700" for="create-task-location">Location</label>
+                        <span
+                            class="text-xs tabular-nums"
+                            :class="{
+                                'text-red-500 font-semibold': location.length >= maxLen,
+                                'text-amber-500':             location.length >= maxLen * 0.9 && location.length < maxLen,
+                                'text-gray-400':              location.length < maxLen * 0.9,
+                            }"
+                            x-text="location.length + ' / ' + maxLen"
+                        ></span>
+                    </div>
+                    <input
+                        id="create-task-location"
+                        name="location"
+                        type="text"
+                        x-model="location"
+                        :maxlength="maxLen"
+                        placeholder="e.g. Kitchen, Bar, Dining room…"
+                        class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-molveno-blue-300 focus:border-molveno-blue-400 text-gray-700 placeholder:text-gray-400"
+                        :class="{ 'border-red-400 focus:ring-red-200 focus:border-red-400': location.length >= maxLen }"
+                    />
+                    <p x-show="location.length >= maxLen" class="text-xs text-red-500">Maximum of 255 characters reached.</p>
+                </div>
+
                 <div x-data="{ maxLen: 1000 }" class="flex flex-col gap-1.5">
                     <div class="flex items-center justify-between">
                         <label class="text-sm font-semibold text-gray-700" for="create-task-notes">Note <span class="text-gray-400 font-normal">(optional)</span></label>
@@ -126,7 +154,7 @@
             {{-- Footer --}}
             <div class="shrink-0 flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 bg-white">
                 <x-ui.button type="button" variant="secondary" @click="close()">Cancel</x-ui.button>
-                <x-ui.button type="submit" x-bind:disabled="name.trim() === ''">
+                <x-ui.button type="submit" x-bind:disabled="name.trim() === '' || location.trim() === ''">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 5v14M5 12h14"/>
                     </svg>

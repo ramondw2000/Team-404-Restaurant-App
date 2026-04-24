@@ -14,6 +14,7 @@ class MaintenanceTask extends Model
 
     protected $fillable = [
         'name',
+        'location',
         'status',
         'notes',
     ];
