@@ -25,6 +25,8 @@ class OrderPage extends Component
 
     public ?int $activeCategoryId = null;
 
+    public bool $barMode = false;
+
     public string $search = '';
 
     /** @var list<string> */
@@ -137,19 +139,23 @@ class OrderPage extends Component
     #[Computed]
     public function dishes(): Collection
     {
-        if (! $this->activeMenuId) {
+        if (! $this->barMode && ! $this->activeMenuId) {
             return new Collection;
         }
 
         $dishes = Dish::query()
             ->with('ingredients')
             ->where('is_available', true)
-            ->whereHas('menuCategories', function ($query): void {
-                $query->where('menu_categories.menu_id', $this->activeMenuId);
+            ->when($this->barMode, function ($query): void {
+                $query->where('is_bar_item', true);
+            }, function ($query): void {
+                $query->whereHas('menuCategories', function ($q): void {
+                    $q->where('menu_categories.menu_id', $this->activeMenuId);
 
-                if ($this->activeCategoryId) {
-                    $query->where('menu_categories.id', $this->activeCategoryId);
-                }
+                    if ($this->activeCategoryId) {
+                        $q->where('menu_categories.id', $this->activeCategoryId);
+                    }
+                });
             })
             ->when($this->search !== '', function ($query): void {
                 $query->where(function ($q): void {
@@ -190,6 +196,17 @@ class OrderPage extends Component
     {
         $this->activeMenuId = $menuId;
         $this->activeCategoryId = null;
+        $this->barMode = false;
+        $this->search = '';
+        unset($this->categories, $this->dishes);
+    }
+
+    #[On('setBarMode')]
+    public function setBarMode(): void
+    {
+        $this->barMode = true;
+        $this->activeMenuId = null;
+        $this->activeCategoryId = null;
         $this->search = '';
         unset($this->categories, $this->dishes);
     }
@@ -206,6 +223,7 @@ class OrderPage extends Component
     {
         $this->activeMenuId = $menuId;
         $this->activeCategoryId = $categoryId;
+        $this->barMode = false;
         $this->search = '';
         unset($this->categories, $this->dishes);
     }

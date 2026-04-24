@@ -1,18 +1,18 @@
 <?php
 
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\DishController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\KitchenOrderController;
 use App\Http\Controllers\MaintenanceController;
-use App\Http\Controllers\OrderManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
+use App\Livewire\Dishes\DishesPage;
+use App\Livewire\Orders\BarOrderPage;
+use App\Livewire\Orders\OrderPage;
 use App\Livewire\Reservations;
 use App\Livewire\TableManagement;
-use App\Livewire\Dishes\DishesPage;
-use App\Livewire\Orders\OrderPage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -79,7 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders', function () {
         return view('orders');
     })->middleware('permission:View Kitchen Orders|View Bar Orders')
-      ->name('orders');
+        ->name('orders');
 
     Route::livewire('/reservations', Reservations::class)
         ->middleware('permission:View Reservations')
@@ -136,6 +136,10 @@ Route::middleware('auth')->group(function () {
     Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
         ->middleware('permission:Create Order')
         ->name('orders.create');
+
+    Route::livewire('/bar-orders/create', BarOrderPage::class)
+        ->middleware('permission:Create Bar Order')
+        ->name('bar-orders.create');
 });
 
 require __DIR__.'/auth.php';

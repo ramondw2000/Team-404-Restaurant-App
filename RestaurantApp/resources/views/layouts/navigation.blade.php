@@ -50,8 +50,8 @@
                     @endcanany
 
                     {{-- Production Units --}}
-                    @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes'])
-                    <x-nav-dropdown label="Production Units" :active="request()->routeIs('orders') || request()->routeIs('dishes')">
+                    @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes', 'Create Bar Order'])
+                    <x-nav-dropdown label="Production Units" :active="request()->routeIs('orders') || request()->routeIs('dishes') || request()->routeIs('bar-orders.*')">
                         @canany(['View Kitchen Orders', 'View Bar Orders'])
                         <x-nav-dropdown-item
                             :href="route('orders')"
@@ -59,6 +59,13 @@
                             description="Combined Kitchen and Bar orders with toggle."
                             :active="request()->routeIs('orders')" />
                         @endcanany
+                        @can('Create Bar Order')
+                        <x-nav-dropdown-item
+                            :href="route('bar-orders.create')"
+                            title="New Bar Order"
+                            description="Walk-up bar order — no table required."
+                            :active="request()->routeIs('bar-orders.*')" />
+                        @endcan
                         @can('View Dishes')
                         <x-nav-dropdown-item
                             :href="route('dishes')"
@@ -189,13 +196,18 @@
             @endcanany
 
             {{-- Production Units --}}
-            @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes'])
+            @canany(['View Kitchen Orders', 'View Bar Orders', 'View Dishes', 'Create Bar Order'])
             <div class="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Production Units</div>
             @canany(['View Kitchen Orders', 'View Bar Orders'])
             <x-responsive-nav-link :href="route('orders')" :active="request()->routeIs('orders')">
                 {{ __('Orders') }}
             </x-responsive-nav-link>
             @endcanany
+            @can('Create Bar Order')
+            <x-responsive-nav-link :href="route('bar-orders.create')" :active="request()->routeIs('bar-orders.*')">
+                {{ __('New Bar Order') }}
+            </x-responsive-nav-link>
+            @endcan
             @can('View Dishes')
             <x-responsive-nav-link :href="route('dishes')" :active="request()->routeIs('dishes')">
                 {{ __('Dishes') }}

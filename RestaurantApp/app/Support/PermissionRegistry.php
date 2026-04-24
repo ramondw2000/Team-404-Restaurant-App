@@ -40,6 +40,7 @@ class PermissionRegistry
             'permissions' => [
                 ['name' => 'View Bar Orders', 'description' => 'Access the Bar Orders page'],
                 ['name' => 'Send Bar Orders', 'description' => 'Mark a bar ticket as ready and send it out'],
+                ['name' => 'Create Bar Order', 'description' => 'Start a standalone bar order (no table required)'],
             ],
         ],
         [

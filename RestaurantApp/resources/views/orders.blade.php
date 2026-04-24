@@ -31,11 +31,14 @@
                     $dbOrders = \App\Models\Order::with(['items.dish.ingredients', 'floorPlanElement', 'user', 'reservation'])
                         ->whereIn('status', [\App\Enums\OrderStatus::Active->value, \App\Enums\OrderStatus::Completed->value])
                         ->where('paid', false)
+                        ->where('origin', 'restaurant')
                         ->latest()
                         ->get();
 
                 $kitchenOrders = $dbOrders->map(function ($order) {
-                    $dishes = $order->items->map(function ($item) {
+                    $kitchenItems = $order->items->filter(fn ($item) => ! ($item->dish?->is_bar_item ?? false));
+
+                    $dishes = $kitchenItems->map(function ($item) {
                         return [
                             'item_id' => $item->id,
                             'name' => $item->dish?->name ?? 'Unknown',
@@ -44,7 +47,7 @@
                             'notes' => $item->notes ?? '',
                             'status' => $item->status->value,
                         ];
-                    })->all();
+                    })->values()->all();
 
                     $statuses = array_column($dishes, 'status');
                     $cntPending = count(array_filter($statuses, fn ($s) => $s === 'pending' || $s === 'preparing'));
@@ -72,6 +75,8 @@
                     ];
                 });
 
+                $kitchenOrders = $kitchenOrders->filter(fn ($o) => count($o['dishes']) > 0)->values();
+
                 $kitchenCountActive = count($kitchenOrders->filter(fn ($o) => $o['overall'] !== 'completed'));
                 $kitchenCountCompleted = count($kitchenOrders->filter(fn ($o) => $o['overall'] === 'completed'));
                 $kitchenTotalPending = (int) $kitchenOrders->sum('cnt_pending');
@@ -81,34 +86,67 @@
                 }
             }
 
-            // Bar Orders (mock data from BarOrderController) - only if user has permission
+            // Bar Orders — real data; an order shows up here if it has at least one bar item.
             $barOrders = [];
+            $barCountActive = 0;
+            $barCountCompleted = 0;
+            $barTotalPending = 0;
+            $barTotalReady = 0;
+
             if ($canViewBar) {
-                $barOrders = [
-                ['id' => 'ORD-047', 'type' => 'table', 'table' => 'A3', 'time' => '18:32', 'waiter' => 'Sofia R.', 'drinks' => [['name' => 'Aperol Spritz', 'qty' => 2, 'notes' => 'Extra ice', 'status' => 'pending'], ['name' => 'Acqua Minerale', 'qty' => 3, 'notes' => 'Still water, no ice', 'status' => 'pending'], ['name' => 'Espresso Martini', 'qty' => 1, 'notes' => '', 'status' => 'pending']]],
-                ['id' => 'ORD-046', 'type' => 'bar', 'table' => null, 'time' => '18:28', 'waiter' => 'Marco D.', 'drinks' => [['name' => 'Negroni', 'qty' => 1, 'notes' => 'Less Campari', 'status' => 'pending'], ['name' => 'Birra alla Spina', 'qty' => 2, 'notes' => '', 'status' => 'pending']]],
-                ['id' => 'ORD-045', 'type' => 'table', 'table' => 'B7', 'time' => '18:14', 'waiter' => 'Elena V.', 'drinks' => [['name' => 'Vino Rosso della Casa', 'qty' => 1, 'notes' => '', 'status' => 'served'], ['name' => 'Limoncello', 'qty' => 2, 'notes' => 'Chilled glasses', 'status' => 'served'], ['name' => 'Caffè Americano', 'qty' => 1, 'notes' => '', 'status' => 'served']]],
-                ['id' => 'ORD-044', 'type' => 'bar', 'table' => null, 'time' => '18:09', 'waiter' => 'Marco D.', 'drinks' => [['name' => 'Mojito', 'qty' => 2, 'notes' => 'One virgin', 'status' => 'pending'], ['name' => 'Prosecco', 'qty' => 1, 'notes' => '', 'status' => 'pending'], ['name' => 'Succo di Frutta', 'qty' => 1, 'notes' => 'Orange juice only', 'status' => 'served']]],
-                ['id' => 'ORD-043', 'type' => 'table', 'table' => 'A12', 'time' => '18:05', 'waiter' => 'Sofia R.', 'drinks' => [['name' => 'Vino Bianco', 'qty' => 2, 'notes' => '', 'status' => 'pending'], ['name' => 'San Pellegrino', 'qty' => 3, 'notes' => 'With lemon slices', 'status' => 'pending']]],
-                ['id' => 'ORD-042', 'type' => 'table', 'table' => 'C2', 'time' => '17:58', 'waiter' => 'Elena V.', 'drinks' => [['name' => 'Grappa', 'qty' => 1, 'notes' => '', 'status' => 'served'], ['name' => 'Caffè Affogato', 'qty' => 2, 'notes' => 'Decaf espresso', 'status' => 'served'], ['name' => 'Amaretto Sour', 'qty' => 1, 'notes' => '', 'status' => 'served']]],
-                ['id' => 'ORD-041', 'type' => 'bar', 'table' => null, 'time' => '17:45', 'waiter' => 'Marco D.', 'drinks' => [['name' => 'Gin Tonic', 'qty' => 2, 'notes' => 'Hendricks with cucumber', 'status' => 'served'], ['name' => 'Bellini', 'qty' => 1, 'notes' => '', 'status' => 'served']]],
-                ['id' => 'ORD-040', 'type' => 'table', 'table' => 'B2', 'time' => '17:38', 'waiter' => 'Sofia R.', 'drinks' => [['name' => 'Campari Soda', 'qty' => 1, 'notes' => '', 'status' => 'pending'], ['name' => 'Chinotto', 'qty' => 2, 'notes' => '', 'status' => 'pending'], ['name' => 'Espresso', 'qty' => 3, 'notes' => 'One decaf', 'status' => 'served']]],
-            ];
+                try {
+                    $dbBarOrders = \App\Models\Order::with(['items.dish', 'floorPlanElement', 'user'])
+                        ->whereIn('status', [\App\Enums\OrderStatus::Active->value, \App\Enums\OrderStatus::Completed->value])
+                        ->where('paid', false)
+                        ->where(function ($query) {
+                            $query->where('origin', 'bar')
+                                ->orWhereHas('items.dish', fn ($q) => $q->where('is_bar_item', true));
+                        })
+                        ->latest()
+                        ->get();
 
-                foreach ($barOrders as &$order) {
-                    $statuses = array_column($order['drinks'], 'status');
-                    $order['cnt_pending'] = count(array_filter($statuses, fn ($s) => $s === 'pending'));
-                    $order['cnt_ready'] = count(array_filter($statuses, fn ($s) => $s === 'ready'));
-                    $order['cnt_served'] = count(array_filter($statuses, fn ($s) => $s === 'served'));
-                    $order['cnt_total'] = count($statuses);
-                    $order['overall'] = $order['cnt_served'] === $order['cnt_total'] ? 'completed' : ($order['cnt_ready'] > 0 ? 'ready' : 'pending');
+                    $barOrders = $dbBarOrders->map(function ($order) {
+                        $barItems = $order->items->filter(fn ($item) => ($item->dish?->is_bar_item ?? false));
+
+                        $drinks = $barItems->map(fn ($item) => [
+                            'item_id' => $item->id,
+                            'name' => $item->dish?->name ?? 'Unknown',
+                            'qty' => $item->quantity,
+                            'notes' => $item->notes ?? '',
+                            'status' => $item->status->value,
+                        ])->values()->all();
+
+                        $statuses = array_column($drinks, 'status');
+                        $cntPending = count(array_filter($statuses, fn ($s) => $s === 'pending' || $s === 'preparing'));
+                        $cntReady = count(array_filter($statuses, fn ($s) => $s === 'ready'));
+                        $cntServed = count(array_filter($statuses, fn ($s) => $s === 'served'));
+                        $cntTotal = count($statuses);
+                        $overall = $cntTotal > 0 && $cntServed === $cntTotal ? 'completed'
+                            : ($cntReady > 0 && $cntPending === 0 ? 'ready' : 'pending');
+
+                        return [
+                            'id' => 'ORD-'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
+                            'db_id' => $order->id,
+                            'type' => $order->origin === 'bar' ? 'bar' : 'table',
+                            'table' => $order->floorPlanElement?->table_name,
+                            'time' => $order->created_at?->format('H:i') ?? '—',
+                            'waiter' => $order->user?->name ?? '—',
+                            'drinks' => $drinks,
+                            'cnt_pending' => $cntPending,
+                            'cnt_ready' => $cntReady,
+                            'cnt_served' => $cntServed,
+                            'cnt_total' => $cntTotal,
+                            'overall' => $overall,
+                        ];
+                    })->filter(fn ($o) => count($o['drinks']) > 0)->values()->all();
+
+                    $barCountActive = count(array_filter($barOrders, fn ($o) => $o['overall'] !== 'completed'));
+                    $barCountCompleted = count(array_filter($barOrders, fn ($o) => $o['overall'] === 'completed'));
+                    $barTotalPending = array_sum(array_column($barOrders, 'cnt_pending'));
+                    $barTotalReady = array_sum(array_column($barOrders, 'cnt_ready'));
+                } catch (\Exception $e) {
+                    // Tables may not exist yet
                 }
-                unset($order);
-
-                $barCountActive = count(array_filter($barOrders, fn ($o) => $o['overall'] !== 'completed'));
-                $barCountCompleted = count(array_filter($barOrders, fn ($o) => $o['overall'] === 'completed'));
-                $barTotalPending = array_sum(array_column($barOrders, 'cnt_pending'));
-                $barTotalReady = array_sum(array_column($barOrders, 'cnt_ready'));
             }
         @endphp
 

@@ -19,6 +19,7 @@ class Order extends Model
         'reservation_id',
         'user_id',
         'status',
+        'origin',
         'paid',
         'notes',
     ];

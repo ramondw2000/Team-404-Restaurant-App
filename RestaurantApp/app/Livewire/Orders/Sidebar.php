@@ -17,6 +17,9 @@ class Sidebar extends Component
     #[Reactive]
     public ?int $activeCategoryId = null;
 
+    #[Reactive]
+    public bool $barMode = false;
+
     public int $floorPlanId;
 
     /** @var array<int, bool> */
@@ -41,6 +44,11 @@ class Sidebar extends Component
     public function selectCategory(int $menuId, int $categoryId): void
     {
         $this->dispatch('setMenuCategory', menuId: $menuId, categoryId: $categoryId)->to(OrderPage::class);
+    }
+
+    public function selectBar(): void
+    {
+        $this->dispatch('setBarMode')->to(OrderPage::class);
     }
 
     public function toggleMenu(int $menuId): void

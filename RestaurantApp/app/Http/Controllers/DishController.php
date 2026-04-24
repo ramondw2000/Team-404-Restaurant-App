@@ -15,18 +15,20 @@ class DishController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'price'       => ['required', 'numeric', 'min:0'],
-            'color'       => ['nullable', 'string', 'max:7'],
-            'photo'       => ['nullable', 'image', 'max:2048'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'color' => ['nullable', 'string', 'max:7'],
+            'photo' => ['nullable', 'image', 'max:2048'],
+            'is_bar_item' => ['nullable', 'boolean'],
         ]);
 
         $data = [
-            'name'        => $validated['name'],
+            'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'price'       => $validated['price'],
-            'color'       => $validated['color'] ?? '#3b82f6',
+            'price' => $validated['price'],
+            'color' => $validated['color'] ?? '#3b82f6',
+            'is_bar_item' => (bool) ($validated['is_bar_item'] ?? false),
         ];
 
         if ($request->hasFile('photo')) {
@@ -54,18 +56,20 @@ class DishController extends Controller
     public function update(Request $request, Dish $dish): RedirectResponse
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'price'       => ['required', 'numeric', 'min:0'],
-            'color'       => ['nullable', 'string', 'max:7'],
-            'photo'       => ['nullable', 'image', 'max:2048'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'color' => ['nullable', 'string', 'max:7'],
+            'photo' => ['nullable', 'image', 'max:2048'],
+            'is_bar_item' => ['nullable', 'boolean'],
         ]);
 
         $data = [
-            'name'        => $validated['name'],
+            'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'price'       => $validated['price'],
-            'color'       => $validated['color'] ?? $dish->color,
+            'price' => $validated['price'],
+            'color' => $validated['color'] ?? $dish->color,
+            'is_bar_item' => (bool) ($validated['is_bar_item'] ?? false),
         ];
 
         if ($request->hasFile('photo')) {
@@ -106,7 +110,7 @@ class DishController extends Controller
      */
     public function toggleAvailability(Dish $dish): RedirectResponse
     {
-        $dish->update(['is_available' => !$dish->is_available]);
+        $dish->update(['is_available' => ! $dish->is_available]);
 
         $status = $dish->is_available ? 'available' : 'unavailable';
 

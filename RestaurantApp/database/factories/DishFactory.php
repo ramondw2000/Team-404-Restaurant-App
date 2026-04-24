@@ -22,6 +22,12 @@ class DishFactory extends Factory
             'color' => '#309bcf',
             'photo_path' => null,
             'is_available' => true,
+            'is_bar_item' => false,
         ];
+    }
+
+    public function barItem(): static
+    {
+        return $this->state(['is_bar_item' => true]);
     }
 }
