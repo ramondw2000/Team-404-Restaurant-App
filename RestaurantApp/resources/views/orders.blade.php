@@ -185,9 +185,7 @@
                         <button type="button" id="btn-bar" class="mode-btn px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 text-gray-600 hover:bg-white hover:shadow-md" onclick="setMode('bar')">
                             <span class="bg-gray-200 p-1.5 rounded-lg">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M8 2h8l-4 9v11"/>
-                                    <path d="M4 2h16"/>
-                                    <path d="M6 22h12"/>
+                                    <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>
                                 </svg>
                             </span>
                             Bar
@@ -259,9 +257,7 @@
                         <x-ui.empty-state title="No bar orders match this filter.">
                             <x-slot:icon>
                                 <svg class="text-gray-300 mb-3" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M8 2h8l-4 9v11"/>
-                                    <path d="M4 2h16"/>
-                                    <path d="M6 22h12"/>
+                                    <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>
                                 </svg>
                             </x-slot:icon>
                         </x-ui.empty-state>
