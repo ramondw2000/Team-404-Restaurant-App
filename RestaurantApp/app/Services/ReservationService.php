@@ -91,8 +91,11 @@ final readonly class ReservationService
         ]);
 
         // Mark table as Reserved only when the reservation is imminent (≤ 30 min away)
+        // AND the table is not already occupied
         $reservationTime = Carbon::parse($data['reservation_datetime']);
-        if ($reservationTime->isFuture() && $reservationTime->diffInMinutes(now()) <= 30) {
+        if ($reservationTime->isFuture()
+            && $reservationTime->diffInMinutes(now()) <= 30
+            && $element->status !== TableStatus::Occupied) {
             $element->update(['status' => TableStatus::Reserved]);
         }
 
@@ -101,9 +104,24 @@ final readonly class ReservationService
 
     /**
      * Seat a reservation (mark as arrived, set table to Occupied).
+     *
+     * @throws \RuntimeException If table is already occupied by another guest.
      */
     public function seatReservation(Reservation $reservation): Reservation
     {
+        // Prevent seating if another guest is already at this table
+        // Check fresh database state to avoid stale relationship issues
+        if ($reservation->floor_plan_element_id) {
+            $existingArrived = Reservation::where('floor_plan_element_id', $reservation->floor_plan_element_id)
+                ->where('status', 'arrived')
+                ->where('id', '!=', $reservation->id)
+                ->exists();
+
+            if ($existingArrived) {
+                throw new \RuntimeException('This table is already occupied by another guest.');
+            }
+        }
+
         $reservation->update(['status' => 'arrived']);
 
         if ($reservation->floorPlanElement) {

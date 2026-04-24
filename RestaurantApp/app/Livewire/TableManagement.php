@@ -1006,24 +1006,28 @@ class TableManagement extends Component
 
     public function createReservation(): void
     {
+        $element = FloorPlanElement::find($this->reservationElementId);
+
         $this->validate([
-            'reservationGuestName' => ['required', 'string', 'max:255'],
-            'reservationPhone' => ['nullable', 'string', 'max:50'],
+            'reservationGuestName' => ['required', 'string', 'min:2', 'max:255', 'regex:/[a-zA-Z]/'],
+            'reservationPhone' => ['nullable', 'string', 'max:50', 'regex:/^[\d\s\+\-\(\)]*$/'],
             'reservationEmail' => ['nullable', 'email', 'max:255'],
-            'reservationPartySize' => ['required', 'integer', 'min:1', 'max:20'],
-            'reservationDatetime' => ['required', 'date', 'after:now'],
+            'reservationPartySize' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:' . ($element?->seat_count ?? 20),
+            ],
+            'reservationDatetime' => ['required', 'date', 'after:now', 'before:+6 months'],
             'reservationNotes' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'reservationGuestName.regex' => 'The guest name must contain at least one letter.',
+            'reservationPhone.regex' => 'The phone number may only contain digits, spaces, and + - ( ) characters.',
+            'reservationPartySize.max' => 'The party size cannot exceed the table capacity of :max seats.',
+            'reservationDatetime.before' => 'Reservations can only be made up to 6 months in advance.',
         ]);
 
-        $element = FloorPlanElement::find($this->reservationElementId);
         if (! $element) {
-            return;
-        }
-
-        // Check table is not currently occupied
-        if ($element->status === TableStatus::Occupied) {
-            $this->addError('reservationDatetime', 'This table is currently occupied.');
-
             return;
         }
 
@@ -1033,6 +1037,22 @@ class TableManagement extends Component
         // Check availability
         if (! $reservationService->isTableAvailableAt($element->id, $dateTime)) {
             $this->addError('reservationDatetime', 'This table is already reserved around that time (2-hour window).');
+
+            return;
+        }
+
+        // Check for duplicate reservation (same name + time + table)
+        $existingReservation = Reservation::where('floor_plan_element_id', $element->id)
+            ->where('guest_name', $this->reservationGuestName)
+            ->whereBetween('reservation_datetime', [
+                $dateTime->copy()->subMinutes(5),
+                $dateTime->copy()->addMinutes(5),
+            ])
+            ->whereNotIn('status', ['cancelled', 'no_show', 'departed'])
+            ->exists();
+
+        if ($existingReservation) {
+            $this->addError('reservationGuestName', 'A reservation with this name already exists for this table around the same time.');
 
             return;
         }
@@ -1061,9 +1081,13 @@ class TableManagement extends Component
             return;
         }
 
-        app(ReservationService::class)->seatReservation($reservation);
-        $this->unsetComputed();
-        $this->dispatch('notify', message: $reservation->guest_name.' has been seated.');
+        try {
+            app(ReservationService::class)->seatReservation($reservation);
+            $this->unsetComputed();
+            $this->dispatch('notify', message: $reservation->guest_name.' has been seated.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('notify', message: $e->getMessage(), type: 'error');
+        }
     }
 
     /**

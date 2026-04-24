@@ -1,10 +1,13 @@
 <?php
 
+use App\Enums\TableStatus;
 use App\Livewire\TableManagement;
 use App\Models\FloorPlan;
 use App\Models\FloorPlanElement;
 use App\Models\Image;
+use App\Models\Reservation;
 use App\Models\User;
+use App\Services\ReservationService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -372,4 +375,97 @@ it('creates an image without crop fields', function () {
 
     // Crop columns should not exist
     expect(array_key_exists('crop_x', $image->getAttributes()))->toBeFalse();
+});
+
+// ── Seating Reservations ─────────────────────────────────────
+
+it('prevents seating a guest at an already occupied table', function () {
+    $user = tableManagementUser();
+    $plan = FloorPlan::factory()->create();
+    $element = FloorPlanElement::factory()->create([
+        'floor_plan_id' => $plan->id,
+        'shape' => 'round',
+        'seat_count' => 4,
+        'status' => TableStatus::Occupied,
+    ]);
+
+    // First guest is already seated
+    $reservation1 = Reservation::factory()->create([
+        'floor_plan_element_id' => $element->id,
+        'status' => 'arrived',
+        'reservation_datetime' => now(),
+    ]);
+
+    // Second reservation exists but guest hasn't arrived yet
+    $reservation2 = Reservation::factory()->create([
+        'floor_plan_element_id' => $element->id,
+        'status' => 'scheduled',
+        'reservation_datetime' => now()->addHour(),
+    ]);
+
+    // Trying to seat the second guest should fail
+    Livewire::actingAs($user)
+        ->test(TableManagement::class)
+        ->call('seatReservation', $reservation2->id)
+        ->assertDispatched('notify', message: 'This table is already occupied by another guest.', type: 'error');
+
+    // Verify reservation2 status hasn't changed
+    expect($reservation2->fresh()->status)->toBe('scheduled');
+});
+
+it('allows re-seating the same guest without error', function () {
+    $user = tableManagementUser();
+    $plan = FloorPlan::factory()->create();
+    $element = FloorPlanElement::factory()->create([
+        'floor_plan_id' => $plan->id,
+        'shape' => 'round',
+        'seat_count' => 4,
+        'status' => TableStatus::Occupied,
+    ]);
+
+    // Guest is already seated
+    $reservation = Reservation::factory()->create([
+        'floor_plan_element_id' => $element->id,
+        'status' => 'arrived',
+        'reservation_datetime' => now(),
+    ]);
+
+    // Re-seating the same guest should succeed (idempotent)
+    Livewire::actingAs($user)
+        ->test(TableManagement::class)
+        ->call('seatReservation', $reservation->id)
+        ->assertDispatched('notify', message: $reservation->guest_name.' has been seated.');
+
+    expect($reservation->fresh()->status)->toBe('arrived');
+});
+
+it('allows creating reservations for future times when table is occupied', function () {
+    $user = tableManagementUser();
+    $plan = FloorPlan::factory()->create();
+    $element = FloorPlanElement::factory()->create([
+        'floor_plan_id' => $plan->id,
+        'shape' => 'round',
+        'seat_count' => 4,
+        'status' => TableStatus::Occupied,
+    ]);
+
+    // Guest is currently seated
+    Reservation::factory()->create([
+        'floor_plan_element_id' => $element->id,
+        'status' => 'arrived',
+        'reservation_datetime' => now(),
+    ]);
+
+    // Should still be able to create a reservation for 3 hours later
+    Livewire::actingAs($user)
+        ->test(TableManagement::class)
+        ->call('openTableSheet', $element->id)
+        ->call('openReservationModal', $element->id)
+        ->set('reservationGuestName', 'Future Guest')
+        ->set('reservationPartySize', 2)
+        ->set('reservationDatetime', now()->addHours(3)->format('Y-m-d\TH:i'))
+        ->call('createReservation')
+        ->assertDispatched('notify', message: 'Reservation created successfully.');
+
+    expect(Reservation::where('guest_name', 'Future Guest')->exists())->toBeTrue();
 });
