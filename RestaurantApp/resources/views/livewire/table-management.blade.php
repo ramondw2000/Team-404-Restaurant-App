@@ -866,7 +866,6 @@
                             wire:click="openReservationModal({{ $tableEl['id'] }})"
                             variant="outline"
                             class="w-full justify-center"
-                            :disabled="$currentStatus && $currentStatus->value === 'Occupied'"
                         >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
