@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
+use App\Models\Dish;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -59,7 +60,7 @@ class StatisticsController extends Controller
             return $type;
         });
 
-        $topItems = $completedOrders
+        $allItems = $completedOrders
             ->flatMap(fn (array $order) => $order['items'])
             ->groupBy('name')
             ->map(function (Collection $items, string $name) use ($taxRate) {
@@ -69,16 +70,45 @@ class StatisticsController extends Controller
                     0.0,
                 );
                 $revenue = round($subtotal * (1 + $taxRate), 2);
+                $isBarItem = $items->first()['is_bar_item'] ?? false;
 
                 return [
                     'name' => $name,
                     'qty' => $qty,
                     'revenue' => $revenue,
+                    'is_bar_item' => $isBarItem,
                 ];
-            })
-            ->sortByDesc('revenue')
-            ->values()
-            ->take(5);
+            });
+
+        $dishItems = $allItems->filter(fn (array $item): bool => ! $item['is_bar_item']);
+        $barItems = $allItems->filter(fn (array $item): bool => $item['is_bar_item']);
+
+        $topItems = $dishItems->sortByDesc('qty')->values()->take(5);
+        $leastSoldDishes = $dishItems->filter(fn (array $item): bool => $item['qty'] > 0)
+            ->sortBy('qty')->values()->take(5);
+
+        $topBarDrinks = $barItems->sortByDesc('qty')->values()->take(5);
+        $leastSoldBarDrinks = $barItems->filter(fn (array $item): bool => $item['qty'] > 0)
+            ->sortBy('qty')->values()->take(5);
+
+        $totalBarRevenue = $barItems->sum('revenue');
+        $totalDishRevenue = $dishItems->sum('revenue');
+
+        $soldNames = $allItems->pluck('name')->all();
+
+        $unsoldDishes = Dish::where('is_available', true)
+            ->where('is_bar_item', false)
+            ->whereNotIn('name', $soldNames)
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
+
+        $unsoldBarDrinks = Dish::where('is_available', true)
+            ->where('is_bar_item', true)
+            ->whereNotIn('name', $soldNames)
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
 
         $recentOrders = $completedOrders->sortByDesc('closed_at')->values();
 
@@ -88,6 +118,13 @@ class StatisticsController extends Controller
             'averageOrderValue' => $averageOrderValue,
             'salesByType' => $salesByType,
             'topItems' => $topItems,
+            'leastSoldDishes' => $leastSoldDishes,
+            'topBarDrinks' => $topBarDrinks,
+            'leastSoldBarDrinks' => $leastSoldBarDrinks,
+            'totalBarRevenue' => $totalBarRevenue,
+            'totalDishRevenue' => $totalDishRevenue,
+            'unsoldDishes' => $unsoldDishes,
+            'unsoldBarDrinks' => $unsoldBarDrinks,
             'recentOrders' => $recentOrders,
             'period' => $period,
         ]);
@@ -112,6 +149,7 @@ class StatisticsController extends Controller
                 'name' => $item->dish?->name ?? 'Unknown',
                 'qty' => $item->quantity,
                 'price' => (float) $item->unit_price,
+                'is_bar_item' => (bool) $item->dish?->is_bar_item,
             ])->all();
 
             return [

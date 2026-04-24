@@ -42,6 +42,39 @@ it('KitchenOrderController passes orders and computed counts', function () {
     expect($orders[0])->toHaveKeys(['id', 'type', 'dishes', 'cnt_pending', 'cnt_total', 'overall']);
 });
 
+it('StatisticsController passes sales data and unsold items', function () {
+    $soldDish = Dish::factory()->create(['name' => 'Sold Pasta']);
+    $unsoldDish = Dish::factory()->create(['name' => 'Unsold Risotto']);
+    $soldDrink = Dish::factory()->barItem()->create(['name' => 'Sold Beer']);
+    $unsoldDrink = Dish::factory()->barItem()->create(['name' => 'Unsold Juice']);
+
+    $order = Order::factory()->completed()->create();
+    OrderItem::factory()->create(['order_id' => $order->id, 'dish_id' => $soldDish->id, 'quantity' => 3]);
+    OrderItem::factory()->create(['order_id' => $order->id, 'dish_id' => $soldDrink->id, 'quantity' => 2]);
+
+    $response = $this->get(route('statistics'));
+
+    $response->assertOk();
+    $response->assertViewHas('totalSales');
+    $response->assertViewHas('orderCount');
+    $response->assertViewHas('topItems');
+    $response->assertViewHas('leastSoldDishes');
+    $response->assertViewHas('topBarDrinks');
+    $response->assertViewHas('leastSoldBarDrinks');
+    $response->assertViewHas('totalDishRevenue');
+    $response->assertViewHas('totalBarRevenue');
+    $response->assertViewHas('unsoldDishes');
+    $response->assertViewHas('unsoldBarDrinks');
+
+    $unsoldDishes = $response->viewData('unsoldDishes');
+    $unsoldBarDrinks = $response->viewData('unsoldBarDrinks');
+
+    expect($unsoldDishes)->toContain('Unsold Risotto')
+        ->not->toContain('Sold Pasta');
+    expect($unsoldBarDrinks)->toContain('Unsold Juice')
+        ->not->toContain('Sold Beer');
+});
+
 it('AccountController passes users, roleConfig, and counts', function () {
     $response = $this->get(route('accounts.index'));
 
