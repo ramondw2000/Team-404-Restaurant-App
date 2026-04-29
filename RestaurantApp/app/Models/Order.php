@@ -20,6 +20,8 @@ class Order extends Model
         'user_id',
         'status',
         'origin',
+        'guest_type',
+        'room_number',
         'paid',
         'notes',
     ];

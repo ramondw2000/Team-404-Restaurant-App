@@ -234,6 +234,70 @@
         <div class="flex-1 overflow-y-auto">
             <div class="max-w-2xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-4">
 
+                {{-- Guest Type Selector --}}
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Payment Method</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                wire:model.live="guestType"
+                                value="walk_in"
+                                class="w-4 h-4 text-molveno-blue-500 border-gray-300 focus:ring-molveno-blue-400"
+                            >
+                            <span class="text-sm text-gray-700">Pay at Bar</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                wire:model.live="guestType"
+                                value="hotel"
+                                class="w-4 h-4 text-molveno-blue-500 border-gray-300 focus:ring-molveno-blue-400"
+                            >
+                            <span class="text-sm text-gray-700">Room Number</span>
+                        </label>
+                    </div>
+
+                    {{-- Room Number Input (Hotel Guest only) --}}
+                    <div x-show="$wire.guestType === 'hotel'" x-transition class="mt-3">
+                        <label class="block text-sm font-medium text-gray-600 mb-1.5">Room Number</label>
+                        <input
+                            type="text"
+                            wire:model.live="roomNumber"
+                            placeholder="e.g. 101"
+                            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-molveno-blue-400 focus:border-transparent"
+                        >
+                    </div>
+                </div>
+
+                {{-- Walk-in Guest Actions --}}
+                <div x-show="$wire.guestType === 'walk_in'" x-transition class="flex gap-3">
+                    <x-ui.button
+                        variant="secondary"
+                        class="flex-1 justify-center"
+                        wire:click="openTicket('print')"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2"/>
+                            <path d="M9 17h6v4H9z"/>
+                            <path d="M7 7h10v4H7z"/>
+                        </svg>
+                        Print Ticket
+                    </x-ui.button>
+                    <x-ui.button
+                        variant="secondary"
+                        class="flex-1 justify-center"
+                        wire:click="openTicket('display')"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                            <path d="M8 21h8"/>
+                            <path d="M12 17v4"/>
+                        </svg>
+                        Display Ticket
+                    </x-ui.button>
+                </div>
+
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Order notes <span class="text-gray-400 font-normal">(optional)</span></label>
                     <textarea
@@ -295,6 +359,18 @@
                     <p class="text-xs text-gray-500">Order total</p>
                     <p class="text-lg font-black text-gray-900 leading-tight">&euro;&nbsp;<span x-text="orderTotal.toFixed(2)"></span></p>
                 </div>
+                <x-ui.button
+                    variant="secondary"
+                    size="lg"
+                    wire:click="markAsPaid"
+                    class="shrink-0"
+                >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    Mark as Paid
+                </x-ui.button>
                 <x-ui.button size="lg" class="shrink-0" x-on:click="submitOrder()" x-bind:disabled="submitting" x-bind:class="submitting ? 'opacity-50 cursor-not-allowed' : ''">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     <span x-text="submitting ? 'Placing…' : 'Place Order'"></span>
@@ -302,6 +378,121 @@
             </div>
         </div>
     </div>
+
+    {{-- Ticket Modal (Print/Display) --}}
+    @if($showTicketModal && $this->ticketData)
+        <div class="fixed inset-0 z-[70] flex items-center justify-center p-4" x-data>
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="closeTicket"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] flex flex-col" @click.stop>
+                {{-- Header --}}
+                <div class="flex items-center justify-between p-4 border-b border-gray-100 shrink-0">
+                    <h2 class="text-base font-bold text-gray-900">
+                        {{ $ticketMode === 'print' ? 'Print Ticket' : 'Order Ticket' }}
+                    </h2>
+                    <button
+                        wire:click="closeTicket"
+                        class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Ticket Content --}}
+                <div class="flex-1 overflow-y-auto" id="ticket-content">
+                    <div class="p-6 space-y-4">
+                        {{-- Header --}}
+                        <div class="text-center">
+                            <h3 class="text-lg font-bold text-gray-900">Molveno Lake Resort</h3>
+                            <p class="text-xs text-gray-500 mt-1">Bar Order</p>
+                            <div class="mt-2 h-px bg-gray-200"></div>
+                        </div>
+
+                        {{-- Order Info --}}
+                        <div class="space-y-1.5 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Order #</span>
+                                <span class="font-medium text-gray-900">BAR-{{ str_pad($this->ticketData['order_id'], 3, '0', STR_PAD_LEFT) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Time</span>
+                                <span class="text-gray-700">{{ $this->ticketData['created_at'] ?? now()->format('H:i') }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Payment</span>
+                                <span class="text-gray-700">{{ $this->ticketData['guest_type'] === 'hotel' ? 'Room Charge' : 'Pay at Bar' }}</span>
+                            </div>
+                            @if($this->ticketData['guest_type'] === 'hotel' && $this->ticketData['room_number'])
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Room</span>
+                                    <span class="text-gray-700">{{ $this->ticketData['room_number'] }}</span>
+                                </div>
+                            @endif
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Server</span>
+                                <span class="text-gray-700">{{ $this->ticketData['waiter'] }}</span>
+                            </div>
+                        </div>
+
+                        <div class="h-px bg-gray-200"></div>
+
+                        {{-- Items --}}
+                        <div class="space-y-2">
+                            @foreach($this->ticketData['items'] as $item)
+                                <div class="flex justify-between text-sm">
+                                    <div class="min-w-0 flex-1">
+                                        <span class="text-gray-900">{{ $item['qty'] }}x</span>
+                                        <span class="text-gray-700 ml-1">{{ $item['name'] }}</span>
+                                        @if(!empty($item['notes']))
+                                            <span class="text-gray-400 text-xs ml-1">({{ $item['notes'] }})</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="h-px bg-gray-200"></div>
+
+                        {{-- Total --}}
+                        <div class="flex justify-between text-base font-bold text-gray-900 pt-1">
+                            <span>Total</span>
+                            <span>&euro; {{ number_format($this->ticketData['total'], 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Actions --}}
+                <div class="p-4 border-t border-gray-100 shrink-0 flex gap-3">
+                    @if($ticketMode === 'print')
+                        <x-ui.button
+                            @click="
+                                const content = document.getElementById('ticket-content').innerHTML;
+                                const w = window.open('', '_blank', 'width=400,height=600');
+                                w.document.write('<html><head><title>Bar Ticket</title><style>body{font-family:system-ui,sans-serif;padding:20px;font-size:13px}*{margin:0;padding:0;box-sizing:border-box}.space-y-4>*+*{margin-top:1rem}.space-y-2>*+*{margin-top:0.5rem}.space-y-1\\.5>*+*{margin-top:0.375rem}.text-center{text-align:center}.flex{display:flex}.justify-between{justify-content:space-between}.font-bold{font-weight:700}.font-medium{font-weight:500}.text-lg{font-size:1.125rem}.text-base{font-size:1rem}.text-sm{font-size:0.875rem}.text-xs{font-size:0.75rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.ml-1{margin-left:0.25rem}.pt-1{padding-top:0.25rem}.min-w-0{min-width:0}.flex-1{flex:1}.shrink-0{flex-shrink:0}hr,.h-px{height:1px;background:#e5e7eb;border:none;margin:0.5rem 0}@media print{body{padding:0}}</style></head><body>' + content + '</body></html>');
+                                w.document.close();
+                                w.focus();
+                                w.print();
+                            "
+                            class="flex-1 justify-center"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                            Print
+                        </x-ui.button>
+                    @endif
+                    <x-ui.button
+                        variant="secondary"
+                        wire:click="closeTicket"
+                        class="flex-1 justify-center"
+                    >
+                        Close
+                    </x-ui.button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <script>
         function barOrderCart(initialCart = {}) {

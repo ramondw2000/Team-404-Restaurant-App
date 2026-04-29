@@ -19,6 +19,14 @@ class BarOrderPage extends Component
 
     public int $orderId;
 
+    public string $guestType = 'walk_in';
+
+    public string $roomNumber = '';
+
+    public bool $showTicketModal = false;
+
+    public string $ticketMode = 'display';
+
     public function mount(): void
     {
         $existingOrder = Order::query()
@@ -31,6 +39,8 @@ class BarOrderPage extends Component
 
         if ($existingOrder) {
             $this->orderId = $existingOrder->id;
+            $this->guestType = $existingOrder->guest_type ?? 'walk_in';
+            $this->roomNumber = $existingOrder->room_number ?? '';
 
             return;
         }
@@ -41,9 +51,26 @@ class BarOrderPage extends Component
             'user_id' => auth()->id(),
             'status' => OrderStatus::Draft,
             'origin' => 'bar',
+            'guest_type' => 'walk_in',
         ]);
 
         $this->orderId = $order->id;
+    }
+
+    public function updatedGuestType(): void
+    {
+        $order = Order::find($this->orderId);
+        if ($order) {
+            $order->update(['guest_type' => $this->guestType === 'hotel' ? 'hotel' : 'walk_in']);
+        }
+    }
+
+    public function updatedRoomNumber(): void
+    {
+        $order = Order::find($this->orderId);
+        if ($order) {
+            $order->update(['room_number' => $this->roomNumber ?: null]);
+        }
     }
 
     /**
@@ -137,6 +164,8 @@ class BarOrderPage extends Component
             'status' => OrderStatus::Active,
             'notes' => $orderNotes,
             'user_id' => auth()->id(),
+            'guest_type' => $this->guestType === 'hotel' ? 'hotel' : 'walk_in',
+            'room_number' => $this->roomNumber ?: null,
         ]);
 
         $this->dispatch('toast', message: 'Bar order placed successfully!', type: 'success');
@@ -144,6 +173,58 @@ class BarOrderPage extends Component
         $this->js("setTimeout(() => { window.location.href = '".route('orders')."'; }, 2000)");
     }
 
+<<<<<<< Updated upstream
+=======
+    public function openTicket(string $mode): void
+    {
+        $this->ticketMode = $mode;
+        $this->showTicketModal = true;
+    }
+
+    public function closeTicket(): void
+    {
+        $this->showTicketModal = false;
+    }
+
+    public function markAsPaid(): void
+    {
+        $this->authorize('Create Bar Order');
+
+        $order = Order::findOrFail($this->orderId);
+        $order->update(['paid' => true]);
+
+        $this->dispatch('toast', message: 'Order marked as paid!', type: 'success');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    #[Computed]
+    public function ticketData(): ?array
+    {
+        $order = Order::with(['items.dish', 'user'])->find($this->orderId);
+        if (! $order) {
+            return null;
+        }
+
+        $items = $order->items->map(fn ($item): array => [
+            'name' => $item->dish?->name ?? 'Unknown',
+            'qty' => $item->quantity,
+            'notes' => $item->notes,
+        ])->all();
+
+        return [
+            'order_id' => $order->id,
+            'guest_type' => $order->guest_type ?? 'walk_in',
+            'room_number' => $order->room_number,
+            'items' => $items,
+            'total' => $order->items->sum(fn ($item) => $item->quantity * $item->unit_price),
+            'created_at' => $order->created_at?->format('H:i'),
+            'waiter' => $order->user?->name ?? '—',
+        ];
+    }
+
+>>>>>>> Stashed changes
     public function render(): View
     {
         return view('livewire.orders.bar-order-page')
