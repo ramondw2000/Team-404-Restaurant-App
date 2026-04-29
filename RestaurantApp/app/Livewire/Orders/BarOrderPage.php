@@ -173,8 +173,6 @@ class BarOrderPage extends Component
         $this->js("setTimeout(() => { window.location.href = '".route('orders')."'; }, 2000)");
     }
 
-<<<<<<< Updated upstream
-=======
     public function openTicket(string $mode): void
     {
         $this->ticketMode = $mode;
@@ -224,7 +222,6 @@ class BarOrderPage extends Component
         ];
     }
 
->>>>>>> Stashed changes
     public function render(): View
     {
         return view('livewire.orders.bar-order-page')
