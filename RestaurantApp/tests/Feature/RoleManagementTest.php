@@ -290,23 +290,41 @@ it('auto-revokes gated permissions when the view gate is disabled', function () 
     expect($serverRole->hasPermissionTo('Edit Order'))->toBeFalse();
 });
 
-it('allows enabling a gated permission once its view gate is on', function () {
+it('auto-grants all gated permissions when the view gate is enabled', function () {
     $user = managementUser();
     $serverRole = Role::where('name', 'server')->first();
 
-    // Enable view gate first
+    expect($serverRole->hasPermissionTo('View Dishes'))->toBeFalse();
+    expect($serverRole->hasPermissionTo('Add Dishes'))->toBeFalse();
+    expect($serverRole->hasPermissionTo('Edit Dishes'))->toBeFalse();
+    expect($serverRole->hasPermissionTo('Delete Dishes'))->toBeFalse();
+
     Livewire::actingAs($user)
         ->test(RoleManagement::class)
         ->call('selectRole', $serverRole->id)
         ->call('togglePermission', 'View Dishes');
 
-    expect($serverRole->fresh()->hasPermissionTo('View Dishes'))->toBeTrue();
+    $serverRole->refresh();
+    expect($serverRole->hasPermissionTo('View Dishes'))->toBeTrue();
+    expect($serverRole->hasPermissionTo('Add Dishes'))->toBeTrue();
+    expect($serverRole->hasPermissionTo('Edit Dishes'))->toBeTrue();
+    expect($serverRole->hasPermissionTo('Delete Dishes'))->toBeTrue();
+});
 
-    // Now the gated permission can be enabled
+it('allows disabling a gated permission individually after the gate is on', function () {
+    $user = managementUser();
+    $serverRole = Role::where('name', 'server')->first();
+
+    // View Orders is on by default for server, with action perms granted
+    expect($serverRole->hasPermissionTo('View Orders'))->toBeTrue();
+    expect($serverRole->hasPermissionTo('Create Order'))->toBeTrue();
+
     Livewire::actingAs($user)
         ->test(RoleManagement::class)
         ->call('selectRole', $serverRole->id)
-        ->call('togglePermission', 'Add Dishes');
+        ->call('togglePermission', 'Create Order');
 
-    expect($serverRole->fresh()->hasPermissionTo('Add Dishes'))->toBeTrue();
+    $serverRole->refresh();
+    expect($serverRole->hasPermissionTo('View Orders'))->toBeTrue();
+    expect($serverRole->hasPermissionTo('Create Order'))->toBeFalse();
 });

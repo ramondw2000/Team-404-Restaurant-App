@@ -233,6 +233,23 @@ class RoleManagement extends Component
             }
 
             $role->givePermissionTo($permission);
+
+            // If enabling a view gate, auto-grant all action permissions it guards
+            if (PermissionRegistry::isViewGate($permissionName)) {
+                foreach (PermissionRegistry::permissionsGatedBy($permissionName) as $gatedName) {
+                    if (isset($this->rolePermissions[$gatedName])) {
+                        continue;
+                    }
+
+                    $gatedPermission = Permission::where('name', $gatedName)->where('guard_name', 'web')->first();
+
+                    if ($gatedPermission === null) {
+                        continue;
+                    }
+
+                    $role->givePermissionTo($gatedPermission);
+                }
+            }
         }
 
         // Bust the memoized cache so the view re-computes from the updated relationship.
