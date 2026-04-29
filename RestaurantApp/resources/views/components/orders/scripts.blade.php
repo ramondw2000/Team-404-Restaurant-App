@@ -1,6 +1,7 @@
 <script>
     const KITCHEN_MARK_READY_URL = '{{ rtrim(route('kitchen-orders.dish.ready', ['orderItem' => '__ID__']), '') }}';
     const KITCHEN_COMPLETE_URL   = '{{ rtrim(route('kitchen-orders.order.complete', ['order' => '__ID__']), '') }}';
+    const KITCHEN_DELETE_URL     = '{{ rtrim(route('kitchen-orders.order.delete', ['order' => '__ID__']), '') }}';
     const KITCHEN_POLL_URL       = '{{ route('kitchen-orders.poll') }}';
     const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content;
     const POLL_INTERVAL_MS       = 5000; // Poll every 5 seconds
@@ -71,6 +72,13 @@
             if (!sendBtn.disabled) {
                 kitchenCompleteOrder(sendBtn);
             }
+            return;
+        }
+
+        const deleteBtn = target.closest('.delete-order-btn');
+        if (deleteBtn) {
+            event.preventDefault();
+            kitchenDeleteOrder(deleteBtn);
         }
     }
 
@@ -116,6 +124,30 @@
         }
     }
 
+    function kitchenDeleteOrder(button) {
+        const card = button.closest('.order-card');
+        const dbId = card?.dataset.orderDbId;
+        if (!dbId) return;
+
+        if (!confirm('Are you sure you want to delete this order?')) return;
+
+        const wasCompleted = card?.dataset.overall === 'completed';
+
+        if (card) {
+            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => card.remove(), 300);
+        }
+
+        kitchenUpdateFilterCounts(wasCompleted ? 'remove_completed' : 'remove_active');
+
+        fetch(KITCHEN_DELETE_URL.replace('__ID__', dbId), {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' },
+        }).catch(() => {});
+    }
+
     function kitchenUpdateFilterCounts(direction) {
         const kitchenPanel = document.getElementById('kitchen-panel') || document;
         const activeCountEl = kitchenPanel.querySelector('button[data-count-type="active"] span');
@@ -130,6 +162,16 @@
             if (completedCountEl) {
                 const current = parseInt(completedCountEl.textContent, 10) || 0;
                 completedCountEl.textContent = current + 1;
+            }
+        } else if (direction === 'remove_active') {
+            if (activeCountEl) {
+                const current = parseInt(activeCountEl.textContent, 10) || 0;
+                activeCountEl.textContent = Math.max(0, current - 1);
+            }
+        } else if (direction === 'remove_completed') {
+            if (completedCountEl) {
+                const current = parseInt(completedCountEl.textContent, 10) || 0;
+                completedCountEl.textContent = Math.max(0, current - 1);
             }
         }
 

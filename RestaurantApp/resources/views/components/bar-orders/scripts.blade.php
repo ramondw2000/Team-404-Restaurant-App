@@ -1,4 +1,5 @@
 <script>
+    const BAR_DELETE_URL = '{{ rtrim(route('kitchen-orders.order.delete', ['order' => '__ID__']), '') }}';
     const BAR_TAB_ACTIVE_CLASSES   = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
     const BAR_TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
     const BAR_TAB_COUNT_ACTIVE_CLASSES   = ['bg-white/25', 'text-white'];
@@ -65,6 +66,13 @@
             if (!sendBtn.disabled) {
                 barCompleteOrder(sendBtn);
             }
+            return;
+        }
+
+        const deleteBtn = target.closest('.delete-order-btn');
+        if (deleteBtn) {
+            event.preventDefault();
+            barDeleteOrder(deleteBtn);
         }
     }
 
@@ -137,6 +145,31 @@
         barSyncCardVisualState(card);
     }
 
+    function barDeleteOrder(button) {
+        const card = button.closest('.order-card');
+        const dbId = card?.dataset.orderDbId;
+        if (!dbId) return;
+
+        if (!confirm('Are you sure you want to delete this order?')) return;
+
+        const wasCompleted = card?.dataset.overall === 'completed';
+
+        if (card) {
+            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => card.remove(), 300);
+        }
+
+        barUpdateFilterCounts(wasCompleted ? 'remove_completed' : 'remove_active');
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        fetch(BAR_DELETE_URL.replace('__ID__', dbId), {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        }).catch(() => {});
+    }
+
     function barUpdateFilterCounts(direction) {
         const barPanel = document.getElementById('bar-panel') || document;
         const activeCountEl    = barPanel.querySelector('button[data-count-type="active"] span');
@@ -145,6 +178,10 @@
         if (direction === 'completed') {
             if (activeCountEl) activeCountEl.textContent = Math.max(0, (parseInt(activeCountEl.textContent, 10) || 0) - 1);
             if (completedCountEl) completedCountEl.textContent = (parseInt(completedCountEl.textContent, 10) || 0) + 1;
+        } else if (direction === 'remove_active') {
+            if (activeCountEl) activeCountEl.textContent = Math.max(0, (parseInt(activeCountEl.textContent, 10) || 0) - 1);
+        } else if (direction === 'remove_completed') {
+            if (completedCountEl) completedCountEl.textContent = Math.max(0, (parseInt(completedCountEl.textContent, 10) || 0) - 1);
         }
         if (allCountEl && activeCountEl && completedCountEl) {
             allCountEl.textContent = (parseInt(activeCountEl.textContent, 10) || 0) + (parseInt(completedCountEl.textContent, 10) || 0);

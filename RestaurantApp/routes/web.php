@@ -75,6 +75,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:Mark Orders Ready')
         ->name('kitchen-orders.order.complete');
 
+    Route::delete('/kitchenorders/orders/{order}', [KitchenOrderController::class, 'deleteOrder'])
+        ->name('kitchen-orders.order.delete');
+
     // Combined Orders page with Kitchen/Bar toggle
     Route::get('/orders', function () {
         return view('orders');
