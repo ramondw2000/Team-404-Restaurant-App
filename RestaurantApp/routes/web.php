@@ -136,6 +136,18 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:Complete Maintenance Task')
         ->name('maintenance.markAsDone');
 
+    Route::patch('/maintenance/{task}/assign', [MaintenanceController::class, 'assign'])
+        ->middleware('permission:View Maintenance')
+        ->name('maintenance.assign');
+
+    Route::patch('/maintenance/{task}/unassign', [MaintenanceController::class, 'unassign'])
+        ->middleware('permission:View Maintenance')
+        ->name('maintenance.unassign');
+
+    Route::patch('/maintenance/{task}/status', [MaintenanceController::class, 'transitionStatus'])
+        ->middleware('permission:View Maintenance')
+        ->name('maintenance.transitionStatus');
+
     Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
         ->middleware('permission:Create Order')
         ->name('orders.create');
