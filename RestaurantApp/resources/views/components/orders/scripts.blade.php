@@ -137,7 +137,10 @@
             card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
             card.style.opacity = '0';
             card.style.transform = 'scale(0.95)';
-            setTimeout(() => card.remove(), 300);
+            setTimeout(() => {
+                card.remove();
+                kitchenApplyCurrentFilter();
+            }, 300);
         }
 
         kitchenUpdateFilterCounts(wasCompleted ? 'remove_completed' : 'remove_active');

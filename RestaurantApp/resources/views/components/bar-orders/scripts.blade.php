@@ -158,7 +158,10 @@
             card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
             card.style.opacity = '0';
             card.style.transform = 'scale(0.95)';
-            setTimeout(() => card.remove(), 300);
+            setTimeout(() => {
+                card.remove();
+                barApplyCurrentFilter();
+            }, 300);
         }
 
         barUpdateFilterCounts(wasCompleted ? 'remove_completed' : 'remove_active');
@@ -272,5 +275,13 @@
 
     function barParseClasses(value) {
         return (value || '').split(' ').filter(Boolean);
+    }
+
+    function barApplyCurrentFilter() {
+        const barPanel = document.getElementById('bar-panel') || document;
+        const activeTab = barPanel.querySelector('button[data-tab].bg-molveno-blue-500');
+        if (activeTab) {
+            barSwitchTab(activeTab);
+        }
     }
 </script>
