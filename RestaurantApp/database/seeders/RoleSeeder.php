@@ -77,7 +77,7 @@ class RoleSeeder extends Seeder
             'permissions' => [
                 // Can view table management to see which tables need attention
                 'View Table Management',
-                'View Maintenance', 'Create Maintenance Task', 'Edit Maintenance Task', 'Complete Maintenance Task',
+                'View Maintenance', 'Create Maintenance Task', 'Edit Maintenance Task', 'Complete Maintenance Task', 'Assign Maintenance Task',
             ],
         ],
     ];

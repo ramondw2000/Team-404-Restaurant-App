@@ -9,7 +9,7 @@ class MaintenanceTaskSeeder extends Seeder
 {
     public function run(): void
     {
-        $pending = [
+        $assigned = [
             ['name' => 'Repair kitchen fridge', 'location' => 'Kitchen'],
             ['name' => 'Replace lamp above table 12', 'location' => 'Dining room'],
             ['name' => 'Inspect restaurant fire alarms', 'location' => 'Entrance'],
@@ -21,7 +21,7 @@ class MaintenanceTaskSeeder extends Seeder
             ['name' => 'Repair wine cooler', 'location' => 'Bar'],
         ];
 
-        $completed = [
+        $done = [
             ['name' => 'Fix leaking tap at bar', 'location' => 'Bar', 'notes' => 'Tap replaced, problem resolved'],
             ['name' => 'Clean kitchen exhaust hood', 'location' => 'Kitchen', 'notes' => 'Hood cleaned and filters replaced'],
             ['name' => 'Repair chair at table 8', 'location' => 'Dining room', 'notes' => 'Chair leg tightened'],
@@ -29,17 +29,17 @@ class MaintenanceTaskSeeder extends Seeder
             ['name' => 'Clean kitchen floor', 'location' => 'Kitchen', 'notes' => 'Floor thoroughly cleaned and disinfected'],
         ];
 
-        foreach ($pending as $task) {
+        foreach ($assigned as $task) {
             MaintenanceTask::firstOrCreate(
                 ['name' => $task['name']],
-                ['location' => $task['location'], 'status' => 'pending', 'notes' => null],
+                ['location' => $task['location'], 'status' => 'assigned', 'notes' => null],
             );
         }
 
-        foreach ($completed as $task) {
+        foreach ($done as $task) {
             MaintenanceTask::firstOrCreate(
                 ['name' => $task['name']],
-                ['location' => $task['location'], 'status' => 'completed', 'notes' => $task['notes']],
+                ['location' => $task['location'], 'status' => 'done', 'notes' => $task['notes']],
             );
         }
     }

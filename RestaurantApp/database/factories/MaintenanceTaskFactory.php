@@ -21,16 +21,37 @@ class MaintenanceTaskFactory extends Factory
         return [
             'name' => $this->faker->sentence(4),
             'location' => $this->faker->randomElement(['Kitchen', 'Bar', 'Dining room', 'Terrace', 'Staff room', 'Entrance']),
-            'status' => MaintenanceTaskStatus::Pending,
+            'status' => MaintenanceTaskStatus::Assigned,
             'notes' => null,
+            'assigned_to' => null,
+            'requirements' => null,
         ];
+    }
+
+    public function inProgress(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => MaintenanceTaskStatus::InProgress,
+        ]);
+    }
+
+    public function done(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => MaintenanceTaskStatus::Done,
+            'notes' => $this->faker->sentence(),
+        ]);
     }
 
     public function completed(): static
     {
+        return $this->done();
+    }
+
+    public function assignedTo(int $userId): static
+    {
         return $this->state(fn (array $attributes) => [
-            'status' => MaintenanceTaskStatus::Completed,
-            'notes' => $this->faker->sentence(),
+            'assigned_to' => $userId,
         ]);
     }
 }
