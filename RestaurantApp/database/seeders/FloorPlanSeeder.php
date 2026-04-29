@@ -64,7 +64,7 @@ class FloorPlanSeeder extends Seeder
             ['shape' => 'rectangular',  'seats' => 4,  'x' => 28.0, 'y' => 30.0, 'w' => 6.1, 'h' => 4.2,  'name' => 'Table 2',  'status' => TableStatus::Available],
             ['shape' => 'rectangular',  'seats' => 6,  'x' => 70.0, 'y' => 30.0, 'w' => 7.4, 'h' => 5.1,  'name' => 'Table 3',  'status' => TableStatus::Available],
             ['shape' => 'round',        'seats' => 6,  'x' => 10.0, 'y' => 55.0, 'w' => 6.8, 'h' => 6.8,  'name' => 'Table 4',  'status' => TableStatus::Available],
-            ['shape' => 'round',        'seats' => 6,  'x' => 28.0, 'y' => 55.0, 'w' => 6.8, 'h' => 6.8,  'name' => 'Table 5',  'status' => TableStatus::Reserved],
+            ['shape' => 'round',        'seats' => 6,  'x' => 28.0, 'y' => 55.0, 'w' => 6.8, 'h' => 6.8,  'name' => 'Table 5',  'status' => TableStatus::Available],
             ['shape' => 'rectangular',  'seats' => 8,  'x' => 48.0, 'y' => 52.0, 'w' => 11.2, 'h' => 6.0, 'name' => 'Table 6', 'status' => TableStatus::Available],
             ['shape' => 'rectangular',  'seats' => 8,  'x' => 65.0, 'y' => 52.0, 'w' => 11.2, 'h' => 6.0, 'name' => 'Table 7', 'status' => TableStatus::Available],
         ];
