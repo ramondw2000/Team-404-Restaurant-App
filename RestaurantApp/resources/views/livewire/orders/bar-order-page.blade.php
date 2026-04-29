@@ -298,16 +298,6 @@
                     </x-ui.button>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Order notes <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <textarea
-                        x-model="orderNotes"
-                        class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl resize-none bg-white focus:outline-none focus:ring-2 focus:ring-molveno-blue-400 focus:border-transparent"
-                        rows="2"
-                        placeholder="Special instructions for the whole order…"
-                    ></textarea>
-                </div>
-
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="bg-molveno-blue-500 px-4 py-3 text-white">
                         <div class="flex items-center justify-between">
