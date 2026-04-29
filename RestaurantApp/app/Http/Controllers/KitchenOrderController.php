@@ -106,6 +106,17 @@ class KitchenOrderController extends Controller
     }
 
     /**
+     * Delete an order and its items.
+     */
+    public function deleteOrder(Order $order): JsonResponse
+    {
+        $order->items()->delete();
+        $order->delete();
+
+        return response()->json(['status' => 'deleted']);
+    }
+
+    /**
      * Poll endpoint for kitchen orders (JSON).
      */
     public function poll(): JsonResponse
