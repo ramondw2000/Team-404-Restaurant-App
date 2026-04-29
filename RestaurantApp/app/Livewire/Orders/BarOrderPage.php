@@ -144,16 +144,6 @@ class BarOrderPage extends Component
         $this->js("setTimeout(() => { window.location.href = '".route('orders')."'; }, 2000)");
     }
 
-    public function cancelOrder(): void
-    {
-        $this->authorize('Create Bar Order');
-
-        $order = Order::findOrFail($this->orderId);
-        $order->update(['status' => OrderStatus::Cancelled]);
-
-        $this->redirect(route('orders'));
-    }
-
     public function render(): View
     {
         return view('livewire.orders.bar-order-page')

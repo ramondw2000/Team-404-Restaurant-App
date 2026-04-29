@@ -16,16 +16,7 @@
                     <x-ui.page-header
                         title="New Bar Order"
                         subtitle="Walk-up bar — no table required"
-                    >
-                        <x-slot:actions>
-                            @can('Create Bar Order')
-                                <x-ui.button variant="danger" wire:click="cancelOrder" wire:confirm="Cancel this bar order?">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                                    Cancel Order
-                                </x-ui.button>
-                            @endcan
-                        </x-slot:actions>
-                    </x-ui.page-header>
+                    />
 
                     {{-- Search --}}
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
