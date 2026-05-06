@@ -12,7 +12,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div>
                     <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Order Ledger</p>
-                    <h3 class="text-base font-semibold text-gray-900 mt-0.5">Completed orders</h3>
+                    <h3 class="text-base font-semibold text-gray-900 mt-0.5">All orders</h3>
                 </div>
                 <div class="flex items-center gap-2">
                     @if(count($this->selectedOrders) > 0)
@@ -140,7 +140,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Order Type</label>
                     <div class="flex gap-1">
-                        @foreach(['' => 'All', 'restaurant' => 'Dine-in', 'room_service' => 'Room Service'] as $value => $label)
+                        @foreach(['' => 'All', 'restaurant' => 'Restaurant', 'bar' => 'Bar'] as $value => $label)
                             <button
                                 wire:click="$set('orderType', '{{ $value }}')"
                                 @class([
@@ -212,6 +212,7 @@
                             </span>
                         </th>
                         <th class="text-center pb-3 pt-4 text-xs font-semibold uppercase tracking-widest text-gray-400">Items</th>
+                        <th class="text-center pb-3 pt-4 text-xs font-semibold uppercase tracking-widest text-gray-400">Status</th>
                         <th wire:click="sortBy('total')" class="text-right pb-3 pt-4 text-xs font-semibold uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600 select-none">
                             <span class="inline-flex items-center gap-1 justify-end">
                                 Total
@@ -259,6 +260,18 @@
                             <td class="py-3 text-gray-500">{{ $order['waiter'] }}</td>
                             <td class="py-3 text-gray-500">{{ $order['customer'] }}</td>
                             <td class="py-3 text-center text-gray-500">{{ count($order['items']) }} items</td>
+                            <td class="py-3 text-center">
+                                <div class="inline-flex flex-col gap-1 items-center">
+                                    <span @class([
+                                        'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide',
+                                        'bg-emerald-100 text-emerald-700' => ! empty($order['paid']),
+                                        'bg-amber-100 text-amber-700' => empty($order['paid']),
+                                    ])>
+                                        {{ ! empty($order['paid']) ? 'Paid' : 'Unpaid' }}
+                                    </span>
+                                    <span class="text-[10px] uppercase tracking-wide text-gray-400">{{ $order['status_label'] ?? '' }}</span>
+                                </div>
+                            </td>
                             <td class="py-3 text-right font-semibold text-molveno-blue-700">&euro; {{ number_format($order['total'], 2) }}</td>
                             <td class="py-3 text-right text-gray-400">{{ $relativeTime }}</td>
                             <td class="py-3 text-right pr-6">
@@ -282,8 +295,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9">
-                                <x-ui.empty-state title="No completed orders found" description="No completed orders found for the selected criteria.">
+                            <td colspan="10">
+                                <x-ui.empty-state title="No orders found" description="No orders match the selected criteria.">
                                     <x-slot:icon>
                                         <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                                     </x-slot:icon>

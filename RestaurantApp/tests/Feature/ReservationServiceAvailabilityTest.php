@@ -12,8 +12,8 @@ it('returns tables with enough seats that have no conflicting reservation', func
     $plan = FloorPlan::factory()->create();
     $table = FloorPlanElement::factory()->create([
         'floor_plan_id' => $plan->id,
-        'seat_count'    => 4,
-        'table_name'    => 'T1',
+        'seat_count' => 4,
+        'table_name' => 'T1',
     ]);
 
     $dateTime = Carbon::parse('2030-01-15 19:00');
@@ -27,16 +27,16 @@ it('excludes tables with an overlapping reservation', function () {
     $plan = FloorPlan::factory()->create();
     $table = FloorPlanElement::factory()->create([
         'floor_plan_id' => $plan->id,
-        'seat_count'    => 4,
-        'table_name'    => 'T2',
+        'seat_count' => 4,
+        'table_name' => 'T2',
     ]);
 
     $dateTime = Carbon::parse('2030-01-15 19:00');
 
     Reservation::factory()->create([
         'floor_plan_element_id' => $table->id,
-        'reservation_datetime'  => $dateTime,
-        'status'                => 'scheduled',
+        'reservation_datetime' => $dateTime,
+        'status' => 'scheduled',
     ]);
 
     $results = app(ReservationService::class)->getAvailableTablesAt($dateTime, 2);
@@ -60,27 +60,26 @@ it('returns reservation_datetime + 2 hours when no later booking exists', functi
     $reservedAt = Carbon::parse('2030-01-15 19:00');
     Reservation::factory()->arrived()->create([
         'floor_plan_element_id' => $table->id,
-        'reservation_datetime'  => $reservedAt,
+        'reservation_datetime' => $reservedAt,
     ]);
 
     expect(app(ReservationService::class)->getStayEndForElement($table->id)->toDateTimeString())
         ->toBe($reservedAt->copy()->addHours(2)->toDateTimeString());
 });
 
-it('uses seated_at over reservation_datetime when guest is seated early', function () {
+it('anchors stay end to reservation_datetime even when seated before reservation time', function () {
     $plan = FloorPlan::factory()->create();
     $table = FloorPlanElement::factory()->create(['floor_plan_id' => $plan->id]);
 
     $reservedAt = Carbon::parse('2030-01-15 19:00');
-    $seatedAt = Carbon::parse('2030-01-15 18:00');
     Reservation::factory()->arrived()->create([
         'floor_plan_element_id' => $table->id,
-        'reservation_datetime'  => $reservedAt,
-        'seated_at'             => $seatedAt,
+        'reservation_datetime' => $reservedAt,
+        'updated_at' => $reservedAt->copy()->subHour(),
     ]);
 
     expect(app(ReservationService::class)->getStayEndForElement($table->id)->toDateTimeString())
-        ->toBe($seatedAt->copy()->addHours(2)->toDateTimeString());
+        ->toBe($reservedAt->copy()->addHours(2)->toDateTimeString());
 });
 
 it('caps stay end at the next scheduled reservation when it lands within the 2-hour window', function () {
@@ -90,13 +89,13 @@ it('caps stay end at the next scheduled reservation when it lands within the 2-h
     $reservedAt = Carbon::parse('2030-01-15 19:00');
     Reservation::factory()->arrived()->create([
         'floor_plan_element_id' => $table->id,
-        'reservation_datetime'  => $reservedAt,
+        'reservation_datetime' => $reservedAt,
     ]);
 
     $nextAt = $reservedAt->copy()->addMinutes(90);
     Reservation::factory()->scheduled()->create([
         'floor_plan_element_id' => $table->id,
-        'reservation_datetime'  => $nextAt,
+        'reservation_datetime' => $nextAt,
     ]);
 
     expect(app(ReservationService::class)->getStayEndForElement($table->id)->toDateTimeString())
@@ -107,8 +106,8 @@ it('excludes tables where seat count is less than party size', function () {
     $plan = FloorPlan::factory()->create();
     $small = FloorPlanElement::factory()->create([
         'floor_plan_id' => $plan->id,
-        'seat_count'    => 2,
-        'table_name'    => 'T3',
+        'seat_count' => 2,
+        'table_name' => 'T3',
     ]);
 
     $dateTime = Carbon::parse('2030-01-15 19:00');
@@ -117,4 +116,3 @@ it('excludes tables where seat count is less than party size', function () {
 
     expect($results->pluck('id'))->not->toContain($small->id);
 });
-

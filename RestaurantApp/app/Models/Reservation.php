@@ -12,13 +12,13 @@ class Reservation extends Model
 {
     /** @use HasFactory<ReservationFactory> */
     use HasFactory;
+
     protected $fillable = [
         'guest_name',
         'phone',
         'email',
         'party_size',
         'reservation_datetime',
-        'seated_at',
         'table_number',
         'floor_plan_element_id',
         'room_number',
@@ -32,7 +32,6 @@ class Reservation extends Model
     {
         return [
             'reservation_datetime' => 'datetime',
-            'seated_at' => 'datetime',
             'party_size' => 'integer',
             'deposit_amount' => 'decimal:2',
         ];

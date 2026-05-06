@@ -1,7 +1,5 @@
 <?php
 
-use App\Enums\OrderItemStatus;
-use App\Enums\OrderStatus;
 use App\Livewire\CompletedOrderTable;
 use App\Models\Dish;
 use App\Models\FloorPlanElement;
@@ -24,14 +22,14 @@ beforeEach(function () {
         'unit_price' => 24.00,
     ]);
 
-    $this->expectedId = 'ORD-' . str_pad((string) $this->completedOrder->id, 3, '0', STR_PAD_LEFT);
+    $this->expectedId = 'ORD-'.str_pad((string) $this->completedOrder->id, 3, '0', STR_PAD_LEFT);
 });
 
 it('renders the completed order table component', function () {
     Livewire::test(CompletedOrderTable::class)
         ->assertStatus(200)
         ->assertSee('Order Ledger')
-        ->assertSee('Completed orders');
+        ->assertSee('All orders');
 });
 
 it('displays completed orders from the database', function () {
@@ -43,13 +41,13 @@ it('displays completed orders from the database', function () {
 it('shows empty state when no orders match the search', function () {
     Livewire::test(CompletedOrderTable::class)
         ->set('search', 'nonexistent-order-xyz')
-        ->assertSee('No completed orders found for the selected criteria');
+        ->assertSee('No orders match the selected criteria.');
 });
 
 it('filters orders by search term on order id', function () {
     $element2 = FloorPlanElement::factory()->create(['table_name' => 'Table B9']);
     $order2 = Order::factory()->completed()->create(['floor_plan_element_id' => $element2->id]);
-    $id2 = 'ORD-' . str_pad((string) $order2->id, 3, '0', STR_PAD_LEFT);
+    $id2 = 'ORD-'.str_pad((string) $order2->id, 3, '0', STR_PAD_LEFT);
 
     Livewire::test(CompletedOrderTable::class)
         ->call('setDateRange', 'all')
@@ -61,7 +59,7 @@ it('filters orders by search term on order id', function () {
 it('filters orders by location multi-select', function () {
     $element2 = FloorPlanElement::factory()->create(['table_name' => 'Table Z99']);
     $order2 = Order::factory()->completed()->create(['floor_plan_element_id' => $element2->id]);
-    $id2 = 'ORD-' . str_pad((string) $order2->id, 3, '0', STR_PAD_LEFT);
+    $id2 = 'ORD-'.str_pad((string) $order2->id, 3, '0', STR_PAD_LEFT);
 
     Livewire::test(CompletedOrderTable::class)
         ->call('setDateRange', 'all')
@@ -155,7 +153,7 @@ it('applies stale row color class for orders older than 30 minutes', function ()
     ]);
 
     $component = Livewire::test(CompletedOrderTable::class)->call('setDateRange', 'all');
-    $staleId = 'ORD-' . str_pad((string) $oldOrder->id, 3, '0', STR_PAD_LEFT);
+    $staleId = 'ORD-'.str_pad((string) $oldOrder->id, 3, '0', STR_PAD_LEFT);
     $order = $component->instance()->allOrders->firstWhere('id', $staleId);
 
     expect($component->instance()->rowClasses($order))->toBe('bg-yellow-50');
@@ -187,4 +185,111 @@ it('exports csv as streamed download', function () {
 
     expect($response->getStatusCode())->toBe(200);
     expect($response->headers->get('Content-Type'))->toBe('text/csv');
+});
+
+it('includes active unpaid restaurant orders in the ledger', function () {
+    /** @var FloorPlanElement $element */
+    $element = FloorPlanElement::factory()->create(['table_name' => 'Table U1']);
+    $dish = Dish::factory()->create(['name' => 'Carbonara', 'price' => 18.00]);
+
+    $unpaid = Order::factory()->active()->create([
+        'floor_plan_element_id' => $element->id,
+        'paid' => false,
+    ]);
+    OrderItem::factory()->pending()->create([
+        'order_id' => $unpaid->id,
+        'dish_id' => $dish->id,
+        'quantity' => 1,
+        'unit_price' => 18.00,
+    ]);
+
+    $unpaidId = 'ORD-'.str_pad((string) $unpaid->id, 3, '0', STR_PAD_LEFT);
+
+    Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
+        ->assertSee($unpaidId)
+        ->assertSee('Unpaid');
+});
+
+it('includes non-table bar orders in the ledger', function () {
+    $dish = Dish::factory()->create(['name' => 'Negroni', 'price' => 9.00, 'is_bar_item' => true]);
+
+    $barOrder = Order::factory()->bar()->active()->create([
+        'paid' => true,
+        'guest_type' => 'walk_in',
+    ]);
+    OrderItem::factory()->served()->create([
+        'order_id' => $barOrder->id,
+        'dish_id' => $dish->id,
+        'quantity' => 1,
+        'unit_price' => 9.00,
+    ]);
+
+    $barId = 'ORD-'.str_pad((string) $barOrder->id, 3, '0', STR_PAD_LEFT);
+
+    Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
+        ->assertSee($barId)
+        ->assertSee('Bar')
+        ->assertSee('Walk-in');
+});
+
+it('includes bar orders linked to a table in the ledger', function () {
+    /** @var FloorPlanElement $element */
+    $element = FloorPlanElement::factory()->create(['table_name' => 'Bar Stool 3']);
+    $dish = Dish::factory()->create(['name' => 'Aperol', 'price' => 8.50, 'is_bar_item' => true]);
+
+    $barTableOrder = Order::factory()->active()->create([
+        'origin' => 'bar',
+        'floor_plan_element_id' => $element->id,
+        'paid' => false,
+    ]);
+    OrderItem::factory()->pending()->create([
+        'order_id' => $barTableOrder->id,
+        'dish_id' => $dish->id,
+        'quantity' => 2,
+        'unit_price' => 8.50,
+    ]);
+
+    $id = 'ORD-'.str_pad((string) $barTableOrder->id, 3, '0', STR_PAD_LEFT);
+
+    Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
+        ->assertSee($id)
+        ->assertSee('Bar Stool 3')
+        ->assertSee('Unpaid');
+});
+
+it('filters ledger by bar order type', function () {
+    /** @var FloorPlanElement $element */
+    $element = FloorPlanElement::factory()->create(['table_name' => 'Table R7']);
+    $restaurantOrder = Order::factory()->completed()->create([
+        'floor_plan_element_id' => $element->id,
+    ]);
+    $restaurantId = 'ORD-'.str_pad((string) $restaurantOrder->id, 3, '0', STR_PAD_LEFT);
+
+    $bar = Order::factory()->bar()->active()->create(['paid' => false]);
+    $barId = 'ORD-'.str_pad((string) $bar->id, 3, '0', STR_PAD_LEFT);
+
+    Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
+        ->set('orderType', 'bar')
+        ->assertSee($barId)
+        ->assertDontSee($restaurantId);
+});
+
+it('excludes draft and cancelled orders from the ledger', function () {
+    /** @var FloorPlanElement $element */
+    $element = FloorPlanElement::factory()->create();
+
+    $draft = Order::factory()->draft()->create(['floor_plan_element_id' => $element->id]);
+    $cancelled = Order::factory()->cancelled()->create(['floor_plan_element_id' => $element->id]);
+
+    $draftId = 'ORD-'.str_pad((string) $draft->id, 3, '0', STR_PAD_LEFT);
+    $cancelledId = 'ORD-'.str_pad((string) $cancelled->id, 3, '0', STR_PAD_LEFT);
+
+    Livewire::test(CompletedOrderTable::class)
+        ->call('setDateRange', 'all')
+        ->assertDontSee($draftId)
+        ->assertDontSee($cancelledId);
 });

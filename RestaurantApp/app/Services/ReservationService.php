@@ -22,9 +22,7 @@ final readonly class ReservationService
 
     /**
      * Compute when the currently seated guest at a table must vacate:
-     * seating start + 2h, capped by the next active reservation's start time.
-     * Stay starts when the guest was actually seated (seated_at), falling back
-     * to reservation_datetime for legacy rows without a recorded seat time.
+     * reservation start + 2h, capped by the next active reservation's start time.
      * Returns null if no guest is currently seated at this table.
      */
     public function getStayEndForElement(int $elementId): ?Carbon
@@ -38,8 +36,7 @@ final readonly class ReservationService
             return null;
         }
 
-        $stayStart = $arrived->seated_at ?? $arrived->reservation_datetime;
-        $defaultEnd = $stayStart->copy()->addHours(self::DEFAULT_STAY_HOURS);
+        $defaultEnd = $arrived->reservation_datetime->copy()->addHours(self::DEFAULT_STAY_HOURS);
 
         $nextReservation = Reservation::where('floor_plan_element_id', $elementId)
             ->where('id', '!=', $arrived->id)
@@ -160,10 +157,7 @@ final readonly class ReservationService
             }
         }
 
-        $reservation->update([
-            'status' => 'arrived',
-            'seated_at' => now(),
-        ]);
+        $reservation->update(['status' => 'arrived']);
 
         if ($reservation->floorPlanElement) {
             $reservation->floorPlanElement->update(['status' => TableStatus::Occupied]);
