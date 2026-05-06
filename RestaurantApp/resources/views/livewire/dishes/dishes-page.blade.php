@@ -100,7 +100,7 @@
     @if($showDishSheet)
         <livewire:dishes.dish-sheet
             :dishId="$editingDishId"
-            wire:key="dish-sheet-{{ $editingDishId ?? 'create' }}-{{ $dishSheetKey }}"
+            wire:key="dish-sheet-{{ $editingDishId ?? 'create' }}"
         />
     @endif
 
