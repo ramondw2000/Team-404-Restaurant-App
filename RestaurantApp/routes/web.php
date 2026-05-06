@@ -153,6 +153,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:View Maintenance')
         ->name('maintenance.transitionStatus');
 
+    Route::delete('/maintenance/{task}', [MaintenanceController::class, 'destroy'])
+        ->middleware('permission:Delete Maintenance Task')
+        ->name('maintenance.destroy');
+
     Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
         ->middleware('permission:Create Order')
         ->name('orders.create');
