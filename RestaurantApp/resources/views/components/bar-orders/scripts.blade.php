@@ -1,5 +1,8 @@
 <script>
     const BAR_DELETE_URL = '{{ rtrim(route('kitchen-orders.order.delete', ['order' => '__ID__']), '') }}';
+    const BAR_MARK_READY_URL = '{{ rtrim(route('kitchen-orders.dish.ready', ['orderItem' => '__ID__']), '') }}';
+    const BAR_COMPLETE_URL = '{{ rtrim(route('kitchen-orders.order.complete', ['order' => '__ID__']), '') }}';
+    const BAR_CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content;
     const BAR_TAB_ACTIVE_CLASSES   = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
     const BAR_TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
     const BAR_TAB_COUNT_ACTIVE_CLASSES   = ['bg-white/25', 'text-white'];
@@ -95,6 +98,14 @@
         }
 
         barUpdateOrderSendState(button.closest('.order-card'));
+
+        const itemId = dishAction?.dataset.itemId;
+        if (itemId) {
+            fetch(BAR_MARK_READY_URL.replace('__ID__', itemId), {
+                method: 'PATCH',
+                headers: { 'X-CSRF-TOKEN': BAR_CSRF_TOKEN, 'Accept': 'application/json' },
+            }).catch(() => {});
+        }
     }
 
     function barCompleteOrder(button) {
@@ -107,6 +118,14 @@
             barMarkAllDrinksServed(card);
             barSyncCardVisualState(card);
             barUpdateFilterCounts('completed');
+        }
+
+        const dbId = card?.dataset.orderDbId;
+        if (dbId) {
+            fetch(BAR_COMPLETE_URL.replace('__ID__', dbId), {
+                method: 'PATCH',
+                headers: { 'X-CSRF-TOKEN': BAR_CSRF_TOKEN, 'Accept': 'application/json' },
+            }).catch(() => {});
         }
     }
 
