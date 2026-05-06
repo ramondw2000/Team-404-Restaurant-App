@@ -10,8 +10,8 @@
         <button type="button"
             @click="$dispatch('open-notes-sheet', {
                 id: {{ $task->id }},
-                notes: '{{ addslashes($task->notes ?? '') }}',
-                taskName: '{{ addslashes($task->name) }}'
+                notes: @json($task->notes ?? ''),
+                taskName: @json($task->name)
             })"
             class="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-molveno-blue-600 hover:text-molveno-blue-800 hover:bg-molveno-blue-50 rounded px-1.5 py-0.5 transition-colors"
             title="Edit note">

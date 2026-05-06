@@ -117,9 +117,10 @@ class BarOrderPage extends Component
             ->where('is_available', true)
             ->where('is_bar_item', true)
             ->when($this->search !== '', function ($query): void {
-                $query->where(function ($q): void {
-                    $q->where('name', 'like', '%'.$this->search.'%')
-                        ->orWhere('description', 'like', '%'.$this->search.'%');
+                $search = '%' . addcslashes($this->search, '%_\\') . '%';
+                $query->where(function ($q) use ($search): void {
+                    $q->whereRaw('name LIKE ?', [$search])
+                        ->orWhereRaw('description LIKE ?', [$search]);
                 });
             })
             ->orderBy('name')

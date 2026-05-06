@@ -10,6 +10,11 @@ class OrderObserver
 {
     /**
      * When a draft order is created, mark the table as Occupied immediately.
+     *
+     * SECURITY NOTE: This observer bypasses authorization checks as it operates
+     * at the model level. Authorization should be enforced at the controller
+     * level before model creation/update. Do not perform model operations
+     * outside of authorized controller flows.
      */
     public function created(Order $order): void
     {

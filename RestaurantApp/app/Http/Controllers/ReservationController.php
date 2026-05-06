@@ -28,6 +28,8 @@ class ReservationController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('Create Reservations');
+
         $validated = $request->validate([
             'guest_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:50',
@@ -49,6 +51,8 @@ class ReservationController extends Controller
 
     public function update(Request $request, Reservation $reservation): RedirectResponse
     {
+        $this->authorize('Update Reservations');
+
         $validated = $request->validate([
             'guest_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:50',
@@ -69,6 +73,8 @@ class ReservationController extends Controller
 
     public function updateStatus(Request $request, Reservation $reservation): RedirectResponse
     {
+        $this->authorize('Update Reservations');
+
         $validated = $request->validate([
             'status' => 'required|string|in:scheduled,arrived,departed,cancelled,late,optional,no_show',
         ]);

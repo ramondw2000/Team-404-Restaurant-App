@@ -54,13 +54,13 @@
                 <span class="text-xs font-semibold text-gray-500 shrink-0">Sort:</span>
                 <x-ui.tab-group>
                     <x-ui.tab :active="$sortBy === 'name'" wire:click="setSort('name')">
-                        Name @if($sortBy === 'name') {!! $sortDir === 'asc' ? '↑' : '↓' !!} @endif
+                        Name @if($sortBy === 'name') {{ $sortDir === 'asc' ? '↑' : '↓' }} @endif
                     </x-ui.tab>
                     <x-ui.tab :active="$sortBy === 'price'" wire:click="setSort('price')">
-                        Price @if($sortBy === 'price') {!! $sortDir === 'asc' ? '↑' : '↓' !!} @endif
+                        Price @if($sortBy === 'price') {{ $sortDir === 'asc' ? '↑' : '↓' }} @endif
                     </x-ui.tab>
                     <x-ui.tab :active="$sortBy === 'created_at'" wire:click="setSort('created_at')">
-                        Newest @if($sortBy === 'created_at') {!! $sortDir === 'asc' ? '↑' : '↓' !!} @endif
+                        Newest @if($sortBy === 'created_at') {{ $sortDir === 'asc' ? '↑' : '↓' }} @endif
                     </x-ui.tab>
                 </x-ui.tab-group>
             </div>

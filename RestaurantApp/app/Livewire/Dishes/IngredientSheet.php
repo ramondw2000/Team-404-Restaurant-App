@@ -59,6 +59,8 @@ class IngredientSheet extends Component
 
     public function deleteIngredient(): void
     {
+        $this->authorize('Delete Dishes');
+
         if (! $this->ingredientId) {
             return;
         }

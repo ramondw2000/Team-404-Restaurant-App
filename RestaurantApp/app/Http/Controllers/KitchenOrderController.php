@@ -121,11 +121,16 @@ class KitchenOrderController extends Controller
      */
     public function poll(): JsonResponse
     {
-        $dbOrders = Order::with(['items.dish.ingredients', 'floorPlanElement', 'user', 'reservation'])
+        // Limit to recent orders and restrict sensitive data exposure
+        $dbOrders = Order::with([
+            'items.dish:id,name,allergens',
+            'floorPlanElement:id,table_name'
+        ])
             ->whereIn('status', [OrderStatus::Active->value, OrderStatus::Completed->value])
             ->where('paid', false)
             ->latest()
-            ->get();
+            ->limit(50)
+            ->get(['id', 'floor_plan_element_id', 'status', 'paid', 'created_at', 'updated_at']);
 
         $orders = $dbOrders->map(function (Order $order): array {
             $dishes = $order->items->map(function ($item): array {

@@ -2,15 +2,15 @@
 
 namespace App\Events;
 
-use App\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 
 class OrderCompleted
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
 
     public function __construct(
-        public Order $order,
+        public int $orderId,
+        public string $orderNumber,
+        public float $total,
     ) {}
 }

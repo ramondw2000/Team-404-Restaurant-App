@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CompletedOrderTable extends Component
 {
-    #[Url]
+    // Search and filters - not exposed in URL to prevent information disclosure
     public string $search = '';
 
     public string $dateRange = 'today';
@@ -32,19 +32,23 @@ class CompletedOrderTable extends Component
 
     public string $orderType = '';
 
+    #[Url]
     public int $perPage = 25;
 
+    #[Url]
     public string $sortField = 'completed_at';
 
+    #[Url]
     public string $sortDirection = 'desc';
 
-    /** @var string[] */
+    /** @var string[] - Not exposed in URL to prevent data leakage */
     public array $selectedOrders = [];
 
     public bool $selectAllOnPage = false;
 
     public bool $showReceiptModal = false;
 
+    // Receipt ID not exposed in URL for privacy
     public ?string $receiptOrderId = null;
 
     /**
@@ -256,6 +260,8 @@ class CompletedOrderTable extends Component
 
     public function exportCsv(): StreamedResponse
     {
+        $this->authorize('Export Orders');
+
         $orders = empty($this->selectedOrders)
             ? $this->filteredOrders
             : $this->filteredOrders->whereIn('id', $this->selectedOrders);

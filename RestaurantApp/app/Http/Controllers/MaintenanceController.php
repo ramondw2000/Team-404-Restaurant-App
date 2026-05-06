@@ -82,6 +82,8 @@ class MaintenanceController extends Controller
      */
     public function markAsDone(MaintenanceTask $task): RedirectResponse
     {
+        $this->authorize('Complete Maintenance Task');
+
         $task->markAsDone();
 
         return redirect()->route('maintenance')->with('success', 'Task marked as done.');

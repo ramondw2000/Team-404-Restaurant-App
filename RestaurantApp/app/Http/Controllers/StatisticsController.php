@@ -13,6 +13,8 @@ class StatisticsController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('View Statistics');
+
         $period = $request->get('period', 'day');
         $validPeriods = ['day', 'week', 'month', 'year'];
         if (! in_array($period, $validPeriods)) {
