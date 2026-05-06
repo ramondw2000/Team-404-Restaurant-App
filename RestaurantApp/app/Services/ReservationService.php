@@ -122,7 +122,10 @@ final readonly class ReservationService
             }
         }
 
-        $reservation->update(['status' => 'arrived']);
+        $reservation->update([
+            'status' => 'arrived',
+            'arrived_at' => now(),
+        ]);
 
         if ($reservation->floorPlanElement) {
             $reservation->floorPlanElement->update(['status' => TableStatus::Occupied]);
@@ -233,7 +236,7 @@ final readonly class ReservationService
     /**
      * Get reservation-to-element mapping for a floor plan (today's active reservations).
      *
-     * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, status: string}>
+     * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, time_24h: string, status: string, arrived_at: string|null, arrived_at_24h: string|null, occupied_until: string|null, occupied_until_24h: string|null, elapsed_formatted: string|null, remaining_formatted: string|null}>
      */
     public function getReservationMapForFloorPlan(int $floorPlanId): array
     {
@@ -243,7 +246,7 @@ final readonly class ReservationService
     /**
      * Reservation map for a floor plan at a specific datetime (±2-hour window).
      *
-     * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, status: string}>
+     * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, time_24h: string, status: string, arrived_at: string|null, arrived_at_24h: string|null, occupied_until: string|null, occupied_until_24h: string|null, elapsed_formatted: string|null, remaining_formatted: string|null}>
      */
     public function getReservationMapForFloorPlanAt(int $floorPlanId, Carbon $datetime): array
     {
@@ -258,13 +261,58 @@ final readonly class ReservationService
             ->get();
 
         $map = [];
+        $now = now();
         foreach ($reservations as $reservation) {
+            $timerInfo = null;
+            if ($reservation->arrived_at) {
+                $arrivedAt = $reservation->arrived_at;
+
+                // Fixed dinner slot: 7:00 PM - 9:00 PM (21:00)
+                $occupiedUntil = $now->copy()->setTime(21, 0, 0);
+                $slotStart = $now->copy()->setTime(19, 0, 0);
+
+                if ($now->lessThan($slotStart)) {
+                    // Before 7pm: no elapsed time, full 2 hours remaining
+                    $elapsedMinutes = 0;
+                    $remainingMinutes = 120;
+                } elseif ($now->greaterThanOrEqualTo($slotStart) && $now->lessThan($occupiedUntil)) {
+                    // Between 7pm and 9pm: normal countdown from slot start
+                    $elapsedMinutes = $slotStart->diffInMinutes($now);
+                    $remainingMinutes = max(0, $now->diffInMinutes($occupiedUntil, false));
+                } else {
+                    // After 9pm: overtime
+                    $elapsedMinutes = $slotStart->diffInMinutes($now);
+                    $remainingMinutes = 0;
+                }
+
+                $elapsedHours = floor($elapsedMinutes / 60);
+                $elapsedMins = $elapsedMinutes % 60;
+                $remainingHours = floor($remainingMinutes / 60);
+                $remainingMins = $remainingMinutes % 60;
+
+                $timerInfo = [
+                    'arrived_at' => $arrivedAt->format('H:i'),
+                    'arrived_at_24h' => $arrivedAt->format('H:i'),
+                    'occupied_until' => '21:00',
+                    'occupied_until_24h' => '21:00',
+                    'elapsed_formatted' => sprintf('%dh %02dm', $elapsedHours, $elapsedMins),
+                    'remaining_formatted' => sprintf('%dh %02dm', $remainingHours, $remainingMins),
+                ];
+            }
+
             $map[$reservation->floor_plan_element_id] = [
                 'reservation_id' => $reservation->id,
                 'guest_name' => $reservation->guest_name,
                 'party_size' => $reservation->party_size,
-                'time' => $reservation->reservation_datetime->format('H:i'),
+                'time' => $reservation->reservation_datetime->format('g:i a'), // 12-hour format
+                'time_24h' => $reservation->reservation_datetime->format('H:i'), // 24-hour format
                 'status' => $reservation->status,
+                'arrived_at' => $timerInfo['arrived_at'] ?? null,
+                'arrived_at_24h' => $timerInfo['arrived_at_24h'] ?? null,
+                'occupied_until' => $timerInfo['occupied_until'] ?? null,
+                'occupied_until_24h' => $timerInfo['occupied_until_24h'] ?? null,
+                'elapsed_formatted' => $timerInfo['elapsed_formatted'] ?? null,
+                'remaining_formatted' => $timerInfo['remaining_formatted'] ?? null,
             ];
         }
 

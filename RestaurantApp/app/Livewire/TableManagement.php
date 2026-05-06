@@ -380,6 +380,71 @@ class TableManagement extends Component
     }
 
     /**
+     * Timer information for the active reservation at the table sheet.
+     * Returns array with elapsed time, remaining time, and occupied until.
+     *
+     * @return array<string, mixed>|null
+     */
+    #[Computed]
+    public function tableSheetTimerInfo(): ?array
+    {
+        if (! $this->tableSheetElementId) {
+            return null;
+        }
+
+        $reservation = app(ReservationService::class)->getActiveReservationForElement($this->tableSheetElementId);
+
+        if (! $reservation || ! $reservation->arrived_at) {
+            return null;
+        }
+
+        $now = now();
+        $arrivedAt = $reservation->arrived_at;
+
+        // Fixed dinner slot: 7:00 PM - 9:00 PM (21:00)
+        $occupiedUntil = $now->copy()->setTime(21, 0, 0); // 9:00 PM tonight
+        $slotStart = $now->copy()->setTime(19, 0, 0); // 7:00 PM tonight
+
+        if ($now->lessThan($slotStart)) {
+            // Before 7pm: no elapsed time, full 2 hours remaining
+            $elapsedMinutes = 0;
+            $remainingMinutes = 120; // 2 hours
+            $isOvertime = false;
+        } elseif ($now->greaterThanOrEqualTo($slotStart) && $now->lessThan($occupiedUntil)) {
+            // Between 7pm and 9pm: normal countdown from slot start
+            $elapsedMinutes = $slotStart->diffInMinutes($now);
+            $remainingMinutes = max(0, $now->diffInMinutes($occupiedUntil, false));
+            $isOvertime = false;
+        } else {
+            // After 9pm: overtime
+            $elapsedMinutes = $slotStart->diffInMinutes($now);
+            $remainingMinutes = 0;
+            $isOvertime = true;
+        }
+
+        $elapsedHours = floor($elapsedMinutes / 60);
+        $elapsedMins = $elapsedMinutes % 60;
+        $remainingHours = floor($remainingMinutes / 60);
+        $remainingMins = $remainingMinutes % 60;
+
+        return [
+            'guest_name' => $reservation->guest_name,
+            'party_size' => $reservation->party_size,
+            'arrived_at' => $arrivedAt->format('g:i a'), // 12-hour format with am/pm
+            'arrived_at_24h' => $arrivedAt->format('H:i'), // 24-hour format for calculations
+            'slot_start' => $slotStart->format('g:i a'), // 7:00 PM
+            'slot_start_24h' => $slotStart->format('H:i'), // 19:00
+            'elapsed_formatted' => sprintf('%dh %02dm', $elapsedHours, $elapsedMins),
+            'elapsed_minutes' => $elapsedMinutes,
+            'remaining_formatted' => sprintf('%dh %02dm', $remainingHours, $remainingMins),
+            'remaining_minutes' => $remainingMinutes,
+            'occupied_until' => '9:00 p.m.', // Fixed end time
+            'occupied_until_24h' => '21:00', // Fixed 9:00 PM
+            'is_overtime' => $isOvertime,
+        ];
+    }
+
+    /**
      * Return the available seat count options for a given shape.
      *
      * @return int[]
@@ -1334,6 +1399,7 @@ class TableManagement extends Component
             $this->tableSheetReservations,
             $this->tableSheetHasUnpaidOrders,
             $this->tableSheetHasAnyOrders,
+            $this->tableSheetTimerInfo,
         );
     }
 

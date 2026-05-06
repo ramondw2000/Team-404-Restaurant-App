@@ -405,6 +405,55 @@
                                                     <span class="w-1.5 h-1.5 rounded-full {{ $resStatusDot }} shrink-0"></span>
                                                     {{ $reservation['guest_name'] }} &middot; {{ $reservation['time'] }}
                                                 </span>
+                                                {{-- Live countdown timer for seated guests (7pm-9pm slot) --}}
+                                                @if($reservation['arrived_at'])
+                                                    <span
+                                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-100 text-indigo-700 ring-indigo-200 shadow-sm ring-1 whitespace-nowrap"
+                                                        x-data="{
+                                                            arrivedAt: '{{ $reservation['arrived_at_24h'] }}',
+                                                            elapsedMinutes: 0,
+                                                            remainingMinutes: 120,
+                                                            timerInterval: null,
+                                                            init() {
+                                                                this.updateTimer();
+                                                                this.timerInterval = setInterval(() => this.updateTimer(), 10000);
+                                                            },
+                                                            updateTimer() {
+                                                                const now = new Date();
+                                                                const slotStart = new Date();
+                                                                slotStart.setHours(19, 0, 0); // 7pm
+                                                                const occupiedUntil = new Date();
+                                                                occupiedUntil.setHours(21, 0, 0); // 9pm
+
+                                                                if (now < slotStart) {
+                                                                    // Before 7pm: no elapsed time, full 2 hours remaining
+                                                                    this.elapsedMinutes = 0;
+                                                                    this.remainingMinutes = 120; // 2 hours
+                                                                } else if (now >= slotStart && now < occupiedUntil) {
+                                                                    // Between 7pm and 9pm: normal countdown from slot start
+                                                                    this.elapsedMinutes = Math.floor((now - slotStart) / 60000);
+                                                                    this.remainingMinutes = Math.max(0, Math.floor((occupiedUntil - now) / 60000));
+                                                                } else {
+                                                                    // After 9pm: overtime, elapsed continues, remaining is 0
+                                                                    this.elapsedMinutes = Math.floor((now - slotStart) / 60000);
+                                                                    this.remainingMinutes = 0;
+                                                                }
+                                                            },
+                                                            formatDuration(minutes) {
+                                                                if (minutes < 0) minutes = 0;
+                                                                const h = Math.floor(minutes / 60);
+                                                                const m = minutes % 60;
+                                                                return `${h}h ${m.toString().padStart(2, '0')}m`;
+                                                            },
+                                                            destroy() {
+                                                                if (this.timerInterval) clearInterval(this.timerInterval);
+                                                            }
+                                                        }"
+                                                        x-init="init()"
+                                                        x-text="formatDuration(elapsedMinutes) + ' / ' + formatDuration(remainingMinutes)"
+                                                    >
+                                                    </span>
+                                                @endif
                                             @endif
                                         </div>
                                     @endif
@@ -808,6 +857,11 @@
                             </div>
                         @endif
                     </div>
+
+                    {{-- Table Timer (only for occupied tables with arrived reservation) --}}
+                    @if($this->tableSheetTimerInfo)
+                        <x-table-management.table-timer :timer-info="$this->tableSheetTimerInfo" />
+                    @endif
 
                     {{-- Reservations Section --}}
                     <x-table-management.reservation-list :reservations="$this->tableSheetReservations" />

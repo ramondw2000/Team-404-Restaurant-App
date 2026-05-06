@@ -22,6 +22,7 @@ class Reservation extends Model
         'floor_plan_element_id',
         'room_number',
         'status',
+        'arrived_at',
         'internal_notes',
         'deposit_amount',
         'deposit_status',
@@ -31,6 +32,7 @@ class Reservation extends Model
     {
         return [
             'reservation_datetime' => 'datetime',
+            'arrived_at' => 'datetime',
             'party_size' => 'integer',
             'deposit_amount' => 'decimal:2',
         ];
