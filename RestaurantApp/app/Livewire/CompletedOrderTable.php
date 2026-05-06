@@ -395,7 +395,7 @@ class CompletedOrderTable extends Component
     private function getCompletedOrders(): Collection
     {
         $query = Order::with(['items.dish', 'floorPlanElement', 'user', 'reservation'])
-            ->where('status', OrderStatus::Completed);
+            ->whereIn('status', [OrderStatus::Active, OrderStatus::Completed]);
 
         if ($this->dateRange === 'today') {
             $query->whereDate('updated_at', today());
@@ -410,6 +410,7 @@ class CompletedOrderTable extends Component
 
         return $query->get()->map(function (Order $order): array {
             $completedAt = $order->updated_at;
+            $origin = $order->origin === 'bar' ? 'bar' : 'restaurant';
 
             $items = $order->items->map(fn ($item): array => [
                 'name' => $item->dish?->name ?? 'Unknown',
@@ -427,20 +428,49 @@ class CompletedOrderTable extends Component
 
             return [
                 'id' => 'ORD-'.str_pad((string) $order->id, 3, '0', STR_PAD_LEFT),
-                'type' => 'restaurant',
-                'location' => $order->floorPlanElement?->table_name ?? '—',
+                'type' => $origin,
+                'location' => $this->resolveLocation($order, $origin),
                 'waiter' => $order->user?->name ?? '—',
-                'customer' => $order->reservation?->guest_name ?? '—',
+                'customer' => $this->resolveCustomer($order, $origin),
                 'closed_at' => $completedAt?->format('H:i') ?? '—',
                 'completed_at' => $completedAt?->toDateTimeString(),
                 'completed_at_carbon' => $completedAt,
                 'payment_method' => null,
                 'is_refunded' => false,
+                'paid' => (bool) $order->paid,
+                'status' => $order->status->value,
+                'status_label' => $order->status->label(),
                 'items' => $items,
                 'subtotal' => $subtotal,
                 'tax' => $tax,
                 'total' => $total,
             ];
         });
+    }
+
+    private function resolveLocation(Order $order, string $origin): string
+    {
+        if ($order->floorPlanElement?->table_name) {
+            return $order->floorPlanElement->table_name;
+        }
+
+        return $origin === 'bar' ? 'Bar' : '—';
+    }
+
+    private function resolveCustomer(Order $order, string $origin): string
+    {
+        if ($order->reservation?->guest_name) {
+            return $order->reservation->guest_name;
+        }
+
+        if ($origin === 'bar') {
+            if ($order->guest_type === 'hotel') {
+                return $order->room_number ? 'Room '.$order->room_number : 'Hotel guest';
+            }
+
+            return 'Walk-in';
+        }
+
+        return '—';
     }
 }
