@@ -3,6 +3,60 @@ import interact from 'interactjs';
 
 window.interact = interact;
 
+// ─── Global confirm modal helper ─────────────────────────────────────────────
+// Dispatches a custom event that the <x-ui.confirm-modal> Alpine component listens for.
+// Usage: confirmAction({ title, message, confirmLabel, onConfirm })
+window.confirmAction = function ({ title, message, confirmLabel, cancelLabel, variant, onConfirm }) {
+    window.dispatchEvent(new CustomEvent('confirm-modal', {
+        detail: { title, message, confirmLabel, cancelLabel, variant, onConfirm },
+    }));
+};
+
+// ─── Override Livewire wire:confirm to use custom modal ──────────────────────
+// Livewire's built-in wire:confirm directive calls window.confirm() synchronously.
+// We override window.confirm so it always opens our async modal instead.
+(function () {
+    const nativeConfirm = window.confirm;
+    let pendingResolve = null;
+    let bypassConfirm = false;
+
+    window.confirm = function (message) {
+        // When re-clicking after user confirmed via modal, let it through
+        if (bypassConfirm) {
+            return true;
+        }
+        // Block the synchronous confirm and show our modal instead.
+        // Return false to cancel the action, then re-trigger if user confirms.
+        return false;
+    };
+
+    // Intercept clicks on elements with wire:confirm before Livewire processes them
+    document.addEventListener('click', (e) => {
+        if (bypassConfirm) return;
+
+        const el = e.target.closest('[wire\\:confirm]');
+        if (!el) return;
+
+        const message = el.getAttribute('wire:confirm');
+        if (!message) return;
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        window.confirmAction({
+            title: 'Are you sure?',
+            message: message,
+            confirmLabel: 'Confirm',
+            variant: 'danger',
+            onConfirm: () => {
+                bypassConfirm = true;
+                el.click();
+                bypassConfirm = false;
+            },
+        });
+    }, { capture: true });
+})();
+
 // ─── Table filter store — shared state across the canvas ───────────────────
 document.addEventListener('alpine:init', () => {
     window.Alpine.store('filters', {

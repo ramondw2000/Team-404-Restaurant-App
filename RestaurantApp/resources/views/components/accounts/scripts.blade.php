@@ -92,28 +92,6 @@
         }
     }
 
-    // ── Delete modal ──────────────────────────────────────
-    function confirmDelete(id, name) {
-        document.getElementById('delete-msg').textContent =
-            `Are you sure you want to delete the account for "${name}"? This action cannot be undone.`;
-        document.getElementById('delete-form').action = `/accounts/${id}`;
-        document.getElementById('delete-confirm-btn').onclick = () => {
-            document.getElementById('delete-form').submit();
-        };
-        const overlay = document.getElementById('delete-overlay');
-        const modal   = document.getElementById('delete-modal');
-        overlay.classList.add('open');
-        modal.classList.remove('scale-95', 'opacity-0', 'pointer-events-none');
-        modal.classList.add('scale-100', 'opacity-100');
-    }
-
-    function closeDelete() {
-        const overlay = document.getElementById('delete-overlay');
-        const modal   = document.getElementById('delete-modal');
-        overlay.classList.remove('open');
-        modal.classList.remove('scale-100', 'opacity-100');
-        modal.classList.add('scale-95', 'opacity-0', 'pointer-events-none');
-    }
 
     // ── Auto-open sheet on validation error ───────────────
     @if($errors->any())

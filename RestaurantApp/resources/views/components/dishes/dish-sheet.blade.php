@@ -204,8 +204,8 @@
         <form id="delete-dish-form" method="POST" class="hidden mr-auto">
             @csrf
             @method('DELETE')
-            <x-ui.button variant="danger" type="submit" id="sheet-delete-btn" size="sm"
-                         onclick="return confirm('Are you sure you want to delete this dish?')">
+            <x-ui.button variant="danger" type="button" id="sheet-delete-btn" size="sm"
+                         onclick="window.confirmAction({ title: 'Delete Dish', message: 'Are you sure you want to delete this dish?', confirmLabel: 'Delete', variant: 'danger', onConfirm: () => document.getElementById('delete-dish-form').submit() })">
                 Delete Dish
             </x-ui.button>
         </form>
