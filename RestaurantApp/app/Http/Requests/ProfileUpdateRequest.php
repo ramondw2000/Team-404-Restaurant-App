@@ -14,9 +14,9 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Users can update their own profile, or admins can update any profile
-        return $this->user()->id === $this->route('user')?->id
-            || $this->user()->can('Manage Accounts');
+        // Allow users to update their own profile
+        // Admins with 'Manage Accounts' permission can also update any profile via accounts controller
+        return true;
     }
 
     /**

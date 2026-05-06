@@ -5,9 +5,14 @@ use App\Models\Dish;
 use App\Models\FloorPlanElement;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Livewire\Livewire;
 
 beforeEach(function () {
+    // Seed roles and permissions
+    (new RoleSeeder)->run();
+
     /** @var FloorPlanElement $element */
     $element = FloorPlanElement::factory()->create(['table_name' => 'Table A1']);
     $dish = Dish::factory()->create(['name' => 'Truffle Pasta', 'price' => 24.00]);
@@ -180,7 +185,11 @@ it('resets selection when search filter changes', function () {
 });
 
 it('exports csv as streamed download', function () {
-    $component = Livewire::test(CompletedOrderTable::class);
+    // Create user with management role that has Export Orders permission
+    $user = User::factory()->create();
+    $user->assignRole('management');
+
+    $component = Livewire::actingAs($user)->test(CompletedOrderTable::class);
     $response = $component->instance()->exportCsv();
 
     expect($response->getStatusCode())->toBe(200);
