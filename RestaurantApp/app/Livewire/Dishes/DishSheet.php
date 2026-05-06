@@ -33,7 +33,7 @@ class DishSheet extends Component
     #[Validate('nullable|string|max:7')]
     public string $color = '#309bcf';
 
-    #[Validate('nullable|image|max:5120')]
+    #[Validate('nullable|image|mimes:jpeg,png,jpg,webp|max:5120')]
     public $photo = null;
 
     public ?string $existingPhotoPath = null;
@@ -96,7 +96,7 @@ class DishSheet extends Component
         $query = Ingredient::query();
 
         if ($this->ingredientSearch !== '') {
-            $query->where('name', 'like', '%'.$this->ingredientSearch.'%');
+            $query->whereRaw('name LIKE ?', ['%' . addcslashes($this->ingredientSearch, '%_\\') . '%']);
         }
 
         return $query->whereNotIn('id', $this->ingredientIds)

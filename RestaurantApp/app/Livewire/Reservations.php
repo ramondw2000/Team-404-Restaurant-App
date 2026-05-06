@@ -83,7 +83,7 @@ class Reservations extends Component
     public function reservations(): Collection
     {
         return Reservation::whereDate('reservation_datetime', $this->selectedDate)
-            ->when($this->search !== '', fn ($q) => $q->where('guest_name', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn ($q) => $q->whereRaw('guest_name LIKE ?', ['%' . addcslashes($this->search, '%_\\') . '%']))
             ->when($this->statusFilter !== 'all', fn ($q) => $q->where('status', $this->statusFilter))
             ->orderBy('reservation_datetime')
             ->get();
@@ -227,9 +227,8 @@ class Reservations extends Component
             return;
         }
 
-        if ($status === 'cancelled') {
-            $this->authorize('Cancel Reservation');
-        }
+        // Authorize all status changes
+        $this->authorize('Update Reservations');
 
         $reservation = Reservation::findOrFail($id);
         $reservation->update(['status' => $status]);

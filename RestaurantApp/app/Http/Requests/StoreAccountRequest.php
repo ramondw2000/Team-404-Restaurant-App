@@ -13,7 +13,7 @@ class StoreAccountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('Manage Accounts');
     }
 
     /**
@@ -28,7 +28,7 @@ class StoreAccountRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)],
-            'password' => ['required', 'string', Password::defaults()],
+            'password' => ['required', 'string', Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => ['string', Rule::in($roleNames)],
         ];

@@ -145,9 +145,9 @@ it('creates a reservation via the Livewire component', function () {
 
     Livewire::actingAs(reservationsUser())
         ->test(Reservations::class)
-        ->set('createGuestName', 'Jane Doe')
-        ->set('createPartySize', 3)
-        ->set('createDatetime', $datetime)
+        ->set('reservationGuestName', 'Jane Doe')
+        ->set('reservationPartySize', 3)
+        ->set('reservationDatetime', $datetime)
         ->call('createReservation');
 
     expect(Reservation::where('guest_name', 'Jane Doe')->exists())->toBeTrue();
@@ -170,9 +170,9 @@ it('auto-assigns the smallest fitting table when no preference given', function 
 
     Livewire::actingAs(reservationsUser())
         ->test(Reservations::class)
-        ->set('createGuestName', 'Party Of Two')
-        ->set('createPartySize', 2)
-        ->set('createDatetime', $datetime)
+        ->set('reservationGuestName', 'Party Of Two')
+        ->set('reservationPartySize', 2)
+        ->set('reservationDatetime', $datetime)
         ->call('createReservation');
 
     $reservation = Reservation::where('guest_name', 'Party Of Two')->first();
@@ -194,9 +194,9 @@ it('falls back to no table when no table fits the party', function () {
 
     Livewire::actingAs(reservationsUser())
         ->test(Reservations::class)
-        ->set('createGuestName', 'Huge Party')
-        ->set('createPartySize', 8)
-        ->set('createDatetime', $datetime)
+        ->set('reservationGuestName', 'Huge Party')
+        ->set('reservationPartySize', 8)
+        ->set('reservationDatetime', $datetime)
         ->call('createReservation');
 
     $reservation = Reservation::where('guest_name', 'Huge Party')->first();
@@ -210,11 +210,11 @@ it('fails create validation when datetime is in the past', function () {
 
     Livewire::actingAs(reservationsUser())
         ->test(Reservations::class)
-        ->set('createGuestName', 'Ghost')
-        ->set('createPartySize', 2)
-        ->set('createDatetime', $past)
+        ->set('reservationGuestName', 'Ghost')
+        ->set('reservationPartySize', 2)
+        ->set('reservationDatetime', $past)
         ->call('createReservation')
-        ->assertHasErrors(['createDatetime']);
+        ->assertHasErrors(['reservationDatetime']);
 });
 
 // ── Edit ─────────────────────────────────────────────────────

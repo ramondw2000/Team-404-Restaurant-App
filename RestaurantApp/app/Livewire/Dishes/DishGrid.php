@@ -99,7 +99,7 @@ class DishGrid extends Component
         $query = Dish::with('ingredients');
 
         if ($this->search !== '') {
-            $query->where('name', 'like', '%'.$this->search.'%');
+            $query->whereRaw('name LIKE ?', ['%' . addcslashes($this->search, '%_\\') . '%']);
         }
 
         // Allergen/dietary filtering requires loading ingredients

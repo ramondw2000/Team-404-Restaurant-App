@@ -33,6 +33,8 @@ class ConfirmablePasswordController extends Controller
             ]);
         }
 
+        // Store confirmation timestamp - valid for configured timeout (default 3 hours)
+        // To reduce timeout, set 'password_timeout' in config/auth.php (in seconds)
         $request->session()->put('auth.password_confirmed_at', time());
 
         return redirect()->intended(route('dashboard', absolute: false));

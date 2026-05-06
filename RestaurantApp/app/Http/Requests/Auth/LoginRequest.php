@@ -17,6 +17,7 @@ class LoginRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // Intentionally returns true - login endpoint must be accessible to guests
         return true;
     }
 

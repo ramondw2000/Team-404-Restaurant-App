@@ -101,6 +101,8 @@ class AccountController extends Controller
 
     public function destroy(User $account): RedirectResponse
     {
+        $this->authorize('Delete User');
+
         // Prevent self-deletion
         if ($account->id === Auth::id()) {
             return redirect()->route('accounts.index')

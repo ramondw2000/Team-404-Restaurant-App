@@ -100,6 +100,8 @@ class DishController extends Controller
      */
     public function destroy(Dish $dish): RedirectResponse
     {
+        $this->authorize('Delete Dishes');
+
         $dish->delete();
 
         return redirect()->route('dishes')->with('success', 'Dish deleted successfully.');
@@ -110,6 +112,8 @@ class DishController extends Controller
      */
     public function toggleAvailability(Dish $dish): RedirectResponse
     {
+        $this->authorize('Edit Dishes');
+
         $dish->update(['is_available' => ! $dish->is_available]);
 
         $status = $dish->is_available ? 'available' : 'unavailable';
