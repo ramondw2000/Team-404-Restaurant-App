@@ -12,6 +12,9 @@
     <body class="font-sans antialiased min-h-screen bg-[#eaf4fa]">
         @include('layouts.navigation')
 
+        <x-ui.toast />
+        <x-ui.confirm-modal />
+
         @php
             // Permission checks
             $canViewKitchen = auth()->user()->can('View Kitchen Orders');

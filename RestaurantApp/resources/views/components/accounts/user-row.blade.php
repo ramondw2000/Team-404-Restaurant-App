@@ -62,7 +62,7 @@
                 </svg>
             </x-ui.button>
             <x-ui.button variant="ghost" size="sm"
-                onclick="confirmDelete({{ $user->id }}, '{{ addslashes($user->name) }}')"
+                onclick="window.confirmAction({ title: 'Delete Account', message: 'Are you sure you want to delete the account for &quot;{{ addslashes($user->name) }}&quot;? This action cannot be undone.', confirmLabel: 'Delete', variant: 'danger', onConfirm: () => { document.getElementById('delete-form').action = '/accounts/{{ $user->id }}'; document.getElementById('delete-form').submit(); } })"
                 title="Delete"
                 class="p-1.5 hover:text-red-500 hover:bg-red-50">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

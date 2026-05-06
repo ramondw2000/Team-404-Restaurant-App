@@ -63,8 +63,8 @@
                             </button>
                             <button
                                 wire:click="cancelReservation({{ $reservation->id }})"
+                                wire:confirm="Cancel this reservation? This action cannot be undone."
                                 class="py-1.5 px-3 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
-                                onclick="return confirm('Cancel this reservation?')"
                             >
                                 Cancel
                             </button>

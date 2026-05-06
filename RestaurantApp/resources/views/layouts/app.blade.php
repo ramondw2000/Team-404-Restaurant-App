@@ -20,6 +20,7 @@
     @include('layouts.navigation')
 
     <x-ui.toast />
+    <x-ui.confirm-modal />
 
     <!-- Page Heading -->
     @isset($header)

@@ -16,6 +16,7 @@
     {{ $slot }}
 </div>
 <x-ui.toast />
+<x-ui.confirm-modal />
 @livewireScripts
 </body>
 </html>

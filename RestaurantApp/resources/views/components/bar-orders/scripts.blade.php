@@ -169,27 +169,33 @@
         const dbId = card?.dataset.orderDbId;
         if (!dbId) return;
 
-        if (!confirm('Are you sure you want to delete this order?')) return;
+        window.confirmAction({
+            title: 'Delete Order',
+            message: 'Are you sure you want to delete this order?',
+            confirmLabel: 'Delete',
+            variant: 'danger',
+            onConfirm: () => {
+                const wasCompleted = card?.dataset.overall === 'completed';
 
-        const wasCompleted = card?.dataset.overall === 'completed';
+                if (card) {
+                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        card.remove();
+                        barApplyCurrentFilter();
+                    }, 300);
+                }
 
-        if (card) {
-            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                card.remove();
-                barApplyCurrentFilter();
-            }, 300);
-        }
+                barUpdateFilterCounts(wasCompleted ? 'remove_completed' : 'remove_active');
 
-        barUpdateFilterCounts(wasCompleted ? 'remove_completed' : 'remove_active');
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        fetch(BAR_DELETE_URL.replace('__ID__', dbId), {
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-        }).catch(() => {});
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                fetch(BAR_DELETE_URL.replace('__ID__', dbId), {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                }).catch(() => {});
+            },
+        });
     }
 
     function barUpdateFilterCounts(direction) {

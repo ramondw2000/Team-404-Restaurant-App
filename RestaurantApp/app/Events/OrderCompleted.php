@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;
 
 class OrderCompleted
@@ -9,8 +10,6 @@ class OrderCompleted
     use Dispatchable;
 
     public function __construct(
-        public int $orderId,
-        public string $orderNumber,
-        public float $total,
+        public Order $order,
     ) {}
 }
