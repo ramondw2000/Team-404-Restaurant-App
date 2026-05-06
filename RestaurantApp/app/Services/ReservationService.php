@@ -17,6 +17,44 @@ use Illuminate\Support\Collection as SupportCollection;
  */
 final readonly class ReservationService
 {
+    /** Default stay window for a seated guest, in hours. */
+    public const DEFAULT_STAY_HOURS = 2;
+
+    /**
+     * Compute when the currently seated guest at a table must vacate:
+     * seating start + 2h, capped by the next active reservation's start time.
+     * Stay starts when the guest was actually seated (seated_at), falling back
+     * to reservation_datetime for legacy rows without a recorded seat time.
+     * Returns null if no guest is currently seated at this table.
+     */
+    public function getStayEndForElement(int $elementId): ?Carbon
+    {
+        $arrived = Reservation::where('floor_plan_element_id', $elementId)
+            ->where('status', 'arrived')
+            ->orderByDesc('reservation_datetime')
+            ->first();
+
+        if (! $arrived) {
+            return null;
+        }
+
+        $stayStart = $arrived->seated_at ?? $arrived->reservation_datetime;
+        $defaultEnd = $stayStart->copy()->addHours(self::DEFAULT_STAY_HOURS);
+
+        $nextReservation = Reservation::where('floor_plan_element_id', $elementId)
+            ->where('id', '!=', $arrived->id)
+            ->where('status', 'scheduled')
+            ->where('reservation_datetime', '>', $arrived->reservation_datetime)
+            ->orderBy('reservation_datetime')
+            ->first();
+
+        if ($nextReservation && $nextReservation->reservation_datetime->lt($defaultEnd)) {
+            return $nextReservation->reservation_datetime;
+        }
+
+        return $defaultEnd;
+    }
+
     /**
      * Get active reservation for a table element (scheduled or arrived today).
      */
@@ -122,7 +160,10 @@ final readonly class ReservationService
             }
         }
 
-        $reservation->update(['status' => 'arrived']);
+        $reservation->update([
+            'status' => 'arrived',
+            'seated_at' => now(),
+        ]);
 
         if ($reservation->floorPlanElement) {
             $reservation->floorPlanElement->update(['status' => TableStatus::Occupied]);

@@ -20,8 +20,6 @@ class DishesPage extends Component
 
     public bool $showDishSheet = false;
 
-    public int $dishSheetKey = 0;
-
     public ?int $editingIngredientId = null;
 
     public bool $showIngredientSheet = false;
@@ -38,7 +36,6 @@ class DishesPage extends Component
     public function openDishSheet(?int $dishId = null): void
     {
         $this->editingDishId = $dishId;
-        $this->dishSheetKey++;
         $this->showDishSheet = true;
     }
 

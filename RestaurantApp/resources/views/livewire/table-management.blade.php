@@ -809,6 +809,67 @@
                         @endif
                     </div>
 
+                    {{-- Stay timer (visible while a guest is seated) --}}
+                    @if($this->tableSheetStayEnd)
+                        @php
+                            $stayEnd = $this->tableSheetStayEnd;
+                            $cappedByReservation = $stayEnd->lt(
+                                ($this->tableSheetReservations->firstWhere('status', 'arrived')?->reservation_datetime
+                                    ?? now())->copy()->addHours(\App\Services\ReservationService::DEFAULT_STAY_HOURS)
+                            );
+                        @endphp
+                        <div
+                            wire:key="stay-timer-{{ $tableEl['id'] }}"
+                            x-data="{
+                                endsAt: {{ $stayEnd->getTimestamp() * 1000 }},
+                                now: Date.now(),
+                                tick: null,
+                                init() {
+                                    this.tick = setInterval(() => this.now = Date.now(), 1000);
+                                },
+                                destroy() { clearInterval(this.tick); },
+                                get remainingMs() { return this.endsAt - this.now; },
+                                get expired() { return this.remainingMs <= 0; },
+                                get label() {
+                                    const ms = Math.max(0, this.remainingMs);
+                                    const totalMin = Math.floor(ms / 60000);
+                                    const h = Math.floor(totalMin / 60);
+                                    const m = totalMin % 60;
+                                    const s = Math.floor((ms % 60000) / 1000);
+                                    return h > 0
+                                        ? `${h}h ${String(m).padStart(2, '0')}m`
+                                        : `${m}m ${String(s).padStart(2, '0')}s`;
+                                }
+                            }"
+                            :class="expired
+                                ? 'bg-rose-50 border-rose-200 text-rose-800'
+                                : (remainingMs < 15 * 60000
+                                    ? 'bg-amber-50 border-amber-200 text-amber-800'
+                                    : 'bg-emerald-50 border-emerald-200 text-emerald-800')"
+                            class="rounded-xl border p-3.5 flex items-center justify-between"
+                        >
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wide opacity-70">
+                                    <span x-show="!expired">Time remaining</span>
+                                    <span x-show="expired" x-cloak>Stay overdue</span>
+                                </p>
+                                <p class="text-2xl font-bold tabular-nums" x-text="label"></p>
+                                <p class="text-[11px] opacity-70 mt-0.5">
+                                    Until {{ $stayEnd->format('H:i') }}
+                                    @if($cappedByReservation)
+                                        &middot; capped by next reservation
+                                    @else
+                                        &middot; 2-hour stay
+                                    @endif
+                                </p>
+                            </div>
+                            <svg class="w-8 h-8 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                      d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    @endif
+
                     {{-- Reservations Section --}}
                     <x-table-management.reservation-list :reservations="$this->tableSheetReservations" />
                 </div>

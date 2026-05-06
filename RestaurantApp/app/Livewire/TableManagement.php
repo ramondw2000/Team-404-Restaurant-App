@@ -353,6 +353,20 @@ class TableManagement extends Component
     }
 
     /**
+     * Stay-end timestamp for the currently open table sheet's seated guest.
+     * Null when no guest is currently seated.
+     */
+    #[Computed]
+    public function tableSheetStayEnd(): ?Carbon
+    {
+        if (! $this->tableSheetElementId) {
+            return null;
+        }
+
+        return app(ReservationService::class)->getStayEndForElement($this->tableSheetElementId);
+    }
+
+    /**
      * True when the currently open table sheet has unpaid orders on it.
      */
     #[Computed]
@@ -1016,7 +1030,7 @@ class TableManagement extends Component
                 'required',
                 'integer',
                 'min:1',
-                'max:' . ($element?->seat_count ?? 20),
+                'max:'.($element?->seat_count ?? 20),
             ],
             'reservationDatetime' => ['required', 'date', 'after:now', 'before:+6 months'],
             'reservationNotes' => ['nullable', 'string', 'max:1000'],
@@ -1334,6 +1348,7 @@ class TableManagement extends Component
             $this->tableSheetReservations,
             $this->tableSheetHasUnpaidOrders,
             $this->tableSheetHasAnyOrders,
+            $this->tableSheetStayEnd,
         );
     }
 
