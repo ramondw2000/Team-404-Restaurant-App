@@ -324,6 +324,32 @@ it('detects assignee correctly', function () {
     expect($task->isAssignee($other))->toBeFalse();
 });
 
+// ── Delete task ─────────────────────────────────────────────
+
+it('allows deleting a task with Delete Maintenance Task permission', function () {
+    $user = maintenanceUser();
+    $user->givePermissionTo('Delete Maintenance Task');
+    $task = MaintenanceTask::factory()->create();
+
+    $this->actingAs($user)
+        ->delete(route('maintenance.destroy', $task))
+        ->assertRedirect(route('maintenance'));
+
+    expect(MaintenanceTask::find($task->id))->toBeNull();
+});
+
+it('denies deleting a task without Delete Maintenance Task permission', function () {
+    $user = User::factory()->create();
+    $user->givePermissionTo('View Maintenance');
+    $task = MaintenanceTask::factory()->create();
+
+    $this->actingAs($user)
+        ->delete(route('maintenance.destroy', $task))
+        ->assertForbidden();
+
+    expect(MaintenanceTask::find($task->id))->not->toBeNull();
+});
+
 // ── Foreign key cascade ──────────────────────────────────────
 
 it('sets assigned_to to null when user is deleted', function () {

@@ -108,6 +108,7 @@ class PermissionRegistry
                 ['name' => 'Edit Maintenance Task', 'description' => 'Edit notes on a maintenance task'],
                 ['name' => 'Complete Maintenance Task', 'description' => 'Mark a maintenance task as done'],
                 ['name' => 'Assign Maintenance Task', 'description' => 'Assign other users to maintenance tasks'],
+                ['name' => 'Delete Maintenance Task', 'description' => 'Delete a maintenance task'],
             ],
         ],
     ];

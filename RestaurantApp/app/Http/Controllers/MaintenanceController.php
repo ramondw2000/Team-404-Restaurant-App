@@ -127,6 +127,18 @@ class MaintenanceController extends Controller
     }
 
     /**
+     * Delete a maintenance task.
+     */
+    public function destroy(MaintenanceTask $task): RedirectResponse
+    {
+        $this->authorize('Delete Maintenance Task');
+
+        $task->delete();
+
+        return redirect()->route('maintenance')->with('success', 'Task deleted.');
+    }
+
+    /**
      * Transition a task to a new status.
      */
     public function transitionStatus(Request $request, MaintenanceTask $task): RedirectResponse
