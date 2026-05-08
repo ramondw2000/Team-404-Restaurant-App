@@ -22,15 +22,19 @@
     </button>
 
     {{-- Dropdown --}}
-    <div x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" x-cloak class="absolute z-30 mt-1 left-0 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-1 max-h-72 flex flex-col">
+    <div x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" x-cloak class="absolute z-30 left-0 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-1 max-h-72 flex flex-col {{ $dropUp ? 'bottom-full mb-1' : 'mt-1 top-full' }}">
         {{-- Search --}}
         <div class="px-3 py-2 border-b border-gray-100">
             <input type="text" wire:model.live.debounce.300ms="userSearch" placeholder="Search users…" class="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-molveno-blue-300 focus:border-molveno-blue-400 placeholder:text-gray-400" />
         </div>
 
         <div class="overflow-y-auto flex-1">
+            @php
+                $task = \App\Models\MaintenanceTask::find($taskId);
+                $isDone = $task && $task->status === \App\Enums\MaintenanceTaskStatus::Done;
+            @endphp
             {{-- Unassign option --}}
-            @if($assignedUserId)
+            @if($assignedUserId && !$isDone)
                 <button type="button" wire:click="unassignUser" @click="open = false" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

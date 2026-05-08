@@ -56,8 +56,8 @@ it('filters by my-tasks', function () {
 
 it('filters by unassigned', function () {
     $user = maintenanceUser();
-    MaintenanceTask::factory()->create(['name' => 'Assigned task', 'assigned_to' => $user->id]);
-    MaintenanceTask::factory()->create(['name' => 'Unassigned task', 'assigned_to' => null]);
+    MaintenanceTask::factory()->create(['name' => 'Assigned task', 'status' => MaintenanceTaskStatus::Assigned, 'assigned_to' => $user->id]);
+    MaintenanceTask::factory()->create(['name' => 'Unassigned task', 'status' => MaintenanceTaskStatus::Unassigned, 'assigned_to' => null]);
 
     $response = $this->actingAs($user)->get(route('maintenance', ['filter' => 'unassigned']));
 

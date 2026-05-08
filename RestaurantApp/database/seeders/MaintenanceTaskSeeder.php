@@ -32,7 +32,7 @@ class MaintenanceTaskSeeder extends Seeder
         foreach ($assigned as $task) {
             MaintenanceTask::firstOrCreate(
                 ['name' => $task['name']],
-                ['location' => $task['location'], 'status' => 'assigned', 'notes' => null],
+                ['location' => $task['location'], 'status' => 'unassigned', 'notes' => null],
             );
         }
 

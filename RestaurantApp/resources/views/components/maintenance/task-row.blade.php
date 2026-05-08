@@ -1,7 +1,8 @@
-@props(['task'])
+@props(['task', 'index' => 0, 'total' => 0])
 
 @php
     $isAssignee = $task->assigned_to === auth()->id();
+    $isBottom3 = ($total - $index) <= 3;
 @endphp
 
 <tbody x-data="{ expanded: false }">
@@ -11,10 +12,10 @@
         </x-ui.td>
         <x-ui.td class="text-gray-600 text-sm whitespace-nowrap">{{ $task->location }}</x-ui.td>
         <x-ui.td>
-            <livewire:task-assignment-dropdown :task-id="$task->id" :assigned-user-id="$task->assigned_to" :key="'assign-'.$task->id" />
+            <livewire:task-assignment-dropdown :task-id="$task->id" :assigned-user-id="$task->assigned_to" :drop-up="$isBottom3" :key="'assign-'.$task->id.'-'.($isBottom3 ? 'up' : 'down')" />
         </x-ui.td>
         <x-ui.td>
-            <livewire:task-status-transition :task-id="$task->id" :current-status="$task->status->value" :is-assignee="$isAssignee" :key="'status-'.$task->id" />
+            <livewire:task-status-wrapper :task-id="$task->id" :status="$task->status->value" :is-assignee="$isAssignee" :key="'status-wrap-'.$task->id.'-'.$task->status->value" />
         </x-ui.td>
         <x-ui.td class="text-gray-400 text-xs whitespace-nowrap">
             {{ $task->created_at->format('M d, Y') }}

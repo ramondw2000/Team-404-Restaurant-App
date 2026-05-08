@@ -1,5 +1,9 @@
 @props(['tasks', 'emptyMessage' => 'No tasks found.'])
 
+@php
+    $totalTasks = $tasks->count();
+@endphp
+
 <x-ui.card padding="none">
     <x-ui.table>
         <thead>
@@ -12,8 +16,8 @@
                 <x-ui.th>Actions</x-ui.th>
             </tr>
         </thead>
-        @forelse($tasks as $task)
-            <x-maintenance.task-row :task="$task" />
+        @forelse($tasks as $index => $task)
+            <x-maintenance.task-row :task="$task" :index="$index" :total="$totalTasks" />
         @empty
             <tbody>
                 <tr>

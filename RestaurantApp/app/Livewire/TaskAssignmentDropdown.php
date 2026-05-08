@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Enums\MaintenanceTaskStatus;
 use App\Models\MaintenanceTask;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -17,12 +18,28 @@ class TaskAssignmentDropdown extends Component
 
     public ?int $assignedUserId = null;
 
+    public bool $dropUp = false;
+
     public string $userSearch = '';
 
-    public function mount(int $taskId, ?int $assignedUserId = null): void
+    public function mount(int $taskId, ?int $assignedUserId = null, bool $dropUp = false): void
     {
         $this->taskId = $taskId;
         $this->assignedUserId = $assignedUserId;
+        $this->dropUp = $dropUp;
+    }
+
+    protected $listeners = [
+        'statusUpdated' => 'refresh',
+        'assignmentUpdated' => 'refresh',
+    ];
+
+    public function refresh(): void
+    {
+        $task = MaintenanceTask::find($this->taskId);
+        if ($task) {
+            $this->assignedUserId = $task->assigned_to;
+        }
     }
 
     /**
@@ -50,7 +67,7 @@ class TaskAssignmentDropdown extends Component
             return;
         }
 
-        $task->update(['assigned_to' => $userId]);
+        $task->update(['assigned_to' => $userId, 'status' => MaintenanceTaskStatus::Assigned]);
         $this->assignedUserId = $userId;
         $this->userSearch = '';
 
@@ -70,7 +87,14 @@ class TaskAssignmentDropdown extends Component
             return;
         }
 
-        $task->update(['assigned_to' => null]);
+        // Cannot unassign if task is done
+        if ($task->status === MaintenanceTaskStatus::Done) {
+            $this->dispatch('toast', message: 'Cannot unassign a completed task. Reopen it first.', type: 'danger');
+
+            return;
+        }
+
+        $task->update(['assigned_to' => null, 'status' => MaintenanceTaskStatus::Unassigned]);
         $this->assignedUserId = null;
         $this->userSearch = '';
 

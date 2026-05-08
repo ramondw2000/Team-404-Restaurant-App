@@ -21,7 +21,7 @@ class MaintenanceTaskFactory extends Factory
         return [
             'name' => $this->faker->sentence(4),
             'location' => $this->faker->randomElement(['Kitchen', 'Bar', 'Dining room', 'Terrace', 'Staff room', 'Entrance']),
-            'status' => MaintenanceTaskStatus::Assigned,
+            'status' => MaintenanceTaskStatus::Unassigned,
             'notes' => null,
             'assigned_to' => null,
             'requirements' => null,

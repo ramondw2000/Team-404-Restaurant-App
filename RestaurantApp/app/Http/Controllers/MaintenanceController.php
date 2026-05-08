@@ -18,20 +18,31 @@ class MaintenanceController extends Controller
     {
         $tasks = MaintenanceTask::with('assignedUser')
             ->when($request->filter === 'my-tasks', fn ($q) => $q->where('assigned_to', auth()->id()))
-            ->when($request->filter === 'unassigned', fn ($q) => $q->whereNull('assigned_to'))
+            ->when($request->filter === 'unassigned', fn ($q) => $q->where('status', MaintenanceTaskStatus::Unassigned))
             ->when($request->status, fn ($q, $s) => $q->whereIn('status', (array) $s))
             ->when($request->search, fn ($q, $s) => $q->where(function ($q) use ($s) {
                 $q->where('name', 'like', "%{$s}%")
                     ->orWhere('notes', 'like', "%{$s}%")
                     ->orWhereHas('assignedUser', fn ($q) => $q->where('name', 'like', "%{$s}%"));
             }))
-            ->orderByRaw("CASE WHEN status = 'in_progress' THEN 0 WHEN status = 'assigned' THEN 1 ELSE 2 END")
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw("
+                CASE
+                    WHEN status = 'in_progress' THEN 0
+                    WHEN status = 'assigned' THEN 1
+                    WHEN status = 'unassigned' THEN 2
+                    WHEN status = 'done' THEN 3
+                END,
+                CASE
+                    WHEN status = 'done' THEN UNIX_TIMESTAMP(updated_at)
+                    ELSE UNIX_TIMESTAMP(created_at)
+                END DESC
+            ")
             ->paginate(25)
             ->withQueryString();
 
         $statusCounts = [
             'all' => MaintenanceTask::count(),
+            'unassigned' => MaintenanceTask::where('status', MaintenanceTaskStatus::Unassigned)->count(),
             'assigned' => MaintenanceTask::where('status', MaintenanceTaskStatus::Assigned)->count(),
             'in_progress' => MaintenanceTask::where('status', MaintenanceTaskStatus::InProgress)->count(),
             'done' => MaintenanceTask::where('status', MaintenanceTaskStatus::Done)->count(),
@@ -105,7 +116,7 @@ class MaintenanceController extends Controller
             abort(403, 'You do not have permission to assign other users.');
         }
 
-        $task->update(['assigned_to' => $userId]);
+        $task->update(['assigned_to' => $userId, 'status' => MaintenanceTaskStatus::Assigned]);
 
         return redirect()->route('maintenance')->with('success', 'Task assigned.');
     }
@@ -121,7 +132,12 @@ class MaintenanceController extends Controller
             abort(403, 'You do not have permission to unassign this task.');
         }
 
-        $task->update(['assigned_to' => null]);
+        // Cannot unassign if task is done
+        if ($task->status === MaintenanceTaskStatus::Done) {
+            return redirect()->route('maintenance')->with('error', 'Cannot unassign a completed task. Reopen it first.');
+        }
+
+        $task->update(['assigned_to' => null, 'status' => MaintenanceTaskStatus::Unassigned]);
 
         return redirect()->route('maintenance')->with('success', 'Task unassigned.');
     }
@@ -144,23 +160,49 @@ class MaintenanceController extends Controller
     public function transitionStatus(Request $request, MaintenanceTask $task): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'string', 'in:assigned,in_progress,done'],
+            'status' => ['required', 'string', 'in:unassigned,assigned,in_progress,done'],
         ]);
 
         $newStatus = MaintenanceTaskStatus::from($validated['status']);
         $currentUser = $request->user();
 
-        $allowed = match ($newStatus) {
-            MaintenanceTaskStatus::InProgress => $task->status === MaintenanceTaskStatus::Assigned && $task->isAssignee($currentUser),
-            MaintenanceTaskStatus::Done => $task->status === MaintenanceTaskStatus::InProgress && $task->isAssignee($currentUser),
-            MaintenanceTaskStatus::Assigned => $task->status === MaintenanceTaskStatus::Done && $currentUser->can('Edit Maintenance Task'),
-        };
+        // Cannot change to unassigned if someone is assigned
+        if ($newStatus === MaintenanceTaskStatus::Unassigned && $task->assigned_to !== null) {
+            abort(403, 'Cannot set status to unassigned while task is assigned to someone. Unassign the task first.');
+        }
+
+        // Assignee can freely change between Assigned, InProgress, and Done
+        $assigneeStatuses = [MaintenanceTaskStatus::Assigned, MaintenanceTaskStatus::InProgress, MaintenanceTaskStatus::Done];
+        $isAssigneeTransition = in_array($newStatus, $assigneeStatuses) &&
+                               in_array($task->status, $assigneeStatuses) &&
+                               $task->isAssignee($currentUser);
+
+        // Editors can also change status between Assigned, InProgress, and Done
+        $isEditorTransition = in_array($newStatus, $assigneeStatuses) &&
+                             in_array($task->status, $assigneeStatuses) &&
+                             $currentUser->can('Edit Maintenance Task');
+
+        // Editors can reopen Done tasks to Unassigned
+        $isReopenTransition = $newStatus === MaintenanceTaskStatus::Unassigned &&
+                             $task->status === MaintenanceTaskStatus::Done &&
+                             $currentUser->can('Edit Maintenance Task');
+
+        // Allow unassigned -> assigned (assignment flow)
+        $isAssignmentTransition = $newStatus === MaintenanceTaskStatus::Assigned &&
+                                 $task->status === MaintenanceTaskStatus::Unassigned;
+
+        $allowed = $isAssigneeTransition || $isEditorTransition || $isReopenTransition || $isAssignmentTransition;
 
         if (! $allowed) {
             abort(403, 'You cannot perform this status transition.');
         }
 
-        $task->update(['status' => $newStatus]);
+        // If transitioning to Unassigned, also unassign the assignee
+        if ($newStatus === MaintenanceTaskStatus::Unassigned) {
+            $task->update(['status' => $newStatus, 'assigned_to' => null]);
+        } else {
+            $task->update(['status' => $newStatus]);
+        }
 
         return redirect()->route('maintenance')->with('success', 'Status updated to '.$newStatus->label().'.');
     }
