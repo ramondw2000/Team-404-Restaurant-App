@@ -15,7 +15,7 @@ class StatusFilter extends Component
 
     public ?string $filter = null;
 
-    protected $listeners = ['statusUpdated' => '$refresh', 'assignmentUpdated' => '$refresh'];
+    protected $listeners = [];
 
     public function mount(?string $filter = null, array $selectedStatuses = []): void
     {

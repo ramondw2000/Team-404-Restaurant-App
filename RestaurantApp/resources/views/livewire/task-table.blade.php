@@ -12,7 +12,7 @@
                 </tr>
             </thead>
             @forelse($tasks as $index => $task)
-                <x-maintenance.task-row :task="$task" :index="$index" :total="$tasks->count()" />
+                <x-maintenance.task-row :task="$task" :index="$index" :total="$tasks->count()" :assignable-users="$assignableUsers" />
             @empty
                 <tbody>
                     <tr>

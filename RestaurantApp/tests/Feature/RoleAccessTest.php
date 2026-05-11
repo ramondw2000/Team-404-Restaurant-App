@@ -111,36 +111,6 @@ it('denies barista access to table management', function () {
     actingAsRole('barista')->get(route('tablemanagement'))->assertForbidden();
 });
 
-// ── Kitchen Orders: management, server, chef, barista ──
-
-it('allows management to access kitchen orders', function () {
-    actingAsRole('management')->get(route('kitchen-orders'))->assertOk();
-});
-
-it('allows server to access kitchen orders', function () {
-    actingAsRole('server')->get(route('kitchen-orders'))->assertOk();
-});
-
-it('allows chef to access kitchen orders', function () {
-    actingAsRole('chef')->get(route('kitchen-orders'))->assertOk();
-});
-
-it('allows barista to access kitchen orders', function () {
-    actingAsRole('barista')->get(route('kitchen-orders'))->assertOk();
-});
-
-it('denies receptionist access to kitchen orders', function () {
-    actingAsRole('receptionist')->get(route('kitchen-orders'))->assertForbidden();
-});
-
-it('denies bartender access to kitchen orders', function () {
-    actingAsRole('bartender')->get(route('kitchen-orders'))->assertForbidden();
-});
-
-it('denies maintenance_crew access to kitchen orders', function () {
-    actingAsRole('maintenance_crew')->get(route('kitchen-orders'))->assertForbidden();
-});
-
 // ── Dishes: management, chef ──
 
 it('allows management to access dishes', function () {

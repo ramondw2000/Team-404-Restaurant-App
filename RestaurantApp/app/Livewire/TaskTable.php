@@ -6,7 +6,10 @@ namespace App\Livewire;
 
 use App\Enums\MaintenanceTaskStatus;
 use App\Models\MaintenanceTask;
+use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,8 +26,6 @@ class TaskTable extends Component
     protected $queryString = ['filter', 'search', 'selectedStatuses'];
 
     protected $listeners = [
-        'statusUpdated' => '$refresh',
-        'assignmentUpdated' => '$refresh',
         'filterUpdated' => 'updateFilter',
     ];
 
@@ -38,6 +39,99 @@ class TaskTable extends Component
         $this->filter = $filter;
         $this->search = $search;
         $this->selectedStatuses = $selectedStatuses;
+    }
+
+    /**
+     * Users who have the 'View Maintenance' permission.
+     *
+     * @return Collection<int, User>
+     */
+    #[Computed]
+    public function assignableUsers(): Collection
+    {
+        return User::permission('View Maintenance')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    public function assignUser(int $taskId, int $userId): void
+    {
+        $task = MaintenanceTask::findOrFail($taskId);
+        $currentUser = auth()->user();
+
+        if ($userId !== $currentUser->id && ! $currentUser->can('Assign Maintenance Task')) {
+            $this->dispatch('toast', message: 'You do not have permission to assign other users.', type: 'danger');
+
+            return;
+        }
+
+        $task->update(['assigned_to' => $userId, 'status' => MaintenanceTaskStatus::Assigned]);
+
+        $assignedName = User::find($userId)?->name ?? 'Unknown';
+        $this->dispatch('toast', message: "Task assigned to {$assignedName}.", type: 'success');
+    }
+
+    public function unassignUser(int $taskId): void
+    {
+        $task = MaintenanceTask::findOrFail($taskId);
+        $currentUser = auth()->user();
+
+        if (! $task->isAssignee($currentUser) && ! $currentUser->can('Assign Maintenance Task')) {
+            $this->dispatch('toast', message: 'You do not have permission to unassign this task.', type: 'danger');
+
+            return;
+        }
+
+        // Cannot unassign if task is done
+        if ($task->status === MaintenanceTaskStatus::Done) {
+            $this->dispatch('toast', message: 'Cannot unassign a completed task. Reopen it first.', type: 'danger');
+
+            return;
+        }
+
+        $task->update(['assigned_to' => null, 'status' => MaintenanceTaskStatus::Unassigned]);
+
+        $this->dispatch('toast', message: 'Task unassigned.', type: 'success');
+    }
+
+    public function transitionStatus(int $taskId, string $status): void
+    {
+        $task = MaintenanceTask::findOrFail($taskId);
+        $newStatus = MaintenanceTaskStatus::from($status);
+        $currentUser = auth()->user();
+
+        // Assignee can freely change between Assigned, InProgress, and Done
+        $assigneeStatuses = [MaintenanceTaskStatus::Assigned, MaintenanceTaskStatus::InProgress, MaintenanceTaskStatus::Done];
+        $isAssigneeTransition = in_array($newStatus, $assigneeStatuses) &&
+                               in_array($task->status, $assigneeStatuses) &&
+                               $task->isAssignee($currentUser);
+
+        // Editors can also change status between Assigned, InProgress, and Done
+        $isEditorTransition = in_array($newStatus, $assigneeStatuses) &&
+                             in_array($task->status, $assigneeStatuses) &&
+                             $currentUser->can('Edit Maintenance Task');
+
+        // Editors can reopen Done tasks to Unassigned
+        $isReopenTransition = $newStatus === MaintenanceTaskStatus::Unassigned &&
+                             $task->status === MaintenanceTaskStatus::Done &&
+                             $currentUser->can('Edit Maintenance Task');
+
+        $allowed = $isAssigneeTransition || $isEditorTransition || $isReopenTransition;
+
+        if (! $allowed) {
+            $this->dispatch('toast', message: 'You cannot perform this status transition.', type: 'danger');
+
+            return;
+        }
+
+        // If reopening (transitioning to Unassigned), also unassign the assignee
+        if ($newStatus === MaintenanceTaskStatus::Unassigned) {
+            $task->update(['status' => $newStatus, 'assigned_to' => null]);
+        } else {
+            $task->update(['status' => $newStatus]);
+        }
+
+        $this->dispatch('toast', message: 'Status updated to '.$newStatus->label().'.', type: 'success');
     }
 
     public function render(): View
@@ -59,8 +153,8 @@ class TaskTable extends Component
                     WHEN status = 'done' THEN 3
                 END,
                 CASE
-                    WHEN status = 'done' THEN UNIX_TIMESTAMP(updated_at)
-                    ELSE UNIX_TIMESTAMP(created_at)
+                    WHEN status = 'done' THEN updated_at
+                    ELSE created_at
                 END DESC
             ")
             ->paginate(25);
@@ -76,6 +170,7 @@ class TaskTable extends Component
         return view('livewire.task-table', [
             'tasks' => $tasks,
             'statusCounts' => $statusCounts,
+            'assignableUsers' => $this->assignableUsers,
         ]);
     }
 }

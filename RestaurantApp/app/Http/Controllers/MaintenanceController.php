@@ -33,8 +33,8 @@ class MaintenanceController extends Controller
                     WHEN status = 'done' THEN 3
                 END,
                 CASE
-                    WHEN status = 'done' THEN UNIX_TIMESTAMP(updated_at)
-                    ELSE UNIX_TIMESTAMP(created_at)
+                    WHEN status = 'done' THEN updated_at
+                    ELSE created_at
                 END DESC
             ")
             ->paginate(25)
