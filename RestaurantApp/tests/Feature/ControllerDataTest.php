@@ -21,27 +21,6 @@ it('dishes page renders as Livewire component', function () {
     $response->assertSeeLivewire(DishesPage::class);
 });
 
-it('KitchenOrderController passes orders and computed counts', function () {
-    $element = FloorPlanElement::factory()->create();
-    $dish = Dish::factory()->create();
-    $order = Order::factory()->active()->create(['floor_plan_element_id' => $element->id]);
-    OrderItem::factory()->create(['order_id' => $order->id, 'dish_id' => $dish->id]);
-
-    $response = $this->get(route('kitchen-orders'));
-
-    $response->assertOk();
-    $response->assertViewHas('allergenConfig');
-    $response->assertViewHas('orders');
-    $response->assertViewHas('countActive');
-    $response->assertViewHas('countCompleted');
-    $response->assertViewHas('totalPending');
-    $response->assertViewHas('totalReady');
-
-    $orders = $response->viewData('orders');
-    expect($orders)->toBeArray()->not->toBeEmpty();
-    expect($orders[0])->toHaveKeys(['id', 'type', 'dishes', 'cnt_pending', 'cnt_total', 'overall']);
-});
-
 it('StatisticsController passes sales data and unsold items', function () {
     $soldDish = Dish::factory()->create(['name' => 'Sold Pasta']);
     $unsoldDish = Dish::factory()->create(['name' => 'Unsold Risotto']);

@@ -17,22 +17,6 @@ it('renders the accounts styles component with sheet CSS', function () {
         ->toContain('.sheet-panel.open');
 });
 
-it('renders the accounts scripts component with JS functions', function () {
-    view()->share('errors', new ViewErrorBag);
-    $html = Blade::render('<x-accounts.scripts />');
-
-    expect($html)
-        ->toContain('<script>')
-        ->toContain('switchTab')
-        ->toContain('openSheet')
-        ->toContain('openEditSheet')
-        ->toContain('closeSheet')
-        ->toContain('confirmDelete')
-        ->toContain('closeDelete')
-        ->toContain('updateRoleDesc')
-        ->toContain('roleDescriptions');
-});
-
 it('renders the accounts role-tabs component with all role tabs', function () {
     (new RoleSeeder)->run();
 

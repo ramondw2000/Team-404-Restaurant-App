@@ -1,7 +1,7 @@
-@props(['task'])
+@props(['task', 'index' => 0, 'total' => 0, 'assignableUsers'])
 
 @php
-    $isAssignee = $task->assigned_to === auth()->id();
+    $isBottom3 = ($total - $index) <= 3;
 @endphp
 
 <tbody x-data="{ expanded: false }">
@@ -11,10 +11,10 @@
         </x-ui.td>
         <x-ui.td class="text-gray-600 text-sm whitespace-nowrap">{{ $task->location }}</x-ui.td>
         <x-ui.td>
-            <livewire:task-assignment-dropdown :task-id="$task->id" :assigned-user-id="$task->assigned_to" :key="'assign-'.$task->id" />
+            <x-maintenance.task-assignment-cell :task="$task" :assignable-users="$assignableUsers" :drop-up="$isBottom3" />
         </x-ui.td>
         <x-ui.td>
-            <livewire:task-status-transition :task-id="$task->id" :current-status="$task->status->value" :is-assignee="$isAssignee" :key="'status-'.$task->id" />
+            <x-maintenance.task-status-cell :task="$task" />
         </x-ui.td>
         <x-ui.td class="text-gray-400 text-xs whitespace-nowrap">
             {{ $task->created_at->format('M d, Y') }}
@@ -69,7 +69,7 @@
     </tr>
     <tr x-show="expanded" x-collapse x-cloak>
         <td colspan="6" class="p-0">
-            <livewire:maintenance-task-requirements :task-id="$task->id" :key="'req-'.$task->id" />
+            <livewire:maintenance-task-requirements :task-id="$task->id" lazy :key="'req-'.$task->id" />
         </td>
     </tr>
 </tbody>

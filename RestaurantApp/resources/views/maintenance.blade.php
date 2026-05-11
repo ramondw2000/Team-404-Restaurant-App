@@ -79,37 +79,17 @@
                     <div class="hidden sm:block w-px h-5 bg-gray-200"></div>
 
                     {{-- Status filter checkboxes --}}
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-medium text-gray-500 mr-1">Status:</span>
-                        @php
-                            $selectedStatuses = (array) request('status', []);
-                        @endphp
-                        @foreach(\App\Enums\MaintenanceTaskStatus::cases() as $statusCase)
-                            <label class="inline-flex items-center gap-1 text-xs cursor-pointer">
-                                <input type="checkbox" name="status[]" value="{{ $statusCase->value }}"
-                                    {{ in_array($statusCase->value, $selectedStatuses) ? 'checked' : '' }}
-                                    onchange="this.form.submit()"
-                                    class="rounded border-gray-300 text-molveno-blue-500 focus:ring-molveno-blue-300 w-3.5 h-3.5"
-                                />
-                                <x-ui.badge :variant="$statusCase->badgeVariant()" size="sm">
-                                    {{ $statusCase->label() }}
-                                    <span class="opacity-70">({{ $statusCounts[$statusCase->value] ?? 0 }})</span>
-                                </x-ui.badge>
-                            </label>
-                        @endforeach
-                    </div>
+                    <livewire:status-filter
+                        :filter="request('filter')"
+                        :selected-statuses="(array) request('status', [])" />
                 </div>
             </form>
 
             {{-- Task Table --}}
-            <x-maintenance.task-table :tasks="$tasks" emptyMessage="No tasks found matching your filters." />
-
-            {{-- Pagination --}}
-            @if($tasks->hasPages())
-                <div class="flex justify-center">
-                    {{ $tasks->links() }}
-                </div>
-            @endif
+            <livewire:task-table
+                :filter="request('filter')"
+                :search="request('search')"
+                :selected-statuses="(array) request('status', [])" />
 
         </div>
 

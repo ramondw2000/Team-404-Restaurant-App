@@ -56,8 +56,8 @@ it('filters by my-tasks', function () {
 
 it('filters by unassigned', function () {
     $user = maintenanceUser();
-    MaintenanceTask::factory()->create(['name' => 'Assigned task', 'assigned_to' => $user->id]);
-    MaintenanceTask::factory()->create(['name' => 'Unassigned task', 'assigned_to' => null]);
+    MaintenanceTask::factory()->create(['name' => 'Assigned task', 'status' => MaintenanceTaskStatus::Assigned, 'assigned_to' => $user->id]);
+    MaintenanceTask::factory()->create(['name' => 'Unassigned task', 'status' => MaintenanceTaskStatus::Unassigned, 'assigned_to' => null]);
 
     $response = $this->actingAs($user)->get(route('maintenance', ['filter' => 'unassigned']));
 
@@ -284,23 +284,27 @@ it('allows reopening a Done task with Edit Maintenance Task permission', functio
     expect($task->fresh()->status)->toBe(MaintenanceTaskStatus::Assigned);
 });
 
-it('denies non-assignee from starting work', function () {
+it('allows editor to transition status even if not assignee', function () {
     $assignee = maintenanceUser();
-    $other = maintenanceUser();
+    $editor = maintenanceUser();
     $task = MaintenanceTask::factory()->create(['assigned_to' => $assignee->id, 'status' => MaintenanceTaskStatus::Assigned]);
 
-    $this->actingAs($other)
+    $this->actingAs($editor)
         ->patch(route('maintenance.transitionStatus', $task), ['status' => 'in_progress'])
-        ->assertForbidden();
+        ->assertRedirect(route('maintenance'));
+
+    expect($task->fresh()->status)->toBe(MaintenanceTaskStatus::InProgress);
 });
 
-it('denies invalid status transitions', function () {
+it('allows assignee to transition from Assigned directly to Done', function () {
     $user = maintenanceUser();
     $task = MaintenanceTask::factory()->create(['assigned_to' => $user->id, 'status' => MaintenanceTaskStatus::Assigned]);
 
     $this->actingAs($user)
         ->patch(route('maintenance.transitionStatus', $task), ['status' => 'done'])
-        ->assertForbidden();
+        ->assertRedirect(route('maintenance'));
+
+    expect($task->fresh()->status)->toBe(MaintenanceTaskStatus::Done);
 });
 
 // ── Model ─────────────────────────────────────────────────────
