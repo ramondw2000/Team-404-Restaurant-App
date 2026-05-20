@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Reservation;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,15 +19,15 @@ class ReservationFactory extends Factory
     public function definition(): array
     {
         return [
-            'guest_name'           => fake()->name(),
-            'phone'                => fake()->optional()->phoneNumber(),
-            'email'                => fake()->optional()->safeEmail(),
-            'party_size'           => fake()->numberBetween(1, 8),
+            'guest_name' => fake()->name(),
+            'phone' => fake()->optional()->phoneNumber(),
+            'email' => fake()->optional()->safeEmail(),
+            'party_size' => fake()->numberBetween(1, 8),
             'reservation_datetime' => now()->addHours(2),
-            'table_number'         => null,
-            'room_number'          => null,
-            'status'               => 'scheduled',
-            'internal_notes'       => null,
+            'table_number' => null,
+            'room_number' => null,
+            'status' => 'scheduled',
+            'internal_notes' => null,
         ];
     }
 
@@ -37,7 +38,10 @@ class ReservationFactory extends Factory
 
     public function arrived(): static
     {
-        return $this->state(['status' => 'arrived']);
+        return $this->state(fn (array $attributes) => [
+            'status' => 'arrived',
+            'seated_at' => $attributes['seated_at'] ?? now(),
+        ]);
     }
 
     public function late(): static
@@ -55,7 +59,7 @@ class ReservationFactory extends Factory
     public function forDate(string $date, string $time = '19:00'): static
     {
         return $this->state([
-            'reservation_datetime' => \Carbon\Carbon::parse("{$date} {$time}"),
+            'reservation_datetime' => Carbon::parse("{$date} {$time}"),
         ]);
     }
 }

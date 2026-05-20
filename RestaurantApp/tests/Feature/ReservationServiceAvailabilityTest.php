@@ -53,21 +53,23 @@ it('returns null when no guest is seated at the table', function () {
     expect(app(ReservationService::class)->getStayEndForElement($table->id))->toBeNull();
 });
 
-it('returns reservation_datetime + 2 hours when no later booking exists', function () {
+it('returns seated_at + 2 hours when no later booking exists', function () {
     $plan = FloorPlan::factory()->create();
     $table = FloorPlanElement::factory()->create(['floor_plan_id' => $plan->id]);
 
     $reservedAt = Carbon::parse('2030-01-15 19:00');
+    $seatedAt = Carbon::parse('2030-01-15 19:15');
     Reservation::factory()->arrived()->create([
         'floor_plan_element_id' => $table->id,
         'reservation_datetime' => $reservedAt,
+        'seated_at' => $seatedAt,
     ]);
 
     expect(app(ReservationService::class)->getStayEndForElement($table->id)->toDateTimeString())
-        ->toBe($reservedAt->copy()->addHours(2)->toDateTimeString());
+        ->toBe($seatedAt->copy()->addHours(2)->toDateTimeString());
 });
 
-it('anchors stay end to reservation_datetime even when seated before reservation time', function () {
+it('falls back to reservation_datetime + 2 hours when seated_at is null', function () {
     $plan = FloorPlan::factory()->create();
     $table = FloorPlanElement::factory()->create(['floor_plan_id' => $plan->id]);
 
@@ -75,7 +77,7 @@ it('anchors stay end to reservation_datetime even when seated before reservation
     Reservation::factory()->arrived()->create([
         'floor_plan_element_id' => $table->id,
         'reservation_datetime' => $reservedAt,
-        'updated_at' => $reservedAt->copy()->subHour(),
+        'seated_at' => null,
     ]);
 
     expect(app(ReservationService::class)->getStayEndForElement($table->id)->toDateTimeString())
@@ -87,9 +89,11 @@ it('caps stay end at the next scheduled reservation when it lands within the 2-h
     $table = FloorPlanElement::factory()->create(['floor_plan_id' => $plan->id]);
 
     $reservedAt = Carbon::parse('2030-01-15 19:00');
+    $seatedAt = Carbon::parse('2030-01-15 19:00');
     Reservation::factory()->arrived()->create([
         'floor_plan_element_id' => $table->id,
         'reservation_datetime' => $reservedAt,
+        'seated_at' => $seatedAt,
     ]);
 
     $nextAt = $reservedAt->copy()->addMinutes(90);
@@ -100,6 +104,25 @@ it('caps stay end at the next scheduled reservation when it lands within the 2-h
 
     expect(app(ReservationService::class)->getStayEndForElement($table->id)->toDateTimeString())
         ->toBe($nextAt->toDateTimeString());
+});
+
+it('records seated_at when seating a reservation', function () {
+    $plan = FloorPlan::factory()->create();
+    $table = FloorPlanElement::factory()->create(['floor_plan_id' => $plan->id]);
+
+    $reservation = Reservation::factory()->scheduled()->create([
+        'floor_plan_element_id' => $table->id,
+        'reservation_datetime' => Carbon::parse('2030-01-15 19:00'),
+    ]);
+
+    $frozen = Carbon::parse('2030-01-15 19:10');
+    Carbon::setTestNow($frozen);
+
+    app(ReservationService::class)->seatReservation($reservation);
+
+    expect($reservation->fresh()->seated_at->toDateTimeString())->toBe($frozen->toDateTimeString());
+
+    Carbon::setTestNow();
 });
 
 it('excludes tables where seat count is less than party size', function () {
