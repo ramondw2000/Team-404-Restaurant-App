@@ -8,6 +8,7 @@ use App\Enums\TableStatus;
 use App\Models\FloorPlanElement;
 use App\Models\Reservation;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -22,10 +23,11 @@ final readonly class ReservationService
 
     /**
      * Compute when the currently seated guest at a table must vacate:
-     * reservation start + 2h, capped by the next active reservation's start time.
+     * seated_at + 2h, capped by the next active reservation's start time.
+     * Falls back to reservation_datetime when seated_at is null (legacy rows).
      * Returns null if no guest is currently seated at this table.
      */
-    public function getStayEndForElement(int $elementId): ?Carbon
+    public function getStayEndForElement(int $elementId): ?CarbonInterface
     {
         $arrived = Reservation::where('floor_plan_element_id', $elementId)
             ->where('status', 'arrived')
@@ -36,7 +38,8 @@ final readonly class ReservationService
             return null;
         }
 
-        $defaultEnd = $arrived->reservation_datetime->copy()->addHours(self::DEFAULT_STAY_HOURS);
+        $anchor = $arrived->seated_at ?? $arrived->reservation_datetime;
+        $defaultEnd = $anchor->copy()->addHours(self::DEFAULT_STAY_HOURS);
 
         $nextReservation = Reservation::where('floor_plan_element_id', $elementId)
             ->where('id', '!=', $arrived->id)
@@ -95,7 +98,7 @@ final readonly class ReservationService
     /**
      * Check if a table is available at a given time (2-hour window).
      */
-    public function isTableAvailableAt(int $elementId, Carbon $dateTime): bool
+    public function isTableAvailableAt(int $elementId, CarbonInterface $dateTime): bool
     {
         $windowStart = $dateTime->copy()->subHours(2);
         $windowEnd = $dateTime->copy()->addHours(2);
@@ -157,7 +160,10 @@ final readonly class ReservationService
             }
         }
 
-        $reservation->update(['status' => 'arrived']);
+        $reservation->update([
+            'status' => 'arrived',
+            'seated_at' => now(),
+        ]);
 
         if ($reservation->floorPlanElement) {
             $reservation->floorPlanElement->update(['status' => TableStatus::Occupied]);
@@ -211,7 +217,7 @@ final readonly class ReservationService
      */
     public function autoMarkLateReservations(): int
     {
-        $count = Reservation::where('status', 'scheduled')
+        $count = (int) Reservation::where('status', 'scheduled')
             ->where('reservation_datetime', '<', now())
             ->update(['status' => 'late']);
 
@@ -245,7 +251,7 @@ final readonly class ReservationService
      *
      * @return SupportCollection<int, FloorPlanElement>
      */
-    public function getAvailableTablesAt(Carbon $dateTime, int $partySize): SupportCollection
+    public function getAvailableTablesAt(CarbonInterface $dateTime, int $partySize): SupportCollection
     {
         return FloorPlanElement::whereNotNull('table_name')
             ->where('seat_count', '>=', $partySize)
@@ -258,7 +264,7 @@ final readonly class ReservationService
      * Find the smallest available table that fits the party size at the given datetime.
      * Ties broken by id for deterministic selection.
      */
-    public function findBestAvailableTableAt(Carbon $dateTime, int $partySize): ?FloorPlanElement
+    public function findBestAvailableTableAt(CarbonInterface $dateTime, int $partySize): ?FloorPlanElement
     {
         return $this->getAvailableTablesAt($dateTime, $partySize)
             ->sortBy([['seat_count', 'asc'], ['id', 'asc']])
@@ -280,7 +286,7 @@ final readonly class ReservationService
      *
      * @return array<int, array{reservation_id: int, guest_name: string, party_size: int, time: string, status: string}>
      */
-    public function getReservationMapForFloorPlanAt(int $floorPlanId, Carbon $datetime): array
+    public function getReservationMapForFloorPlanAt(int $floorPlanId, CarbonInterface $datetime): array
     {
         $windowStart = $datetime->copy()->subHours(2);
         $windowEnd = $datetime->copy()->addHours(2);
