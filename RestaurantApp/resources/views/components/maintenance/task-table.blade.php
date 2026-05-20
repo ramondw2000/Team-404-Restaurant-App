@@ -13,7 +13,8 @@
                 <x-ui.th>Assigned To</x-ui.th>
                 <x-ui.th>Status</x-ui.th>
                 <x-ui.th>Date Created</x-ui.th>
-                <x-ui.th>Actions</x-ui.th>
+                <x-ui.th>Done At</x-ui.th>
+                <x-ui.th>Completion Date</x-ui.th>
             </tr>
         </thead>
         @forelse($tasks as $index => $task)
@@ -21,7 +22,7 @@
         @empty
             <tbody>
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <x-ui.empty-state :title="$emptyMessage" />
                     </td>
                 </tr>

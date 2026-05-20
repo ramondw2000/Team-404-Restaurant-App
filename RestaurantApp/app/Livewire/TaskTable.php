@@ -124,11 +124,12 @@ class TaskTable extends Component
             return;
         }
 
-        // If reopening (transitioning to Unassigned), also unassign the assignee
-        if ($newStatus === MaintenanceTaskStatus::Unassigned) {
-            $task->update(['status' => $newStatus, 'assigned_to' => null]);
+        if ($newStatus === MaintenanceTaskStatus::Done) {
+            $task->update(['status' => $newStatus, 'done_at' => now()]);
+        } elseif ($newStatus === MaintenanceTaskStatus::Unassigned) {
+            $task->update(['status' => $newStatus, 'assigned_to' => null, 'done_at' => null]);
         } else {
-            $task->update(['status' => $newStatus]);
+            $task->update(['status' => $newStatus, 'done_at' => null]);
         }
 
         $this->dispatch('toast', message: 'Status updated to '.$newStatus->label().'.', type: 'success');

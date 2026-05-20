@@ -19,6 +19,13 @@
         <x-ui.td class="text-gray-400 text-xs whitespace-nowrap">
             {{ $task->created_at->format('M d, Y') }}
         </x-ui.td>
+        <x-ui.td class="text-gray-600 text-xs whitespace-nowrap">
+            @if($task->done_at)
+                {{ $task->done_at->format('d-m-Y H:i') }}
+            @else
+                <span class="text-gray-300">-</span>
+            @endif
+        </x-ui.td>
         <x-ui.td>
             <div class="flex items-center gap-1">
                 <button type="button" @click="expanded = !expanded" class="inline-flex items-center gap-1 text-xs font-medium text-molveno-blue-600 hover:text-molveno-blue-800 hover:bg-molveno-blue-50 rounded px-2 py-1 transition-colors">
@@ -68,7 +75,7 @@
         </x-ui.td>
     </tr>
     <tr x-show="expanded" x-collapse x-cloak>
-        <td colspan="6" class="p-0">
+        <td colspan="7" class="p-0">
             <livewire:maintenance-task-requirements :task-id="$task->id" lazy :key="'req-'.$task->id" />
         </td>
     </tr>

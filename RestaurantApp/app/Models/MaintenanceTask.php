@@ -17,6 +17,7 @@ class MaintenanceTask extends Model
         'name',
         'location',
         'status',
+        'done_at',
         'notes',
         'assigned_to',
         'requirements',
@@ -26,6 +27,7 @@ class MaintenanceTask extends Model
     {
         return [
             'status' => MaintenanceTaskStatus::class,
+            'done_at' => 'datetime',
             'requirements' => 'array',
         ];
     }
@@ -54,7 +56,10 @@ class MaintenanceTask extends Model
 
     public function markAsDone(): void
     {
-        $this->update(['status' => MaintenanceTaskStatus::Done]);
+        $this->update([
+            'status' => MaintenanceTaskStatus::Done,
+            'done_at' => now(),
+        ]);
     }
 
     public function scopeAssigned($query)
