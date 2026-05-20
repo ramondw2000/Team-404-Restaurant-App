@@ -31,6 +31,7 @@
                     <x-ui.th>Allergens</x-ui.th>
                     <x-ui.th>Dietary</x-ui.th>
                     <x-ui.th class="text-center">Dishes</x-ui.th>
+                    <x-ui.th class="text-center">Available</x-ui.th>
                     <x-ui.th class="text-right">Actions</x-ui.th>
                 </tr>
             </thead>
@@ -74,6 +75,25 @@
                                 {{ $ingredient->dishes_count }}
                             </span>
                         </x-ui.td>
+                        <x-ui.td class="text-center">
+                            <button
+                                type="button"
+                                wire:click="toggleAvailability({{ $ingredient->id }})"
+                                @class([
+                                    'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
+                                    'bg-green-500' => $ingredient->is_available,
+                                    'bg-gray-300' => ! $ingredient->is_available,
+                                ])
+                                title="{{ $ingredient->is_available ? 'Available — click to mark out of stock' : 'Out of stock — click to mark available' }}"
+                                aria-label="Toggle availability for {{ $ingredient->name }}"
+                            >
+                                <span @class([
+                                    'inline-block h-3 w-3 transform rounded-full bg-white transition-transform',
+                                    'translate-x-5' => $ingredient->is_available,
+                                    'translate-x-1' => ! $ingredient->is_available,
+                                ])></span>
+                            </button>
+                        </x-ui.td>
                         <x-ui.td class="text-right">
                             <div class="flex items-center justify-end gap-1">
                                 <button
@@ -101,7 +121,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <x-ui.td colspan="5" class="text-center text-gray-400 py-8">
+                        <x-ui.td colspan="6" class="text-center text-gray-400 py-8">
                             No ingredients found. Create one to get started.
                         </x-ui.td>
                     </tr>

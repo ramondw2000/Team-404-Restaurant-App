@@ -56,6 +56,16 @@ class IngredientLibrary extends Component
         return $query->paginate(20);
     }
 
+    public function toggleAvailability(int $id): void
+    {
+        $this->authorize('Edit Dishes');
+
+        $ingredient = Ingredient::findOrFail($id);
+        $ingredient->update(['is_available' => ! $ingredient->is_available]);
+
+        unset($this->ingredients);
+    }
+
     public function deleteIngredient(int $id): void
     {
         $ingredient = Ingredient::withCount('dishes')->findOrFail($id);
@@ -87,7 +97,7 @@ class IngredientLibrary extends Component
     #[On('ingredient-updated')]
     public function onIngredientUpdated(int $id): void
     {
-        if (!in_array($id, $this->newIngredientIds, true)) {
+        if (! in_array($id, $this->newIngredientIds, true)) {
             $this->updatedIngredientIds[] = $id;
         }
         unset($this->ingredients);

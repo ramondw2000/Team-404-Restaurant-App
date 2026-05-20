@@ -19,6 +19,7 @@ class IngredientFactory extends Factory
             'name' => fake()->unique()->word(),
             'allergens' => [],
             'dietary' => [],
+            'is_available' => true,
         ];
     }
 
@@ -30,6 +31,11 @@ class IngredientFactory extends Factory
     public function vegetarian(): static
     {
         return $this->state(['dietary' => ['vegetarian']]);
+    }
+
+    public function unavailable(): static
+    {
+        return $this->state(['is_available' => false]);
     }
 
     /**

@@ -36,10 +36,17 @@
                     @else
                         <x-ordermanagement.dish-grid>
                             @foreach($this->dishes as $dish)
+                                @php($out = $dish->is_out_of_stock)
                                 <div
                                     wire:key="bar-dish-{{ $dish->id }}"
-                                    class="dish-card"
+                                    @class([
+                                        'dish-card',
+                                        'opacity-60 cursor-pointer' => $out,
+                                    ])
                                     id="bar-dish-card-{{ $dish->id }}"
+                                    @if($out)
+                                        wire:click="$dispatch('open-dish-ingredients', { dishId: {{ $dish->id }} })"
+                                    @endif
                                 >
                                     <div class="dish-card-body">
                                         <div class="flex items-start gap-2 flex-wrap">
@@ -69,11 +76,17 @@
 
                                     <div class="dish-card-image">
                                         @if($dish->photo_path)
-                                            <img src="{{ Storage::url($dish->photo_path) }}" alt="{{ $dish->name }}">
+                                            <img src="{{ Storage::url($dish->photo_path) }}" alt="{{ $dish->name }}" @class(['grayscale' => $out])>
                                         @else
-                                            <svg class="text-gray-300" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                                            <svg @class(['text-gray-300', 'grayscale' => $out]) width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
                                                 <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>
                                             </svg>
+                                        @endif
+
+                                        @if($out)
+                                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+                                                <span class="px-2 py-1 bg-black/70 text-white text-[10px] font-semibold uppercase tracking-wide rounded">Out of stock</span>
+                                            </div>
                                         @endif
 
                                         <div
@@ -82,14 +95,16 @@
                                             x-text="cart[{{ $dish->id }}]?.qty ?? 0"
                                         ></div>
 
-                                        <button
-                                            type="button"
-                                            class="btn-add-dish"
-                                            @click="openAddModal({{ $dish->id }}, {{ json_encode($dish->name) }}, {{ (float) $dish->price }})"
-                                            aria-label="Add {{ $dish->name }}"
-                                        >
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                                        </button>
+                                        @if(! $out)
+                                            <button
+                                                type="button"
+                                                class="btn-add-dish"
+                                                @click="openAddModal({{ $dish->id }}, {{ json_encode($dish->name) }}, {{ (float) $dish->price }})"
+                                                aria-label="Add {{ $dish->name }}"
+                                            >
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -483,6 +498,9 @@
             </div>
         </div>
     @endif
+
+    {{-- Ingredient-detail modal for out-of-stock dishes --}}
+    <livewire:orders.dish-ingredients-modal />
 
     <script>
         function barOrderCart(initialCart = {}) {
