@@ -14,7 +14,7 @@
                 <x-ui.th>Status</x-ui.th>
                 <x-ui.th>Date Created</x-ui.th>
                 <x-ui.th>Done At</x-ui.th>
-                <x-ui.th>Actions</x-ui.th>
+                <x-ui.th>Completion Date</x-ui.th>
             </tr>
         </thead>
         @forelse($tasks as $index => $task)
