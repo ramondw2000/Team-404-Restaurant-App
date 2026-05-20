@@ -2,17 +2,19 @@
 
 This view defines what each **role** is allowed to do across the entire app. Edit a role here once, and every user with that role inherits the change instantly.
 
-## The model
+## How it works
+
+Think of it in three layers:
 
 ```
 Permission  →  Role  →  User
 ```
 
-- **Permissions** are fixed strings the code checks (e.g. *Manage Accounts*, *Take Reservations*).
-- **Roles** group permissions into job-shaped bundles (e.g. *Waiter* bundles *Take Reservations*, *Take Orders*, *View Menu*).
-- **Users** receive permissions only via their assigned roles.
+- **Permissions** are specific actions (e.g. *Manage Accounts*, *Take Reservations*).
+- **Roles** bundle permissions into a job description (e.g. *Waiter* bundles *Take Reservations*, *Take Orders*, *View Menu*).
+- **Users** get their access through the roles assigned to them — not directly.
 
-You manage **permissions on roles** here; you assign **roles to users** on the *Users* tab.
+You set **which permissions a role has** here. You assign **roles to people** on the *Users* tab.
 
 ## Layout
 

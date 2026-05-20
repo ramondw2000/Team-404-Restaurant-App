@@ -25,9 +25,9 @@ Photos are gold here — attach if your installation supports it.
 
 ## Status
 
-Defaults to **Pending** (new tasks are unstarted).
+Defaults to **Unassigned** — a brand-new task is waiting to be picked up.
 
-Change to **In Progress** at creation only if you are filing the task *after* starting work (e.g. logging an in-flight job).
+You can change this to **In Progress** at creation only if you are logging a job you have already started (e.g. you noticed the problem and began fixing it straight away). Leave it as **Unassigned** if someone else needs to pick it up.
 
 ## Assignee
 

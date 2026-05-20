@@ -34,7 +34,7 @@ This is where allergens and dietary flags actually come from.
 2. Pick one to attach it to this dish.
 3. Repeat for every ingredient.
 
-The **Allergen summary** under the ingredient list updates live — it's the union of allergens across every attached ingredient. Same for dietary flags (the dish becomes Vegetarian only if *every* ingredient is vegetarian; Vegan only if *every* ingredient is vegan).
+The **Allergen summary** under the ingredient list updates live — it shows every allergen found in any ingredient on this dish. Dietary flags work the opposite way: a dish is only shown as Vegetarian if **all** of its ingredients are vegetarian, and only Vegan if **all** are vegan. One non-vegan ingredient removes the flag from the whole dish.
 
 **Missing an ingredient?** Open the [Ingredient Library](#) (sidebar) first, add it there, then come back.
 

@@ -9,7 +9,7 @@ The **Today / Week / Month / Year** buttons in the top-right scope every number 
 | Period | Window |
 | --- | --- |
 | **Today** | Just today (00:00 → now) |
-| **Week** | The last 7 days |
+| **Week** | The current calendar week (Monday to today) |
 | **Month** | The current calendar month |
 | **Year** | The current calendar year |
 

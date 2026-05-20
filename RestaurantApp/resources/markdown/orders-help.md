@@ -4,47 +4,45 @@ The Orders page is the live queue for incoming orders from the dining room. Depe
 
 ## Choosing Kitchen or Bar
 
-If you have access to both queues, use the **Kitchen / Bar** toggle near the top of the page.
+If you have access to both queues, a **Kitchen / Bar** switcher appears near the top of the page. Click the **Kitchen** button to see food orders, or the **Bar** button to see drink orders. The page remembers your last choice.
 
-- **Kitchen** — Food orders going to the kitchen line.
-- **Bar** — Drink orders going to the bartenders.
-
-Each queue updates in real time as servers send new orders from their tables.
+If you only have access to one queue, you will go straight to it with no switcher shown.
 
 ## Reading the Queue
 
 Each order card shows:
-- Table name / number
+- Table name / number (or *Walk-up* for bar orders with no table)
 - Time the order was placed
-- List of dishes or drinks with quantities
-- Allergens (hover an icon for details)
-- Status badge (Pending → Preparing → Ready → Served)
+- List of dishes or drinks with quantities and any notes
+- Allergen icons (hover for the allergen name)
 
 ### Status Summary
-The badges at the top of the queue summarise totals at a glance:
-- **Pending** — Not started yet
-- **Ready** — Waiting to be served
-- **Completed** — Finished today
+The counters at the top of the queue give you an at-a-glance picture:
+- **Pending** — Items not yet started
+- **Ready** — Items plated/poured and waiting to be collected
+- **Completed** — Orders fully served today
 
 ## Filtering Orders
 
-Use the **filter tabs** above the grid:
-- **All** — Everything currently active
-- **Active** — Pending or being prepared
-- **Completed** — Finished today
+Use the **filter tabs** above the grid to focus on what matters right now:
+- **All** — Every order (active and completed)
+- **Active** — Orders still being worked on
+- **Completed** — Orders finished today
 
 ## Working an Order
 
-1. Pick up the next **Pending** card.
-2. Click an item to mark it **Preparing** (or use the bulk action on the card).
-3. When the dish/drink is plated or poured, mark it **Ready**.
-4. Once a server collects it, mark the whole order **Served**.
+Each item on an order card has a **Mark Ready** button. Use it when the dish is plated or the drink is poured.
 
-Marking the last item Ready will automatically suggest completing the order.
+1. Pick up the next card from the top (oldest order first).
+2. Prepare the items.
+3. Click the item's **Mark Ready** button when it is ready to go out.
+4. Once a server collects everything, click **Complete Order** on the card to mark the whole order as served and remove it from the active queue.
+
+Clicking **Mark Ready** again on a ready item toggles it back to **Pending** — useful if you made a mistake.
 
 ## Tips
 
 - Cards are sorted oldest first — work top-to-bottom.
-- The queue auto-refreshes; no need to reload the page.
-- If a guest's allergen flag matters for the dish, the icon highlights in colour — double-check before plating.
-- Use the **Completed** filter to verify what has gone out today before closing the shift.
+- The queue auto-refreshes every few seconds; no need to reload the page.
+- Allergen icons on an item are a reminder to double-check before plating — hover to see the full allergen name.
+- Use the **Completed** filter at the end of a shift to verify what has gone out today.
