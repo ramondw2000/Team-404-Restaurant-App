@@ -25,7 +25,7 @@ Optional. Used for confirmation emails (if your installation has email turned on
 How many people the booking is for. Determines which tables can accommodate the booking.
 
 - Enter the **actual head count** — children included.
-- A party of 1 is valid; we do reserve solo dining spots.
+- Minimum party size is **2**. For a solo diner, enter 2 and note it in the Notes field.
 
 ## Date & Time
 

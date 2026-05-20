@@ -4,11 +4,13 @@ The Users tab is the master list of every staff member who can log into the syst
 
 ## How permissions reach a user
 
+You don't give permissions directly to a person. Instead you assign them a **role**, and the role defines what they can do. If someone has two roles, they get everything both roles allow combined.
+
 ```
 Permission  →  Role  →  User
 ```
 
-You don't grant permissions directly to users. You assign **roles**, and each role bundles a set of permissions defined on the *Roles & Permissions* tab. A user with two roles gets the **union** of permissions from both.
+The permissions for each role are set on the *Roles & Permissions* tab.
 
 ## Filtering the List
 

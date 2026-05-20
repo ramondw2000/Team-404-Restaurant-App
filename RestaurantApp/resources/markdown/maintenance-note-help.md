@@ -16,13 +16,11 @@ Each note should be:
 - "Driver burned out. Ordered part XYZ-123 from Supplier A, ETA Friday."
 - "Tried reseating, no fix. Escalating to electrician — left voicemail."
 
-## Editing vs. Adding
+## How Notes Work
 
-- The first time you open notes on a task you'll see **Add Note** in the header.
-- If a note already exists, opening it shows **Edit Note** instead.
-- Saving overwrites the existing note (or creates the first one).
+Each task has one notes field. When you open the notes area and save, you are updating that field — previous content is replaced by whatever you type.
 
-Some installations preserve historical notes as a list — others store a single rolling note. The form behaves accordingly.
+This means notes work best as a **running summary** that you keep up to date, rather than a back-and-forth thread. Write the current situation clearly each time you save.
 
 ## Author & Timestamp
 
