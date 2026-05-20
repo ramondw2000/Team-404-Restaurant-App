@@ -46,10 +46,11 @@
 
         {{-- Center: Title + Snap Toggle (edit mode) --}}
         <div class="flex-1 flex items-center justify-center gap-3">
+            <span class="text-sm font-semibold text-gray-700 tracking-wide uppercase">Table Management</span>
             <button
                 type="button"
-                x-on:click="$dispatch('open-sheet', { name: 'table-management-help' })"
-                class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                x-on:click="$dispatch('open-sheet', { name: 'help-table-management' })"
+                class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                 title="How to use this page"
                 aria-label="Open help guide"
             >
@@ -59,7 +60,6 @@
                     <circle cx="12" cy="20" r="1" fill="currentColor"/>
                 </svg>
             </button>
-            <span class="text-sm font-semibold text-gray-700 tracking-wide uppercase">Table Management</span>
             @if($editMode)
                 <label
                     class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none"
@@ -1277,5 +1277,5 @@
     @endif
 
     {{-- Help guide sheet --}}
-    <x-help.table-management-sheet />
+    <x-help.sheet page="table-management" title="How to use Table Management" />
 </div>

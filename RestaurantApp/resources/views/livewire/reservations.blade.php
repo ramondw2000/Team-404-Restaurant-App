@@ -4,6 +4,8 @@
         <x-ui.page-header
             :title="\Carbon\Carbon::parse($selectedDate)->translatedFormat('l, j F Y')"
             :subtitle="$this->totalCount . ' ' . ($this->totalCount === 1 ? 'reservation' : 'reservations') . ' this day'"
+            help-page="reservations-list"
+            help-title="How the Reservations list works"
         >
             <x-slot:actions>
                 {{-- Calendar Popover --}}
@@ -12,6 +14,7 @@
                         @click="open = !open"
                         type="button"
                         class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium px-3 py-2 text-sm rounded-lg transition-colors duration-150 shadow-sm"
+                        title="Pick a different day to view"
                     >
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -34,7 +37,7 @@
                     </div>
                 </div>
 
-                <x-ui.button wire:click="openReservationModal">
+                <x-ui.button wire:click="openReservationModal" title="Create a new reservation for the selected day">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 5v14M5 12h14"/>
                     </svg>

@@ -11,11 +11,28 @@
 
     <!-- Sheet header -->
     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-        <h2 id="sheet-title" class="text-base font-bold text-gray-900">Add Account</h2>
+        <div class="flex items-center gap-2">
+            <h2 id="sheet-title" class="text-base font-bold text-gray-900">Add Account</h2>
+            <button
+                type="button"
+                x-data
+                x-on:click.stop="$dispatch('open-sheet', { name: 'help-accounts-sheet' })"
+                class="p-1 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                title="How to fill in this form"
+                aria-label="Open account form help"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                    <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
         <button onclick="closeSheet()" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
     </div>
+    <x-help.sheet page="accounts-sheet" title="How to fill in the account form" />
 
     <!-- Sheet form -->
     <form id="account-form" method="POST" class="flex flex-col flex-1 overflow-hidden">

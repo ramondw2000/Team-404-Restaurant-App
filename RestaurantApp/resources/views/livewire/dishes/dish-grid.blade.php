@@ -1,4 +1,26 @@
 <div>
+    {{-- View header --}}
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+            <h2 class="text-lg font-bold text-gray-900">Dishes</h2>
+            <button
+                type="button"
+                x-data
+                x-on:click="$dispatch('open-sheet', { name: 'help-dishes-main' })"
+                class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                title="How to use the Dishes view"
+                aria-label="Open dishes help"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                    <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <x-help.sheet page="dishes-main" title="How the Dishes view works" />
+
     {{-- Legend --}}
     <x-dishes.allergen-legend :allergenConfig="$allergenConfig" />
 

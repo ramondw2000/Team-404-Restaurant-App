@@ -57,7 +57,22 @@
         {{-- Header --}}
         <div class="shrink-0 flex items-start justify-between gap-3 px-5 py-4 border-b border-gray-100">
             <div>
-                <h2 class="text-base font-bold text-gray-900" x-text="notes ? 'Edit Note' : 'Add Note'"></h2>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-gray-900" x-text="notes ? 'Edit Note' : 'Add Note'"></h2>
+                    <button
+                        type="button"
+                        @click.stop="$dispatch('open-sheet', { name: 'help-maintenance-note' })"
+                        class="p-1 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                        title="How notes work"
+                        aria-label="Open notes help"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                            <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
                 <p class="text-xs text-gray-500 mt-0.5" x-text="taskName"></p>
             </div>
             <button type="button" @click="close()"
@@ -67,6 +82,7 @@
                 </svg>
             </button>
         </div>
+        <x-help.sheet page="maintenance-note" title="How task notes work" />
 
         {{-- Body --}}
         <form

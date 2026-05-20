@@ -22,7 +22,23 @@
     >
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col" x-on:click.stop>
             <div class="p-6 overflow-y-auto flex-1">
-                <h2 class="text-lg font-bold text-gray-900 mb-1">Reservation Details</h2>
+                <div class="flex items-center gap-2 mb-1">
+                    <h2 class="text-lg font-bold text-gray-900">Reservation Details</h2>
+                    <button
+                        type="button"
+                        x-on:click.stop="$dispatch('open-sheet', { name: 'help-reservations-detail' })"
+                        class="p-1 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                        title="How the detail view works"
+                        aria-label="Open reservation detail help"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                            <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+                <x-help.sheet page="reservations-detail" title="How the Reservation detail works" />
 
                 @if($reservation)
                     @php $dt = \Carbon\Carbon::parse($reservation['reservation_datetime']); @endphp

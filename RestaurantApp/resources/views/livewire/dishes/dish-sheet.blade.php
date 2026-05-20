@@ -15,9 +15,25 @@
         {{-- Header --}}
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
             <div>
-                <h2 class="text-base font-bold text-gray-900">
-                    {{ $dishId ? 'Edit Dish' : 'Add New Dish' }}
-                </h2>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-base font-bold text-gray-900">
+                        {{ $dishId ? 'Edit Dish' : 'Add New Dish' }}
+                    </h2>
+                    <button
+                        type="button"
+                        x-data
+                        x-on:click.stop="$dispatch('open-sheet', { name: 'help-dishes-sheet' })"
+                        class="p-1 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                        title="How to fill in this form"
+                        aria-label="Open dish form help"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                            <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
                 <p class="text-xs text-gray-400 mt-0.5">
                     @if($dishId)
                         Editing: <span class="font-semibold text-gray-600">{{ $name }}</span>
@@ -34,6 +50,7 @@
                 </svg>
             </button>
         </div>
+        <x-help.sheet page="dishes-sheet" title="How to fill in the dish form" />
 
         {{-- Body --}}
         <div class="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">

@@ -21,14 +21,40 @@
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <p class="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Molveno Analytics</p>
-                        <h1 class="text-2xl font-bold">Sales performance overview</h1>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl font-bold">Sales performance overview</h1>
+                            <button
+                                type="button"
+                                x-data
+                                x-on:click="$dispatch('open-sheet', { name: 'help-statistics' })"
+                                class="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                                title="How this page works"
+                                aria-label="Open statistics help"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                                    <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
                         <p class="text-white/70 mt-1 text-sm">Monitor channel performance, track top dishes, and review completed orders.</p>
                     </div>
+                    <x-help.sheet page="statistics" title="How to read the Statistics page" />
                     <div class="shrink-0 flex items-center gap-3">
                         {{-- Period selector buttons --}}
                         <div class="bg-white/10 border border-white/20 rounded-xl p-1 flex items-center gap-1">
+                            @php
+                                $periodTitles = [
+                                    'day' => 'Show data for today only',
+                                    'week' => 'Show data for the last 7 days',
+                                    'month' => 'Show data for the current month',
+                                    'year' => 'Show data for the current year',
+                                ];
+                            @endphp
                             @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year'] as $key => $label)
-                                <a href="{{ route('statistics', ['period' => $key]) }}" 
+                                <a href="{{ route('statistics', ['period' => $key]) }}"
+                                   title="{{ $periodTitles[$key] }}"
                                    class="relative px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ease-out {{ $period === $key ? 'bg-white text-primary shadow-lg shadow-black/20 font-bold' : 'text-white/80 hover:text-white hover:bg-white/10' }}">
                                     {{ $label }}
                                 </a>
