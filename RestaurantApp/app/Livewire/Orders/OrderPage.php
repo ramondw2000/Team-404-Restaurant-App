@@ -10,6 +10,7 @@ use App\Models\MenuCategory;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -158,7 +159,7 @@ class OrderPage extends Component
                 });
             })
             ->when($this->search !== '', function ($query): void {
-                $search = '%' . addcslashes($this->search, '%_\\') . '%';
+                $search = '%'.addcslashes($this->search, '%_\\').'%';
                 $query->where(function ($q) use ($search): void {
                     $q->whereRaw('name LIKE ?', [$search])
                         ->orWhereRaw('description LIKE ?', [$search]);
@@ -271,7 +272,14 @@ class OrderPage extends Component
 
         $insertData = [];
         foreach ($cartItems as $item) {
-            $dish = Dish::findOrFail((int) $item['dish_id']);
+            $dish = Dish::with('ingredients')->findOrFail((int) $item['dish_id']);
+
+            if ($dish->is_out_of_stock) {
+                throw ValidationException::withMessages([
+                    'cart' => "\"{$dish->name}\" is out of stock and cannot be ordered.",
+                ]);
+            }
+
             $insertData[] = [
                 'order_id' => $order->id,
                 'dish_id' => $dish->id,

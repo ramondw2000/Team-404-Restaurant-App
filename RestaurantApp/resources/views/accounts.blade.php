@@ -22,7 +22,7 @@
             <x-ui.page-header title="Account Management" subtitle="Manage staff accounts — Molveno Lake Resort">
                 <x-slot:actions>
                     @if($activeTab === 'users')
-                        <x-ui.button onclick="openSheet()">
+                        <x-ui.button onclick="openSheet()" title="Create a new staff account">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 5v14M5 12h14"/>
                             </svg>
@@ -46,6 +46,7 @@
             <!-- ── Page tabs (Users / Roles) ─────────────────── -->
             <div class="flex gap-1 border-b border-gray-200">
                 <a href="{{ route('accounts.index', ['tab' => 'users']) }}"
+                   title="Browse and edit staff accounts"
                    @class([
                        'px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors',
                        'border-molveno-blue-500 text-molveno-blue-600' => $activeTab === 'users',
@@ -54,6 +55,7 @@
                     Users
                 </a>
                 <a href="{{ route('accounts.index', ['tab' => 'roles']) }}"
+                   title="Define roles and toggle which permissions each role grants"
                    @class([
                        'px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors',
                        'border-molveno-blue-500 text-molveno-blue-600' => $activeTab === 'roles',
@@ -64,6 +66,26 @@
             </div>
 
             @if($activeTab === 'users')
+
+                <!-- ── Users view header ──────────────────────── -->
+                <div class="flex items-center gap-2 -mb-2">
+                    <h2 class="text-lg font-bold text-gray-900">Users</h2>
+                    <button
+                        type="button"
+                        x-data
+                        x-on:click="$dispatch('open-sheet', { name: 'help-accounts-users' })"
+                        class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                        title="How the Users tab works"
+                        aria-label="Open users help"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                            <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+                <x-help.sheet page="accounts-users" title="How the Users tab works" />
 
                 <!-- ── Role filter tabs ───────────────────────── -->
                 <x-accounts.role-tabs :counts="$counts" :roles="$roles" />

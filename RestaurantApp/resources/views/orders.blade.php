@@ -157,7 +157,23 @@
 
             <!-- Page Title -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Orders</h1>
+                <div class="flex items-center justify-center gap-2 mb-2">
+                    <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Orders</h1>
+                    <button
+                        type="button"
+                        x-data
+                        x-on:click="$dispatch('open-sheet', { name: 'help-orders' })"
+                        class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                        title="How to use this page"
+                        aria-label="Open help guide"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                            <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
                 <p class="text-gray-500 text-sm sm:text-base">
                     @if($hasBothPermissions)
                         Manage kitchen and bar orders in one place
@@ -168,6 +184,7 @@
                     @endif
                 </p>
             </div>
+            <x-help.sheet page="orders" title="How to use the Orders queue" />
 
             <!-- Mode Toggle Card (only shown when user has both permissions) -->
             @if($hasBothPermissions)
@@ -175,7 +192,7 @@
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="text-sm text-gray-500 font-medium">Select Order Type</div>
                     <div class="inline-flex items-center bg-gray-50 border border-gray-200 rounded-2xl p-1.5 shadow-inner">
-                        <button type="button" id="btn-kitchen" class="mode-btn px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 bg-molveno-blue-500 text-white shadow-md hover:shadow-lg" onclick="setMode('kitchen')">
+                        <button type="button" id="btn-kitchen" class="mode-btn px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 bg-molveno-blue-500 text-white shadow-md hover:shadow-lg" onclick="setMode('kitchen')" title="Show the kitchen food order queue">
                             <span class="bg-white/20 p-1.5 rounded-lg">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
@@ -185,7 +202,7 @@
                             </span>
                             Kitchen
                         </button>
-                        <button type="button" id="btn-bar" class="mode-btn px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 text-gray-600 hover:bg-white hover:shadow-md" onclick="setMode('bar')">
+                        <button type="button" id="btn-bar" class="mode-btn px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 text-gray-600 hover:bg-white hover:shadow-md" onclick="setMode('bar')" title="Show the bar drink order queue">
                             <span class="bg-gray-200 p-1.5 rounded-lg">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>

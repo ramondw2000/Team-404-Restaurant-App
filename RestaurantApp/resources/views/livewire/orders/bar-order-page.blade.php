@@ -16,6 +16,8 @@
                     <x-ui.page-header
                         title="New Bar Order"
                         subtitle="Walk-up bar — no table required"
+                        help-page="bar-order-create"
+                        help-title="How to take a Bar Order"
                     />
 
                     {{-- Search --}}
@@ -36,10 +38,17 @@
                     @else
                         <x-ordermanagement.dish-grid>
                             @foreach($this->dishes as $dish)
+                                @php($out = $dish->is_out_of_stock)
                                 <div
                                     wire:key="bar-dish-{{ $dish->id }}"
-                                    class="dish-card"
+                                    @class([
+                                        'dish-card',
+                                        'opacity-60 cursor-pointer' => $out,
+                                    ])
                                     id="bar-dish-card-{{ $dish->id }}"
+                                    @if($out)
+                                        wire:click="$dispatch('open-dish-ingredients', { dishId: {{ $dish->id }} })"
+                                    @endif
                                 >
                                     <div class="dish-card-body">
                                         <div class="flex items-start gap-2 flex-wrap">
@@ -69,11 +78,17 @@
 
                                     <div class="dish-card-image">
                                         @if($dish->photo_path)
-                                            <img src="{{ Storage::url($dish->photo_path) }}" alt="{{ $dish->name }}">
+                                            <img src="{{ Storage::url($dish->photo_path) }}" alt="{{ $dish->name }}" @class(['grayscale' => $out])>
                                         @else
-                                            <svg class="text-gray-300" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                                            <svg @class(['text-gray-300', 'grayscale' => $out]) width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
                                                 <path d="M4 3h16l-2 14H6Z"/><path d="M6 17h12"/><path d="M8 7v5"/>
                                             </svg>
+                                        @endif
+
+                                        @if($out)
+                                            <div class="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+                                                <span class="px-2 py-1 bg-black/70 text-white text-[10px] font-semibold uppercase tracking-wide rounded">Out of stock</span>
+                                            </div>
                                         @endif
 
                                         <div
@@ -82,14 +97,16 @@
                                             x-text="cart[{{ $dish->id }}]?.qty ?? 0"
                                         ></div>
 
-                                        <button
-                                            type="button"
-                                            class="btn-add-dish"
-                                            @click="openAddModal({{ $dish->id }}, {{ json_encode($dish->name) }}, {{ (float) $dish->price }})"
-                                            aria-label="Add {{ $dish->name }}"
-                                        >
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                                        </button>
+                                        @if(! $out)
+                                            <button
+                                                type="button"
+                                                class="btn-add-dish"
+                                                @click="openAddModal({{ $dish->id }}, {{ json_encode($dish->name) }}, {{ (float) $dish->price }})"
+                                                aria-label="Add {{ $dish->name }}"
+                                            >
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -128,13 +145,29 @@
         >
             <div class="px-5 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                    <h2 class="text-base font-bold text-gray-900 leading-snug" x-text="addModal.name"></h2>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-base font-bold text-gray-900 leading-snug" x-text="addModal.name"></h2>
+                        <button
+                            type="button"
+                            @click.stop="$dispatch('open-sheet', { name: 'help-bar-order-add' })"
+                            class="p-1 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                            title="How to add a drink"
+                            aria-label="Open add-drink help"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                                <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
                     <p class="text-sm font-semibold text-molveno-blue-600 mt-0.5">&euro;&nbsp;<span x-text="addModal.price.toFixed(2)"></span></p>
                 </div>
                 <button @click="closeAddModal()" class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors" type="button">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
+            <x-help.sheet page="bar-order-add" title="How to add a drink to the order" />
 
             <div class="px-5 py-4 flex flex-col gap-4">
                 <div class="flex items-center gap-3">
@@ -483,6 +516,9 @@
             </div>
         </div>
     @endif
+
+    {{-- Ingredient-detail modal for out-of-stock dishes --}}
+    <livewire:orders.dish-ingredients-modal />
 
     <script>
         function barOrderCart(initialCart = {}) {

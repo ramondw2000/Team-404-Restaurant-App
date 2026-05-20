@@ -2,16 +2,33 @@
     {{-- Header --}}
     <div class="flex items-center justify-between mb-4">
         <div>
-            <h2 class="text-lg font-bold text-gray-900">Ingredient Library</h2>
+            <div class="flex items-center gap-2">
+                <h2 class="text-lg font-bold text-gray-900">Ingredient Library</h2>
+                <button
+                    type="button"
+                    x-data
+                    x-on:click="$dispatch('open-sheet', { name: 'help-dishes-ingredients' })"
+                    class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                    title="How the Ingredient Library works"
+                    aria-label="Open ingredients help"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01"/>
+                        <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
             <p class="text-xs text-gray-500">Manage global ingredients shared across all dishes.</p>
         </div>
-        <x-ui.button wire:click="$dispatch('open-ingredient-sheet')" size="sm">
+        <x-ui.button wire:click="$dispatch('open-ingredient-sheet')" size="sm" title="Add a new ingredient to the global library">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                 <path d="M12 5v14M5 12h14"/>
             </svg>
             Add Ingredient
         </x-ui.button>
     </div>
+    <x-help.sheet page="dishes-ingredients" title="How the Ingredient Library works" />
 
     {{-- Search --}}
     <x-ui.search-input wire:model.live.debounce.300ms="search" placeholder="Search ingredients…" class="mb-4" />
@@ -31,6 +48,7 @@
                     <x-ui.th>Allergens</x-ui.th>
                     <x-ui.th>Dietary</x-ui.th>
                     <x-ui.th class="text-center">Dishes</x-ui.th>
+                    <x-ui.th class="text-center">Available</x-ui.th>
                     <x-ui.th class="text-right">Actions</x-ui.th>
                 </tr>
             </thead>
@@ -74,6 +92,25 @@
                                 {{ $ingredient->dishes_count }}
                             </span>
                         </x-ui.td>
+                        <x-ui.td class="text-center">
+                            <button
+                                type="button"
+                                wire:click="toggleAvailability({{ $ingredient->id }})"
+                                @class([
+                                    'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
+                                    'bg-green-500' => $ingredient->is_available,
+                                    'bg-gray-300' => ! $ingredient->is_available,
+                                ])
+                                title="{{ $ingredient->is_available ? 'Available — click to mark out of stock' : 'Out of stock — click to mark available' }}"
+                                aria-label="Toggle availability for {{ $ingredient->name }}"
+                            >
+                                <span @class([
+                                    'inline-block h-3 w-3 transform rounded-full bg-white transition-transform',
+                                    'translate-x-5' => $ingredient->is_available,
+                                    'translate-x-1' => ! $ingredient->is_available,
+                                ])></span>
+                            </button>
+                        </x-ui.td>
                         <x-ui.td class="text-right">
                             <div class="flex items-center justify-end gap-1">
                                 <button
@@ -101,7 +138,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <x-ui.td colspan="5" class="text-center text-gray-400 py-8">
+                        <x-ui.td colspan="6" class="text-center text-gray-400 py-8">
                             No ingredients found. Create one to get started.
                         </x-ui.td>
                     </tr>

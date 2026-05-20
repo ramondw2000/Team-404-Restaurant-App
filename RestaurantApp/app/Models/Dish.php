@@ -107,6 +107,17 @@ class Dish extends Model
     }
 
     /**
+     * Out-of-stock state: true when the dish is unavailable OR any ingredient is unavailable.
+     *
+     * @return Attribute<bool, never>
+     */
+    protected function isOutOfStock(): Attribute
+    {
+        return Attribute::get(fn (): bool => ! $this->is_available
+            || $this->ingredients->contains(fn (Ingredient $ingredient): bool => ! $ingredient->is_available));
+    }
+
+    /**
      * Clean up photo from storage on deletion.
      */
     protected static function booted(): void
