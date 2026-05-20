@@ -14,6 +14,7 @@
                     <select
                         wire:change="switchFloorPlan($event.target.value)"
                         class="appearance-none bg-none pl-3 pr-8 py-1.5 text-sm font-medium bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                        title="Switch between floor plans"
                     >
                         @foreach($this->floorPlans as $plan)
                             <option
@@ -60,7 +61,10 @@
             </button>
             <span class="text-sm font-semibold text-gray-700 tracking-wide uppercase">Table Management</span>
             @if($editMode)
-                <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
+                <label
+                    class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none"
+                    title="Align tables to nearby edges and centers while dragging. Hold Shift to temporarily toggle."
+                >
                     <input
                         type="checkbox"
                         wire:model.live="snapEnabled"
@@ -114,6 +118,7 @@
                             placeholder="Table name…"
                             class="pl-6 pr-2 py-1 text-xs border border-gray-200 rounded-lg w-28 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                             x-model="$store.filters.name"
+                            title="Highlight tables matching this name"
                         >
                     </div>
 
@@ -122,6 +127,7 @@
                         <select
                             class="px-2 py-1 text-xs border border-gray-200 rounded-lg w-20 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                             x-model="$store.filters.seats"
+                            title="Show only tables with at least this many seats"
                         >
                             <option value="">Seats</option>
                             @for($i = 2; $i <= 10; $i += 2)
@@ -165,19 +171,19 @@
                 {{-- Edit Mode Toggle --}}
                 @if($editMode)
                     <div class="flex items-center gap-2">
-                        <x-ui.button size="sm" wire:click="saveChanges">
+                        <x-ui.button size="sm" wire:click="saveChanges" title="Save all layout changes">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M5 13l4 4L19 7"/>
                             </svg>
                             Save
                         </x-ui.button>
-                        <x-ui.button variant="secondary" size="sm" wire:click="exitEditMode">
+                        <x-ui.button variant="secondary" size="sm" wire:click="exitEditMode" title="Exit edit mode and return to live view">
                             Done
                         </x-ui.button>
                     </div>
                 @else
-                    <x-ui.button variant="outline" size="sm" wire:click="enterEditMode">
+                    <x-ui.button variant="outline" size="sm" wire:click="enterEditMode" title="Edit the floor plan layout: add, move, rotate, or remove tables">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -188,6 +194,30 @@
             @endif
         </div>
     </header>
+
+    {{-- ===== EDIT MODE HINT BANNER ===== --}}
+    @if($editMode)
+        <div class="flex items-center justify-between gap-3 px-4 py-1.5 bg-blue-50 border-b border-blue-200 shrink-0 z-10 text-xs text-blue-800">
+            <div class="flex items-center gap-2 min-w-0">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="truncate">
+                    Drag elements from the sidebar onto the canvas. Right-click a table for more options. Don't forget to <strong>Save</strong> when finished.
+                </span>
+            </div>
+            <div class="hidden md:flex items-center gap-2 shrink-0 text-blue-700">
+                <kbd class="px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[10px] font-mono">Ctrl+C</kbd>
+                <span class="text-[10px]">copy</span>
+                <kbd class="px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[10px] font-mono">Ctrl+V</kbd>
+                <span class="text-[10px]">paste</span>
+                <kbd class="px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[10px] font-mono">Del</kbd>
+                <span class="text-[10px]">remove</span>
+                <kbd class="px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[10px] font-mono">Shift</kbd>
+                <span class="text-[10px]">toggle snap</span>
+            </div>
+        </div>
+    @endif
 
     {{-- ===== PREVIEW MODE BANNER ===== --}}
     @if($previewDatetime && !$editMode)
@@ -609,17 +639,19 @@
 
                             {{-- Z-Order Controls --}}
                             <div>
-                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Layer Order</label>
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2" title="Controls which element appears on top when they overlap">Layer Order</label>
                                 <div class="flex gap-2">
                                     <button
                                         wire:click="bringToFront({{ json_encode($el['id']) }})"
                                         class="flex-1 py-2 px-3 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                        title="Move this element above all others"
                                     >
                                         Bring to Front
                                     </button>
                                     <button
                                         wire:click="sendToBack({{ json_encode($el['id']) }})"
                                         class="flex-1 py-2 px-3 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                        title="Move this element behind all others"
                                     >
                                         Send to Back
                                     </button>
@@ -630,6 +662,7 @@
                             <button
                                 wire:click="deleteElement({{ json_encode($el['id']) }})"
                                 class="w-full py-2 px-3 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                                title="Remove this element from the floor plan"
                             >
                                 Delete Element
                             </button>
@@ -645,6 +678,7 @@
                                 <button
                                     wire:click="openRenameModal"
                                     class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                                    title="Rename the active floor plan"
                                 >
                                     <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor"
                                          viewBox="0 0 24 24">
@@ -662,7 +696,9 @@
                                     x-on:livewire-upload-progress="progress = $event.detail.progress"
                                 >
                                     <label
-                                        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                                        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                                        title="Upload a new background image (PNG, JPG, WEBP, or SVG)">
+
                                         <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor"
                                              viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -684,7 +720,7 @@
                                 </div>
 
                                 {{-- Delete Floor Plan --}}
-                                <x-ui.button variant="danger" size="sm" wire:click="deleteFloorPlan" wire:confirm="Are you sure you want to delete this floor plan? This cannot be undone." class="w-full justify-start">
+                                <x-ui.button variant="danger" size="sm" wire:click="deleteFloorPlan" wire:confirm="Are you sure you want to delete this floor plan? This cannot be undone." class="w-full justify-start" title="Permanently delete this floor plan and all its tables">
                                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -698,6 +734,7 @@
                         <div class="flex-1 flex flex-col overflow-hidden">
                             <div class="px-4 pt-4 pb-2">
                                 <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Elements</h3>
+                                <p class="text-[11px] text-gray-400 mt-1 leading-snug">Drag a shape onto the canvas to add it. Numbers indicate seat counts.</p>
                             </div>
 
                             @if(empty($this->presetElements))
