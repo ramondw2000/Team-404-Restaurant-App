@@ -64,7 +64,7 @@
                     </x-ui.tab>
                     <x-ui.tab :active="$sortBy === 'popularity'" wire:click="setSort('popularity')">
                         @if($sortBy === 'popularity' && $sortDir === 'asc')
-                            Popular ↓
+                            Least Popular ↓
                         @elseif($sortBy === 'popularity')
                             Most Popular ↑
                         @else
