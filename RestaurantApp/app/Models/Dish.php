@@ -20,6 +20,8 @@ class Dish extends Model
         'photo_path',
         'is_available',
         'is_bar_item',
+        'category',
+        'routing_tag',
     ];
 
     /**

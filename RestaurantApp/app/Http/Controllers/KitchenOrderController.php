@@ -20,11 +20,32 @@ class KitchenOrderController extends Controller
         $dbOrders = Order::with(['items.dish.ingredients', 'floorPlanElement', 'user', 'reservation'])
             ->whereIn('status', [OrderStatus::Active->value, OrderStatus::Completed->value])
             ->where('paid', false)
+            ->whereHas('items.dish', function ($query): void {
+                // Kitchen items: routing_tag = 'kitchen' OR legacy items (is_bar_item = false and no routing_tag)
+                $query->where(function ($q): void {
+                    $q->where('routing_tag', 'kitchen')
+                        ->orWhere(function ($q2): void {
+                            $q2->where('is_bar_item', false)
+                                ->whereNull('routing_tag');
+                        });
+                });
+            })
             ->latest()
             ->get();
 
-        $orders = $dbOrders->map(function (Order $order): array {
-            $dishes = $order->items->map(function ($item): array {
+        $orders = $dbOrders->map(function (Order $order): ?array {
+            // Filter items to only show kitchen items
+            $kitchenItems = $order->items->filter(function ($item): bool {
+                $dish = $item->dish;
+                if (!$dish) {
+                    return false;
+                }
+                // Show if routing_tag is kitchen, or legacy non-bar items
+                return $dish->routing_tag === 'kitchen'
+                    || ($dish->is_bar_item === false && $dish->routing_tag === null);
+            });
+
+            $dishes = $kitchenItems->map(function ($item): array {
                 $allergens = $item->dish?->allergens ?? [];
 
                 return [
@@ -36,6 +57,11 @@ class KitchenOrderController extends Controller
                     'status' => $item->status->value,
                 ];
             })->all();
+
+            // Skip orders with no kitchen items
+            if (empty($dishes)) {
+                return null;
+            }
 
             $statuses = array_column($dishes, 'status');
             $cntPending = count(array_filter($statuses, fn ($s) => $s === 'pending' || $s === 'preparing'));
@@ -63,7 +89,7 @@ class KitchenOrderController extends Controller
                 'cnt_total' => $cntTotal,
                 'overall' => $overall,
             ];
-        })->all();
+        })->filter()->values()->all();
 
         $countActive = count(array_filter($orders, fn ($o) => $o['overall'] !== 'completed'));
         $countCompleted = count(array_filter($orders, fn ($o) => $o['overall'] === 'completed'));
@@ -123,17 +149,31 @@ class KitchenOrderController extends Controller
     {
         // Limit to recent orders and restrict sensitive data exposure
         $dbOrders = Order::with([
-            'items.dish:id,name,allergens',
+            'items.dish:id,name,allergens,routing_tag,is_bar_item',
             'floorPlanElement:id,table_name'
         ])
             ->whereIn('status', [OrderStatus::Active->value, OrderStatus::Completed->value])
             ->where('paid', false)
+            ->whereHas('items.dish', function ($query): void {
+                $query->where('routing_tag', 'kitchen')
+                    ->orWhere(function ($q): void {
+                        $q->where('is_bar_item', false)->whereNull('routing_tag');
+                    });
+            })
             ->latest()
             ->limit(50)
             ->get(['id', 'floor_plan_element_id', 'status', 'paid', 'created_at', 'updated_at']);
 
-        $orders = $dbOrders->map(function (Order $order): array {
-            $dishes = $order->items->map(function ($item): array {
+        $orders = $dbOrders->map(function (Order $order): ?array {
+            // Filter to only kitchen items
+            $kitchenItems = $order->items->filter(function ($item): bool {
+                $dish = $item->dish;
+                if (!$dish) return false;
+                return $dish->routing_tag === 'kitchen'
+                    || ($dish->is_bar_item === false && $dish->routing_tag === null);
+            });
+
+            $dishes = $kitchenItems->map(function ($item): array {
                 $allergens = $item->dish?->allergens ?? [];
 
                 return [
@@ -145,6 +185,10 @@ class KitchenOrderController extends Controller
                     'status' => $item->status->value,
                 ];
             })->all();
+
+            if (empty($dishes)) {
+                return null;
+            }
 
             $statuses = array_column($dishes, 'status');
             $cntPending = count(array_filter($statuses, fn ($s) => $s === 'pending' || $s === 'preparing'));
@@ -172,7 +216,7 @@ class KitchenOrderController extends Controller
                 'cnt_total' => $cntTotal,
                 'overall' => $overall,
             ];
-        })->all();
+        })->filter()->values()->all();
 
         $countActive = count(array_filter($orders, fn ($o) => $o['overall'] !== 'completed'));
         $countCompleted = count(array_filter($orders, fn ($o) => $o['overall'] === 'completed'));

@@ -22,6 +22,8 @@ class Sidebar extends Component
 
     public int $floorPlanId;
 
+    public string $targetComponent = OrderPage::class;
+
     /** @var array<int, bool> */
     public array $expandedMenus = [];
 
@@ -38,17 +40,17 @@ class Sidebar extends Component
 
     public function selectMenu(int $menuId): void
     {
-        $this->dispatch('setMenuCategory', menuId: $menuId, categoryId: null)->to(OrderPage::class);
+        $this->dispatch('setMenuCategory', menuId: $menuId, categoryId: null)->to($this->targetComponent);
     }
 
     public function selectCategory(int $menuId, int $categoryId): void
     {
-        $this->dispatch('setMenuCategory', menuId: $menuId, categoryId: $categoryId)->to(OrderPage::class);
+        $this->dispatch('setMenuCategory', menuId: $menuId, categoryId: $categoryId)->to($this->targetComponent);
     }
 
     public function selectBar(): void
     {
-        $this->dispatch('setBarMode')->to(OrderPage::class);
+        $this->dispatch('setBarMode')->to($this->targetComponent);
     }
 
     public function toggleMenu(int $menuId): void

@@ -24,6 +24,10 @@ class BarOrderPage extends Component
 
     public string $roomNumber = '';
 
+    public bool $showFood = true;
+
+    public bool $showDrinks = true;
+
     public bool $showTicketModal = false;
 
     public string $ticketMode = 'display';
@@ -116,7 +120,21 @@ class BarOrderPage extends Component
         return Dish::query()
             ->with('ingredients')
             ->where('is_available', true)
-            ->where('is_bar_item', true)
+            ->where(function ($query): void {
+                $query->where('routing_tag', 'bar')
+                    ->orWhere(function ($q): void {
+                        $q->where('is_bar_item', true)->whereNull('routing_tag');
+                    });
+            })
+            ->when(!$this->showFood || !$this->showDrinks, function ($query): void {
+                if ($this->showFood && !$this->showDrinks) {
+                    $query->where(function ($q): void {
+                        $q->where('category', '!=', 'drinks')->orWhereNull('category');
+                    });
+                } elseif (!$this->showFood && $this->showDrinks) {
+                    $query->where('category', 'drinks');
+                }
+            })
             ->when($this->search !== '', function ($query): void {
                 $search = '%'.addcslashes($this->search, '%_\\').'%';
                 $query->where(function ($q) use ($search): void {
@@ -124,12 +142,31 @@ class BarOrderPage extends Component
                         ->orWhereRaw('description LIKE ?', [$search]);
                 });
             })
+            ->orderByRaw("CASE WHEN category = 'drinks' THEN 1 ELSE 0 END")
             ->orderBy('name')
             ->get();
     }
 
     public function updatedSearch(): void
     {
+        unset($this->dishes);
+    }
+
+    public function toggleFoodFilter(): void
+    {
+        $this->showFood = !$this->showFood;
+        if (!$this->showFood && !$this->showDrinks) {
+            $this->showDrinks = true;
+        }
+        unset($this->dishes);
+    }
+
+    public function toggleDrinksFilter(): void
+    {
+        $this->showDrinks = !$this->showDrinks;
+        if (!$this->showFood && !$this->showDrinks) {
+            $this->showFood = true;
+        }
         unset($this->dishes);
     }
 

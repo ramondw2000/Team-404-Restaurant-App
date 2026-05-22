@@ -10,6 +10,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\StatisticsController;
 use App\Livewire\Dishes\DishesPage;
 use App\Livewire\Orders\BarOrderPage;
+use App\Livewire\Orders\CombinedOrderPage;
 use App\Livewire\Orders\OrderPage;
 use App\Livewire\Reservations;
 use App\Livewire\TableManagement;
@@ -160,6 +161,14 @@ Route::middleware('auth')->group(function () {
     Route::livewire('/orders/create/{floorPlanElement}', OrderPage::class)
         ->middleware('permission:Create Order')
         ->name('orders.create');
+
+    Route::livewire('/combined-orders/create/{floorPlanElement}', CombinedOrderPage::class)
+        ->middleware('permission:Create Order')
+        ->name('combined-orders.create');
+
+    Route::livewire('/combined-orders/new', CombinedOrderPage::class)
+        ->middleware('permission:Create Order')
+        ->name('combined-orders.new');
 
     Route::livewire('/bar-orders/create', BarOrderPage::class)
         ->middleware('permission:Create Bar Order')
