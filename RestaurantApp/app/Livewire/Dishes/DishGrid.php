@@ -67,11 +67,15 @@ class DishGrid extends Component
 
     public function setSort(string $field): void
     {
+        if (! in_array($field, ['name', 'price', 'created_at', 'popularity'])) {
+            return;
+        }
+
         if ($this->sortBy === $field) {
             $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
         } else {
             $this->sortBy = $field;
-            $this->sortDir = 'asc';
+            $this->sortDir = $field === 'popularity' ? 'desc' : 'asc';
         }
         $this->resetPage();
     }
@@ -99,7 +103,7 @@ class DishGrid extends Component
         $query = Dish::with('ingredients');
 
         if ($this->search !== '') {
-            $query->whereRaw('name LIKE ?', ['%' . addcslashes($this->search, '%_\\') . '%']);
+            $query->whereRaw('name LIKE ?', ['%'.addcslashes($this->search, '%_\\').'%']);
         }
 
         // Allergen/dietary filtering requires loading ingredients
@@ -129,7 +133,11 @@ class DishGrid extends Component
             }
         }
 
-        $query->orderBy($this->sortBy, $this->sortDir);
+        if ($this->sortBy === 'popularity') {
+            $query->withCount('orderItems')->orderBy('order_items_count', $this->sortDir);
+        } else {
+            $query->orderBy($this->sortBy, $this->sortDir);
+        }
 
         return $query->paginate($this->perPage);
     }
