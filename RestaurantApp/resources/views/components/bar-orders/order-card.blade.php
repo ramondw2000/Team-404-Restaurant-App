@@ -45,18 +45,7 @@ $cardStateClass = $order['overall'] === 'completed'
             </div>
 
             <div class="text-right shrink-0">
-                <div class="flex items-center justify-end gap-2">
-                    <p class="text-xs font-semibold">{{ $order['time'] }}</p>
-                    <button type="button"
-                            class="delete-order-btn inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 hover:bg-red-500 transition-colors"
-                            data-role="delete-order"
-                            data-order-db-id="{{ $order['db_id'] }}"
-                            title="Delete Order">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-                        </svg>
-                    </button>
-                </div>
+                <p class="text-xs font-semibold">{{ $order['time'] }}</p>
                 <p class="text-xs opacity-70 mt-0.5">
                     @if($order['overall'] === 'completed')
                         All served
