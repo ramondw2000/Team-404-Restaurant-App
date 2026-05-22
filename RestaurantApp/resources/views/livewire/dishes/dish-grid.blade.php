@@ -84,6 +84,15 @@
                     <x-ui.tab :active="$sortBy === 'created_at'" wire:click="setSort('created_at')">
                         Newest @if($sortBy === 'created_at') {{ $sortDir === 'asc' ? '↑' : '↓' }} @endif
                     </x-ui.tab>
+                    <x-ui.tab :active="$sortBy === 'popularity'" wire:click="setSort('popularity')">
+                        @if($sortBy === 'popularity' && $sortDir === 'asc')
+                            Least Popular ↓
+                        @elseif($sortBy === 'popularity')
+                            Most Popular ↑
+                        @else
+                            Most Popular
+                        @endif
+                    </x-ui.tab>
                 </x-ui.tab-group>
             </div>
             <div class="flex items-center gap-2">
