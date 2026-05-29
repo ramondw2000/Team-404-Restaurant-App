@@ -1,196 +1,93 @@
 # RestaurantApp
 
-A restaurant management system (reservations, table management, ordering,
-kitchen & bar displays, menu/ingredient management, maintenance tasks and
-statistics) built with **Laravel 12 + Livewire 4**.
+A restaurant management system — reservations, table & order management, kitchen
+and bar displays, menu/ingredient management, maintenance tasks and statistics —
+built with **Laravel 12 + Livewire 4**.
 
-This repository also contains **MolvenoCLI** — a single-file, cross-platform
-command-line tool that installs Docker and runs the application in a container,
-so it can be launched on macOS, Windows or Linux without installing PHP, Node or
-.NET.
+It ships as **MolvenoCLI** (`molveno`): a single, self-contained binary that
+installs Docker and runs the whole application in a container. The application is
+bundled inside the binary, so the executable is all you need — no PHP, Node or
+.NET required.
+
+## Installation
+
+Download the `molveno` binary for your platform from the
+[**latest release**](https://github.com/spectrum-capgemini/Team-404-Name-Not-Found/releases/latest),
+then follow the steps for your OS. Afterwards, `molveno install` sets up Docker
+(if needed) and `molveno run` starts the app at <http://localhost:8000>.
+
+### Windows
+
+Download `molveno-win-x64.exe`. In **PowerShell**, from the folder you saved it in:
+
+```powershell
+# Rename it to molveno.exe (and optionally move it somewhere on your PATH)
+Rename-Item .\molveno-win-x64.exe molveno.exe
+
+.\molveno.exe install    # installs Docker Desktop if it isn't already
+.\molveno.exe run        # build and start the app
+```
+
+### macOS
+
+Download `molveno-osx-arm64` (Apple Silicon). In **Terminal**:
+
+```bash
+chmod +x molveno-osx-arm64                                    # make it executable
+xattr -d com.apple.quarantine molveno-osx-arm64 2>/dev/null || true   # clear the Gatekeeper "downloaded" flag
+sudo mv molveno-osx-arm64 /usr/local/bin/molveno              # put it on your PATH
+
+molveno install    # installs Docker Desktop if it isn't already
+molveno run        # build and start the app
+```
+
+### Linux
+
+Download `molveno-linux-x64`. In a **terminal**:
+
+```bash
+chmod +x molveno-linux-x64                          # make it executable
+sudo mv molveno-linux-x64 /usr/local/bin/molveno    # put it on your PATH
+
+molveno install    # installs Docker Engine if it isn't already
+molveno run        # build and start the app
+```
+
+> No prebuilt binary for your architecture? Build one with the .NET 10 SDK —
+> see [`Molveno/README.md`](Molveno/README.md).
+
+## Usage
+
+| Command | Description |
+|---------|-------------|
+| `molveno install` | Install the Docker requirements for your OS. |
+| `molveno run` | Build and start the app at <http://localhost:8000>. Options: `--env=<path>` (custom env file), `--port=<n>` (different host port). |
+| `molveno stop` | Stop and remove the running app container. Data is kept. |
+| `molveno env` | Write an example `.env` file you can edit and pass to `molveno run --env=<path>`. |
+
+Full command reference: [`Molveno/README.md`](Molveno/README.md).
+
+### Demo logins
+
+The app seeds one account per role; **all accounts use the password `password`**:
+
+| Role | Email |
+|------|-------|
+| Manager | `manager@demo.com` |
+| Server | `server@demo.com` |
+| Chef | `chef@demo.com` |
+| Bartender | `bartender@demo.com` |
+| Receptionist | `receptionist@demo.com` |
+| Barista | `barista@demo.com` |
+| Maintenance | `maintenance@demo.com` |
 
 ## Repository layout
 
 | Path | What it is |
 |------|------------|
-| [`RestaurantApp/`](RestaurantApp/) | The Laravel application, plus its Docker setup (`Dockerfile`, `docker-compose.yml`, `.env.docker`). |
-| [`Molveno/`](Molveno/) | The **MolvenoCLI** (`molveno`) .NET 10 tool that builds and runs RestaurantApp in Docker. |
+| [`RestaurantApp/`](RestaurantApp/) | The Laravel application and its Docker setup. |
+| [`Molveno/`](Molveno/) | The MolvenoCLI (`molveno`) source and build scripts. |
 | [`docs/`](docs/) | Dish and floor-plan images used by the database seeders. |
-| `MockupApp/` | Early UI mockups. |
-| [`user-manual.md`](user-manual.md) | End-user manual. |
 
-## Running the application
-
-There are two supported ways to run it. Both use Docker and seed a demo database
-on first boot — then open <http://localhost:8000>.
-
-### Option A — Docker Compose (directly)
-
-```bash
-cd RestaurantApp
-docker compose up --build
-```
-
-See **[`RestaurantApp/README.md`](RestaurantApp/README.md)** for Docker
-installation steps (per OS), configuration via `.env.docker`, switching to
-MySQL, and demo login accounts.
-
-### Option B — MolvenoCLI (`molveno`)
-
-A self-contained binary that can also install Docker for you:
-
-```bash
-# Build the binary for your OS (needs the .NET 10 SDK), then:
-molveno install          # install the Docker requirements for your OS
-molveno run              # build + run RestaurantApp in Docker
-molveno env              # write an example .env you can customise
-```
-
-See **[`Molveno/README.md`](Molveno/README.md)** for building the binary and the
-full command reference.
-
-### Demo logins
-
-The seeder creates one account per role; **all use the password `password`**
-(e.g. `manager@demo.com`). The full list is in
-[`RestaurantApp/README.md`](RestaurantApp/README.md).
-
----
-
-# Requirements
-
-> The sections below are the original (Dutch) functional requirements for the
-> application.
-
-## Lijst aan rollen
-
-- Eigenaar
-    - Heeft beschikking tot de volledige applicatie.
-
-- Receptionist
-    - Reserveringen toevoegen, bijhouden en annuleren. Handmatig relevante informatie bij elke reservering kunnen zetten. Onderhoudsopdrachten toevoegen voor onderhoudsploeg.
-
-- Bedienend personeel
-    - Bestellingen kunnen toevoegen/weghalen voor elke tafel, opmerkingen toevoegen en afrekenen.
-
-- Koks
-    - Bestellingen ontvangen en uitdraaien, bestellingen gereed melden. Ook moet het menu kunnen worden aangepast, ingredienten worden aangepast, allergenen aangepast.
-
-- Onderhoudsploeg
-    - Moet onderhoudsopdrachten kunnen lezen en gereedmelden, opmerkingen daarbij kunnen plaatsen.
-
-## Reserveringen
-
-- De gebruiker moet de mogelijkheid hebben om reserveringen handmatig in te kunnen voeren. De gebruiker kan vervolgens de specifieke informatie zien van elke reservering die opgeslagen is in de database. De volgende gegevens die benodigd zijn als volgt: 
-    - De volledige naam van de gast.
-    - De hoeveelheid gasten.
-    - De aankomsttijd.
-    - Het telefoonnummer en/of e-mailadres.
-    - Het tafelnummer die de gasten zijn toegewezen.
-    - Het kamernummer van de gast (als het van toepassing is).
-    - evt. bijzonderheden (bv. gehandicapten, allergenen).
-
-    - Als benodigd is, moet de gebruiker de mogelijkheid hebben om de gegevens aan te passen voor elke reservering, zoals volgt: 
-        - Het aanpassen van de persoonlijke informatie voor elke reservering.
-        - Het annuleren van een reservering.  
-
-- De gebruiker moet een overzicht zien van alle reserveringen op een bepaalde dag. 
-    - De reserveringen zijn gesorteerd in tijdvakken om de halfuur.
-    - De gebruiker kan een latere datum uitkiezen om de reserveringen op die bepaalde dag in te kunnen zien.
-
-## Table Management
-
-- De gebruiker moet een overzicht zien van alle tafels. Hieruit moet de gebruiker de volgende informatie moeten zien:
-    - Het tafelnummer.
-
-    - De huidige status van de tafel:
-        - Vrij.
-        - Bezet.
-        - Net vertrokken.
-        - Al bezet voor een reservering. 
-
-    - Het aantal gasten die momenteel aan tafel zit. 
-    - De resterende tijd die de gasten hebben om te blijven.
-
-- De gebruiker kan een specifieke tafel selecteren om de volgende informatie te bekijken:
-    - Een lijst van alle drank en gerechten die de tafel heeft besteld. 
-    - De totaalprijs van alle drank en gerechten.
-    - Een button betreft voor het afrekenen. 
-
-### Betalingen
-
-- Wanneer een tafel wilt betalen, kan de gebruiker de betreffende tafel selecteren en vanaf daar de betaling uitvoeren. De gebruiker drukt op de button om de betaling uit te voeren. 
-
-## Bestellingen plaatsen
-
-- Het bedienend personeel nemen de bestellingen op per tafel, daarna moeten ze deze op een apart apparaat waar de applicatie op draait kunnen invoeren. De volgende elementen moeten hierin zichtbaar zijn:
-    - Een kader waar de gebruiker het betreffende tafelnummer in kan voeren.
-    - Een lijst met alle drank en gerechten, waaronder de naam en de prijs van het gerecht aangetoond zijn.
-        - Een nav-bar aanmaken met verschillende categorienamen.*
-        - De gebruiker kan per gerecht nog extra commentaar bij toevoegen, om eventuele bijzonderheden te vermelden (bv. allergenen, substituties, gaarheid van vlees).
-
-    - Een overzicht van alle gekozen gerechten, samen met de totaalprijs en eventuele kortingen die van toepassingen verrekenen.
-        - Als de gebruiker een verkeerd gerecht gekozen heeft, moet er de mogelijkheid zijn om dat specifiek gerecht te kunnen verwijderen.
-
-    - Een zoekbar om bepaalde gerechten sneller op te zoeken.*
-    - Een verstuurbutton om de bestelling door te sturen naar de keuken als alles gereed is.
-
-## Keuken overzicht 
-
-- Alle bestellingen worden verstuurd en aangetoond aan het keukenpersoneel via een scherm in de keuken. Per bestelling is er een blokje met daarin de volgende informatie: 
-- Alle gerechten en de hoeveelheid van elk gerecht. 
-  - Onder het gerecht waarvan het van toepassing is, worden alle bijzonderheden weergeven die voor de koks van belang zijn. 
-  - De tijd van wanneer de bestelling verstuurd werdt.
- - Het tafel- en bestellingsnummer.
-
-Functionaliteiten van het bestellingsoverzicht:
-
-- Mark Ready – Bestellingen als “gereed” markeren zodra ze volledig bereid of geserveerd zijn.
-
-- Send Out – Bestellingen naar de volgende fase versturen zodat personeel weet dat ze onderweg zijn.
-
-Wij hebben besloten het bestellingsoverzicht aan te passen, zodat bestellingen niet langer individueel met “Mark Ready” of “Send Out” kunnen worden afgevinkt, maar in één handeling per bestelling worden verwerkt.
-
-### Room Service
-
-- Gasten die voor room service hebben gevraagd komen ook in het overzichtsysteem te zien. Hiervoor is de kamernummer vermeld van de gast, naast alle andere benodigde informatie die vermeld is in de vorige paragraaf. 
-
-## Menuoverzicht
-
-- De gebruiker kan een overzicht zien van alle gerechten die momenteel te bestellen zijn. Hieronder is de volgende informatie te zien per gerecht: 
-    - Naam van het gerecht.
-    - Evt. afbeelding van het gerecht. 
-    - De ingrediënten nodig voor het gerecht.
-    - Instructies voor het gerecht.
-    - Allergenen.
-
-- De gebruiker kan vervolgens nieuwe gerechten kunnen toevoegen of verwijderen in het menu. De benodigde informatie hiervoor is al uitgelijst in de vorige paragraaf. 
-
-### Ingrediënten
-
-- De gebruiker kan vervolgens ingrediënten toevoegen of verwijderen, die vervolgens opgeslagen worden in een lijst. De ingrediënten in deze lijst kunnen vervolgens toegevoegd worden aan elk gegeven gerecht. De allergenen die bij de ingrediënten horen kunnen toegevoegd worden bij de gegeven ingrediënt.
-
-## Statistieken
-
-- De gebruiker kan de statistieken zien op een dagelijks, wekelijks, maandelijks en jaarlijks basis. Onder statistieken wordt het volgende weergeven:
-    - Het totaalwinst van de gekozen periode.
-    - Een lijst van de meest en minst verkochte gerechten.
-
-## Bar overzicht
-
-- Er moet een bestellingsoverzicht worden gemaakt voor barmedewerkers, zodat zij bestellingen kunnen bekijken en verwerken voor:
-    - Gasten aan tafel
-    - Gasten bij de bar
-
-- Het bestellingsoverzicht zal dezelfde structuur hebben als het keukenoverzicht, maar dan voor de bar.
-
-## Onderhoudsploeg overzicht
-
-- De gebruiker kan een overzicht zien van alle taken die gegeven zijn door de receptie. De taken zijn gecategoriseerd op hun huidige status (niet begonnen, in behandeling, voltooid). Voor elke taak is de volgende informatie zichtbaar:
-    - De naam van de taak.
-    - De tijd waarop de taak is aangevraagd.
-    - De status van de taak.
-    - Evt. opmerkingen die de onderhoudsploeg kan toevoegen.
-
-*Nog bespreken met de anderen
-
+Prefer to run it without the CLI? RestaurantApp can also be started directly with
+Docker Compose — see [`RestaurantApp/README.md`](RestaurantApp/README.md).

@@ -26,6 +26,9 @@ internal static class Program
             case "run":
                 return RunCommand.Run(rest);
 
+            case "stop":
+                return StopCommand.Run(rest);
+
             case "env":
                 return EnvCommand.Run(rest);
 
@@ -72,6 +75,8 @@ internal static class Program
                                      --no-build   Skip rebuilding the image.
                                      --follow     Stream container logs after starting.
 
+                stop               Stop and remove the running app container (data is kept).
+
                 env                Write an example SQLite environment file.
                                      --output=<path>  Destination (default: ./.env.example).
                                      --force          Overwrite an existing file.
@@ -84,6 +89,7 @@ internal static class Program
                 molveno env
                 molveno run
                 molveno run --env=./my.env --port=9000
+                molveno stop
             """);
     }
 }

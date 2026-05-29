@@ -10,7 +10,7 @@ namespace MolvenoCLI.Commands;
 internal static class RunCommand
 {
     private const string ImageTag = "molveno-restaurantapp:local";
-    private const string ContainerName = "molveno-restaurantapp";
+    private const string ContainerName = Docker.ContainerName;
 
     public static int Run(ArgParser args)
     {

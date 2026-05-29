@@ -26,6 +26,7 @@ molveno env          # write an example .env file you can customise
 - [Commands](#commands)
   - [`molveno install`](#molveno-install)
   - [`molveno run`](#molveno-run)
+  - [`molveno stop`](#molveno-stop)
   - [`molveno env`](#molveno-env)
 - [How `run` finds RestaurantApp](#how-run-finds-restaurantapp)
 - [Typical workflow](#typical-workflow)
@@ -149,7 +150,22 @@ Useful follow-ups it prints:
 
 ```bash
 docker logs -f molveno-restaurantapp     # view logs
-docker rm -f molveno-restaurantapp       # stop and remove
+molveno stop                             # stop and remove (see below)
+```
+
+### `molveno stop`
+
+Stops and removes the running RestaurantApp container. The named Docker volumes
+(database and images) are preserved, so a later `molveno run` keeps your data.
+
+```bash
+molveno stop
+```
+
+To delete the data too:
+
+```bash
+docker volume rm molveno-sqlite molveno-public-storage
 ```
 
 ### `molveno env`
