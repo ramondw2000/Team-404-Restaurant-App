@@ -24,4 +24,32 @@
         <Version>1.0.0</Version>
     </PropertyGroup>
 
+    <!-- ───────────────────────────────────────────────────────────────────────
+         Bundle the RestaurantApp build context into the binary so the CLI can
+         build and run it with nothing else on disk. The archive contains the
+         RestaurantApp Docker context plus docs/images for the seeders.
+         ─────────────────────────────────────────────────────────────────────── -->
+    <PropertyGroup>
+        <RepoRoot>$(MSBuildProjectDirectory)/../..</RepoRoot>
+        <AppContextArchive>$(MSBuildProjectDirectory)/obj/restaurantapp-context.tar.gz</AppContextArchive>
+        <HasAppSources Condition="Exists('$(RepoRoot)/RestaurantApp/Dockerfile')">true</HasAppSources>
+        <TarExcludes>--exclude=RestaurantApp/vendor --exclude=RestaurantApp/node_modules --exclude=RestaurantApp/.git --exclude=RestaurantApp/.idea --exclude=RestaurantApp/.vite --exclude=RestaurantApp/.windsurf --exclude=RestaurantApp/.cursor --exclude=RestaurantApp/.claude --exclude=RestaurantApp/.agents --exclude=RestaurantApp/.ai --exclude=RestaurantApp/.codex --exclude=RestaurantApp/_archived --exclude=RestaurantApp/issues --exclude=RestaurantApp/tests --exclude=RestaurantApp/storage/app/public/dishes --exclude=RestaurantApp/storage/app/public/images --exclude=RestaurantApp/storage/logs --exclude=RestaurantApp/storage/framework/cache --exclude=RestaurantApp/storage/framework/sessions --exclude=RestaurantApp/storage/framework/views --exclude=RestaurantApp/storage/framework/testing --exclude=RestaurantApp/storage/pail --exclude=RestaurantApp/public/build --exclude=RestaurantApp/public/hot --exclude=RestaurantApp/public/storage --exclude=RestaurantApp/database/data --exclude=RestaurantApp/database/database.sqlite --exclude=RestaurantApp/.env</TarExcludes>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(HasAppSources)' == 'true'">
+        <EmbeddedResource Include="$(AppContextArchive)">
+            <LogicalName>restaurantapp-context.tar.gz</LogicalName>
+            <Visible>false</Visible>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <Target Name="PackRestaurantApp"
+            BeforeTargets="PrepareForBuild;BeforeCompile"
+            Condition="'$(HasAppSources)' == 'true'">
+        <MakeDir Directories="$(MSBuildProjectDirectory)/obj" />
+        <Message Importance="high" Text="Packing RestaurantApp build context into $(AppContextArchive)" />
+        <Exec WorkingDirectory="$(RepoRoot)"
+              Command="tar -czf &quot;$(AppContextArchive)&quot; $(TarExcludes) RestaurantApp docs/images" />
+    </Target>
+
 </Project>

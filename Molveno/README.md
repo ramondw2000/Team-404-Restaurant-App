@@ -4,6 +4,10 @@ A small, self-contained command-line tool that installs Docker and runs the
 [RestaurantApp](../RestaurantApp/) Laravel application in a container — without
 needing PHP, Composer, Node **or even .NET** installed on the machine.
 
+The **entire RestaurantApp is bundled inside the binary** (its Docker build
+context plus the seed images), so the single `molveno` executable is all you
+need to ship and run the app — no separate source checkout required.
+
 It is built with **.NET 10 Native AOT**, so each platform gets a single native
 binary (`molveno` / `molveno.exe`) with no runtime dependency.
 
@@ -72,6 +76,13 @@ MolvenoCLI/bin/Release/net10.0/<RID>/publish/molveno      (molveno.exe on Window
 Supported runtime identifiers (RIDs): `linux-x64`, `linux-arm64`, `osx-x64`,
 `osx-arm64`, `win-x64`, `win-arm64`.
 
+> **The build embeds RestaurantApp.** A build-time step packs the
+> `RestaurantApp/` Docker context and `docs/images/` into the binary, so build
+> from a full repository checkout (both folders must sit next to `Molveno/`) and
+> with `tar` available (present by default on Linux, macOS and Windows 10+). If
+> the sources aren't found, the CLI still builds — just without the bundled app,
+> in which case `molveno run` needs `--path`.
+
 > **Native AOT cannot cross-compile.** A Linux machine produces only the Linux
 > binary, macOS only the macOS binary, etc. To ship all three, build on each OS
 > (for example, via a CI matrix). Once built, copy `molveno` somewhere on your
@@ -112,9 +123,10 @@ When it's ready, open **<http://localhost:8000>**.
 
 | Option | Description |
 |--------|-------------|
-| `--env=<path>` | Use a custom environment file (**optional**; see [`molveno env`](#molveno-env)). Defaults to `RestaurantApp/.env.docker`, or a generated SQLite default if that's missing. |
+| `--env=<path>` | Use a custom environment file (**optional**; see [`molveno env`](#molveno-env)). Defaults to the bundled `.env.docker`, or a generated SQLite default if that's missing. |
 | `--port=<n>` | Publish on a different host port (overrides `APP_PORT` in the env file; default `8000`). |
-| `--path=<dir>` | Path to the RestaurantApp directory (see [below](#how-run-finds-restaurantapp)). |
+| `--path=<dir>` | Use a RestaurantApp directory **on disk** instead of the bundled copy (for development; see [below](#how-run-finds-restaurantapp)). |
+| `--refresh` | Re-extract the bundled app over the cached copy. |
 | `--no-build` | Skip rebuilding the image and start the existing one. |
 | `--follow` | Stream the container logs after starting (Ctrl+C detaches; the container keeps running). |
 
@@ -159,16 +171,26 @@ molveno env --output=./my.env     # writes ./my.env
 
 ## How `run` finds RestaurantApp
 
-`molveno run` needs the RestaurantApp directory (the one containing both
-`Dockerfile` and `docker-compose.yml`). It looks, in order:
+By default `molveno run` uses the **bundled** copy of RestaurantApp embedded in
+the binary: on first run it is unpacked to a per-version cache directory and
+built from there. Resolution order:
 
-1. `--path=<dir>` if given.
+1. `--path=<dir>` if given (a RestaurantApp working tree on disk).
 2. The `MOLVENO_APP_DIR` environment variable.
-3. Walking up from the current directory (checking each folder and a
-   `RestaurantApp/` subfolder).
-4. Walking up from the binary's own location the same way.
+3. The **bundled** app (default).
+4. As a last resort (binaries built without the app embedded), by walking up
+   from the current directory and the binary's location looking for a
+   `RestaurantApp/` folder.
 
-If it can't be found, pass it explicitly:
+The bundled app is extracted to:
+
+- `$MOLVENO_HOME/app/<version>/`  if `MOLVENO_HOME` is set, otherwise
+- `<local-app-data>/molveno/app/<version>/` — e.g. `~/.local/share/molveno`
+  (Linux), `~/Library/Application Support/molveno` (macOS),
+  `%LOCALAPPDATA%\molveno` (Windows).
+
+Use `molveno run --refresh` to re-unpack it, or `--path` to run a checkout
+instead:
 
 ```bash
 molveno run --path=/path/to/RestaurantApp

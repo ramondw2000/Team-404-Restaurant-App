@@ -26,7 +26,7 @@ internal static class RunCommand
             return 1;
         }
 
-        var appDir = AppLocator.Locate(args.GetOption("path"));
+        var appDir = ResolveAppDir(args);
         if (appDir is null)
         {
             Output.Error("Could not locate the RestaurantApp directory (needs Dockerfile + docker-compose.yml).");
@@ -102,6 +102,34 @@ internal static class RunCommand
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// Resolves the RestaurantApp build context. An explicit <c>--path</c> or the
+    /// MOLVENO_APP_DIR variable wins (for development against a working tree);
+    /// otherwise the app bundled inside the CLI is unpacked and used, so only the
+    /// binary is needed. Falls back to walking the filesystem if nothing is embedded.
+    /// </summary>
+    private static string? ResolveAppDir(ArgParser args)
+    {
+        var overridePath = args.GetOption("path");
+        if (!string.IsNullOrWhiteSpace(overridePath))
+        {
+            return AppLocator.Locate(overridePath);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MOLVENO_APP_DIR")))
+        {
+            return AppLocator.Locate(null);
+        }
+
+        if (EmbeddedApp.IsAvailable)
+        {
+            Output.Info("Using the RestaurantApp bundled inside the CLI.");
+            return EmbeddedApp.Ensure(args.HasFlag("refresh"));
+        }
+
+        return AppLocator.Locate(null);
     }
 
     private static bool TryResolveEnvFile(ArgParser args, string appDir, out string envFile, out string envContents)

@@ -62,10 +62,13 @@ internal static class Program
                                    (Docker Desktop on macOS/Windows, get.docker.com on Linux).
                                      --dry-run    Show what would be downloaded, do nothing.
 
-                run                Build and run the RestaurantApp container.
+                run                Build and run the RestaurantApp container. The app is
+                                   bundled inside this binary, so nothing else is needed.
                                      --env=<path> Use a custom environment file (optional).
                                      --port=<n>   Publish on a different host port.
-                                     --path=<dir> Path to the RestaurantApp directory.
+                                     --path=<dir> Use a RestaurantApp directory on disk
+                                                  instead of the bundled copy.
+                                     --refresh    Re-extract the bundled app.
                                      --no-build   Skip rebuilding the image.
                                      --follow     Stream container logs after starting.
 
