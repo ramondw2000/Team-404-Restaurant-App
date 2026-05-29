@@ -1,0 +1,38 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# RestaurantApp — Docker Compose
+#
+# All tunable configuration lives in the external `.env.docker` file (loaded via
+# env_file below). Defaults run the app on SQLite with no extra services:
+#
+#     docker compose up --build
+#
+# Then open http://localhost:8000
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: restaurantapp:local
+    container_name: restaurantapp
+    env_file:
+      - .env.docker
+    ports:
+      # Host port is configurable via APP_PORT (shell env or a compose .env);
+      # the container always serves on 8000.
+      - "${APP_PORT:-8000}:8000"
+    volumes:
+      # Source images the seeders read from `base_path('../docs/images')`.
+      # App root is /var/www/html, so docs must sit at /var/www/docs.
+      - ../docs:/var/www/docs:ro
+      # Persist the SQLite database across restarts (dedicated subdir so it does
+      # not shadow database/migrations inside the image).
+      - sqlite-data:/var/www/html/database/data
+      # Persist seeded / uploaded public images.
+      - public-storage:/var/www/html/storage/app/public
+    restart: unless-stopped
+
+volumes:
+  sqlite-data:
+  public-storage:
