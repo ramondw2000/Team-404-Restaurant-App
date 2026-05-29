@@ -1,1 +1,4 @@
-<Solution />
+<Solution>
+  <Folder Name="/Solution Items/" />
+  <Project Path="MolvenoCLI/MolvenoCLI.csproj" />
+</Solution>

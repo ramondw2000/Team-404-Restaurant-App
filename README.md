@@ -1,4 +1,66 @@
+# RestaurantApp
+
+A restaurant management system (reservations, table management, ordering,
+kitchen & bar displays, menu/ingredient management, maintenance tasks and
+statistics) built with **Laravel 12 + Livewire 4**.
+
+This repository also contains **MolvenoCLI** — a single-file, cross-platform
+command-line tool that installs Docker and runs the application in a container,
+so it can be launched on macOS, Windows or Linux without installing PHP, Node or
+.NET.
+
+## Repository layout
+
+| Path | What it is |
+|------|------------|
+| [`RestaurantApp/`](RestaurantApp/) | The Laravel application, plus its Docker setup (`Dockerfile`, `docker-compose.yml`, `.env.docker`). |
+| [`Molveno/`](Molveno/) | The **MolvenoCLI** (`molveno`) .NET 10 tool that builds and runs RestaurantApp in Docker. |
+| [`docs/`](docs/) | Dish and floor-plan images used by the database seeders. |
+| `MockupApp/` | Early UI mockups. |
+| [`user-manual.md`](user-manual.md) | End-user manual. |
+
+## Running the application
+
+There are two supported ways to run it. Both use Docker and seed a demo database
+on first boot — then open <http://localhost:8000>.
+
+### Option A — Docker Compose (directly)
+
+```bash
+cd RestaurantApp
+docker compose up --build
+```
+
+See **[`RestaurantApp/README.md`](RestaurantApp/README.md)** for Docker
+installation steps (per OS), configuration via `.env.docker`, switching to
+MySQL, and demo login accounts.
+
+### Option B — MolvenoCLI (`molveno`)
+
+A self-contained binary that can also install Docker for you:
+
+```bash
+# Build the binary for your OS (needs the .NET 10 SDK), then:
+molveno install          # install the Docker requirements for your OS
+molveno run              # build + run RestaurantApp in Docker
+molveno env              # write an example .env you can customise
+```
+
+See **[`Molveno/README.md`](Molveno/README.md)** for building the binary and the
+full command reference.
+
+### Demo logins
+
+The seeder creates one account per role; **all use the password `password`**
+(e.g. `manager@demo.com`). The full list is in
+[`RestaurantApp/README.md`](RestaurantApp/README.md).
+
+---
+
 # Requirements
+
+> The sections below are the original (Dutch) functional requirements for the
+> application.
 
 ## Lijst aan rollen
 

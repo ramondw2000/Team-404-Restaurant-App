@@ -1,6 +1,3 @@
-package-lock.json
-composer.lock
-
 *.log
 .DS_Store
 .env

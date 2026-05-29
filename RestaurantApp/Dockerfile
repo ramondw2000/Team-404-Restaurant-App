@@ -69,8 +69,16 @@ RUN composer install \
 COPY . .
 COPY --from=assets /app/public/build ./public/build
 
-# Regenerate the optimized autoloader against app/ and run package discovery.
-RUN composer dump-autoload --no-dev --optimize \
+# Ensure the framework's writable directories exist (the build context may omit
+# the empty cache/session/view folders), then regenerate the optimized
+# autoloader and run package discovery.
+RUN mkdir -p \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+ && composer dump-autoload --no-dev --optimize \
  && chmod +x docker/entrypoint.sh
 
 EXPOSE 8000
