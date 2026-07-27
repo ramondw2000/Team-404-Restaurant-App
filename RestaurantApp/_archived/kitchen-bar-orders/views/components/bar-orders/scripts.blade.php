@@ -1,0 +1,272 @@
+<script>
+    const BAR_TAB_ACTIVE_CLASSES = ['bg-molveno-blue-500', 'border-molveno-blue-500', 'text-white'];
+    const BAR_TAB_INACTIVE_CLASSES = ['bg-white', 'border-gray-200', 'text-gray-600', 'hover:border-molveno-blue-300', 'hover:text-molveno-blue-700'];
+    const BAR_TAB_COUNT_ACTIVE_CLASSES = ['bg-white/25', 'text-white'];
+    const BAR_TAB_COUNT_INACTIVE_CLASSES = ['bg-gray-100', 'text-gray-500'];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const barPanel = document.getElementById('bar-panel');
+        const scope = barPanel || document;
+        const defaultTab = scope.querySelector('button[data-default="true"]') || scope.querySelector('button[data-tab]');
+        if (defaultTab) {
+            barSwitchTab(defaultTab);
+        }
+        scope.querySelectorAll('.mark-ready-btn').forEach(btn => {
+            barSetMarkReadyAppearance(btn, btn.dataset.drinkStatus === 'ready' ? 'ready' : 'pending');
+        });
+        scope.querySelectorAll('.order-card').forEach(card => {
+            barUpdateOrderSendState(card);
+            barSyncCardVisualState(card);
+        });
+        document.addEventListener('click', barHandleActionClick);
+    });
+
+    const BAR_CARD_COMPLETED_CLASSES = ['bg-emerald-50', 'border-emerald-200', 'shadow-md'];
+    const BAR_CARD_DEFAULT_CLASSES = ['bg-white', 'border-gray-200', 'shadow-sm'];
+
+    function barSwitchTab(btn) {
+        const tab = btn.dataset.tab;
+        const barPanel = document.getElementById('bar-panel');
+        const scope = barPanel || document;
+        scope.querySelectorAll('button[data-tab]').forEach(b => barSetTabAppearance(b, b === btn));
+        let visible = 0;
+        scope.querySelectorAll('.order-card').forEach(card => {
+            const overall = card.dataset.overall;
+            const type    = card.dataset.type;
+            const show    = tab === 'all'       ? true
+                          : tab === 'active'    ? overall !== 'completed'
+                          : tab === 'completed' ? overall === 'completed'
+                          : tab === 'table'     ? type === 'table'
+                          : tab === 'bar'       ? type === 'bar'
+                          : true;
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        const emptyEl = scope.querySelector('#bar-empty') || document.getElementById('no-orders');
+        if (emptyEl) emptyEl.classList.toggle('hidden', visible > 0);
+    }
+
+    function barHandleActionClick(event) {
+        const barPanel = document.getElementById('bar-panel');
+        if (!barPanel || !barPanel.contains(event.target)) return;
+
+        const target = event.target instanceof Element ? event.target : event.target.parentElement;
+        if (!target) return;
+
+        const markBtn = target.closest('.mark-ready-btn');
+        if (markBtn) {
+            event.preventDefault();
+            markDrinkReady(markBtn);
+            return;
+        }
+
+        const sendBtn = target.closest('.order-send-btn');
+        if (sendBtn) {
+            event.preventDefault();
+            if (!sendBtn.disabled) {
+                barCompleteOrder(sendBtn);
+            }
+        }
+    }
+
+    function barCompleteOrder(button) {
+        barSetSendButtonState(button, 'sent');
+        const card = button.closest('.order-card');
+        if (card) {
+            card.dataset.overall = 'completed';
+            barHideOrderActions(card);
+            markAllDrinksServed(card);
+            barSyncCardVisualState(card);
+        }
+    }
+
+    function markDrinkReady(button) {
+        const nextState = button.dataset.drinkStatus === 'ready' ? 'pending' : 'ready';
+        barSetMarkReadyAppearance(button, nextState);
+        button.dataset.drinkStatus = nextState;
+
+        const label = button.querySelector('.mark-ready-label');
+        if (label) label.textContent = nextState === 'ready' ? 'Ready' : 'Mark Ready';
+
+        const drinkStatus = button.closest('.drink-status');
+        if (drinkStatus) {
+            drinkStatus.dataset.drinkStatus = nextState;
+        }
+
+        const wrapper = button.closest('[data-drink-wrapper]');
+        if (wrapper) {
+            wrapper.dataset.drinkStatus = nextState;
+            const dot = wrapper.querySelector('[data-role="status-dot"]');
+            if (dot) barSetStatusDotAppearance(dot, nextState);
+        }
+
+        barUpdateOrderSendState(button.closest('.order-card'));
+    }
+
+    function markAllDrinksServed(card) {
+        card.querySelectorAll('[data-drink-wrapper]').forEach(wrapper => {
+            wrapper.dataset.drinkStatus = 'served';
+
+            // Update status dot
+            const dot = wrapper.querySelector('[data-role="status-dot"]');
+            if (dot) barSetStatusDotAppearance(dot, 'served');
+
+            // Replace status badge with served badge
+            const status = wrapper.querySelector('.drink-status');
+            if (status) {
+                status.dataset.drinkStatus = 'served';
+                status.innerHTML = `
+                    <div class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 border border-green-200 px-2.5 py-1.5 rounded-lg">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        Served
+                    </div>`;
+            }
+        });
+    }
+
+    function barUpdateOrderSendState(card) {
+        if (!card) return;
+
+        const drinkStatuses = Array.from(card.querySelectorAll('.drink-status'));
+        const hasPending = drinkStatuses.some(s => s.dataset.drinkStatus === 'pending');
+        const allServed = drinkStatuses.length > 0 && drinkStatuses.every(s => s.dataset.drinkStatus === 'served');
+        const allReadyOrServed = drinkStatuses.length > 0 && drinkStatuses.every(s => ['ready', 'served'].includes(s.dataset.drinkStatus));
+
+        const sendBtn = card.querySelector('.order-send-btn');
+
+        if (sendBtn) {
+            const currentState = card.dataset.overall === 'completed' ? 'sent'
+                                : allServed ? 'sent'
+                                : allReadyOrServed ? 'ready'
+                                : 'disabled';
+            barSetSendButtonState(sendBtn, currentState);
+        }
+
+        if (card.dataset.overall !== 'completed') {
+            card.dataset.overall = allReadyOrServed ? 'ready' : (hasPending ? 'pending' : card.dataset.overall);
+        }
+
+        barSyncCardVisualState(card);
+    }
+
+    function barSetTabAppearance(button, isActive) {
+        if (!button) return;
+        button.classList.remove(...BAR_TAB_ACTIVE_CLASSES, ...BAR_TAB_INACTIVE_CLASSES);
+        button.classList.add(...(isActive ? BAR_TAB_ACTIVE_CLASSES : BAR_TAB_INACTIVE_CLASSES));
+
+        const count = button.querySelector('span');
+        if (count) {
+            count.classList.remove(...BAR_TAB_COUNT_ACTIVE_CLASSES, ...BAR_TAB_COUNT_INACTIVE_CLASSES);
+            count.classList.add(...(isActive ? BAR_TAB_COUNT_ACTIVE_CLASSES : BAR_TAB_COUNT_INACTIVE_CLASSES));
+        }
+    }
+
+    function barSetStatusDotAppearance(dot, state) {
+        if (!dot) return;
+        const pending = barParseClasses(dot.dataset.classPending);
+        const ready = barParseClasses(dot.dataset.classReady);
+        const served = barParseClasses(dot.dataset.classServed);
+        dot.classList.remove(...pending, ...ready, ...served);
+
+        if (state === 'ready') {
+            dot.classList.add(...ready);
+        } else if (state === 'served') {
+            dot.classList.add(...served);
+        } else {
+            dot.classList.add(...pending);
+        }
+
+        dot.dataset.status = state;
+    }
+
+    function barSetSendButtonState(button, state) {
+        if (!button) return;
+        const disabled = barParseClasses(button.dataset.classDisabled);
+        const ready = barParseClasses(button.dataset.classReady);
+        const sent = barParseClasses(button.dataset.classSent);
+        button.classList.remove(...disabled, ...ready, ...sent);
+
+        if (state === 'sent') {
+            button.classList.add(...sent);
+            button.disabled = true;
+        } else if (state === 'ready') {
+            button.classList.add(...ready);
+            button.disabled = false;
+        } else {
+            button.classList.add(...disabled);
+            button.disabled = true;
+        }
+
+        button.dataset.sendState = state;
+        const label = button.querySelector('.order-send-label');
+        if (label) label.textContent = state === 'sent' ? 'Sent' : 'Send Out';
+    }
+
+    function barSyncCardVisualState(card) {
+        if (!card) return;
+        card.classList.remove(...BAR_CARD_COMPLETED_CLASSES, ...BAR_CARD_DEFAULT_CLASSES);
+
+        const isCompleted = card.dataset.overall === 'completed';
+
+        if (isCompleted) {
+            card.classList.add(...BAR_CARD_COMPLETED_CLASSES);
+        } else {
+            card.classList.add(...BAR_CARD_DEFAULT_CLASSES);
+        }
+
+        // Sync header background & summary text
+        const header = card.querySelector(':scope > div:first-child');
+        if (header) {
+            header.classList.remove('bg-sky-700', 'bg-amber-600', 'bg-emerald-600');
+            header.classList.add(isCompleted ? 'bg-emerald-600' : (card.dataset.overall === 'ready' ? 'bg-amber-600' : 'bg-sky-700'));
+
+            // Update the summary line (second <p> in the right side)
+            const rightP = header.querySelectorAll('.text-right p');
+            if (rightP.length >= 2) {
+                rightP[1].textContent = isCompleted ? 'All served' : rightP[1].textContent;
+            }
+        }
+
+        // Sync footer status label
+        const footerStatus = card.querySelector('.px-4.py-3.bg-gray-50 .inline-flex.items-center.gap-1.text-xs.font-semibold');
+        if (footerStatus) {
+            footerStatus.classList.remove('text-green-600', 'text-amber-600', 'text-gray-400');
+            if (isCompleted) {
+                footerStatus.classList.add('text-green-600');
+                footerStatus.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Completed`;
+            } else if (card.dataset.overall === 'ready') {
+                footerStatus.classList.add('text-amber-600');
+                footerStatus.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg> Ready to serve`;
+            } else {
+                footerStatus.classList.add('text-gray-400');
+                footerStatus.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 1.5"/></svg> Preparing`;
+            }
+        }
+    }
+
+    function barHideOrderActions(card) {
+        const actions = card.querySelector('[data-role="order-actions"]');
+        if (actions) actions.classList.add('hidden');
+    }
+
+    function barShowOrderActions(card) {
+        const actions = card.querySelector('[data-role="order-actions"]');
+        if (actions) actions.classList.remove('hidden');
+    }
+
+    function barSetMarkReadyAppearance(button, state) {
+        if (!button) return;
+        const pending = barParseClasses(button.dataset.classPending);
+        const ready = barParseClasses(button.dataset.classReady);
+        button.classList.remove(...pending, ...ready);
+        if (state === 'ready') {
+            button.classList.add(...ready);
+        } else {
+            button.classList.add(...pending);
+        }
+    }
+
+    function barParseClasses(value) {
+        return (value || '').split(' ').filter(Boolean);
+    }
+</script>

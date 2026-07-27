@@ -1,0 +1,1 @@
+wil de mj dat onze app de betalingen ook verwerkt? of dat we alleen de bon laten zien?

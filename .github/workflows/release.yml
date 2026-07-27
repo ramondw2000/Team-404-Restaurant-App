@@ -1,0 +1,165 @@
+name: CI & Release
+
+# Runs the RestaurantApp test suite on every push/PR, builds the MolvenoCLI
+# native binaries for Linux/Windows/macOS, and — when a v* tag is pushed —
+# publishes a GitHub Release with the source code and all three executables.
+#
+# Release vs. development version:
+#   * A plain version tag (v1.0.0) publishes a full release and is marked latest.
+#   * A pre-release tag containing a hyphen (v1.0.0-dev, v1.0.0-rc.1, v1.0.0-beta)
+#     publishes a development version flagged as a GitHub "pre-release".
+#
+# To cut a release:
+#     git tag v1.0.0        && git push origin v1.0.0        # stable
+#     git tag v1.0.0-dev    && git push origin v1.0.0-dev    # development
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1. Test the Laravel application (RestaurantApp)
+  # ───────────────────────────────────────────────────────────────────────────
+  test-restaurantapp:
+    name: Test RestaurantApp (PHP / Pest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: RestaurantApp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, xml, bcmath, curl, zip, sqlite3, pdo_sqlite, intl, gd, fileinfo, dom, tokenizer
+          coverage: none
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install npm dependencies and build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run tests
+        run: php artisan test --compact
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. Build the MolvenoCLI native AOT binary on each OS
+  #    (also serves as the build/compile check for the CLI)
+  # ───────────────────────────────────────────────────────────────────────────
+  build-cli:
+    name: Build molveno (${{ matrix.rid }})
+    needs: test-restaurantapp
+    # Build on pushes to main and on tags; PRs only run tests.
+    if: github.event_name == 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            ext: ''
+            asset: molveno-linux-x64
+          - os: windows-latest
+            rid: win-x64
+            ext: '.exe'
+            asset: molveno-win-x64.exe
+          - os: macos-latest
+            rid: osx-arm64
+            ext: ''
+            asset: molveno-osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Native AOT prerequisites (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Publish single-file AOT binary
+        run: dotnet publish Molveno/MolvenoCLI/MolvenoCLI.csproj -c Release -r ${{ matrix.rid }}
+
+      - name: Stage binary
+        shell: bash
+        run: |
+          src="Molveno/MolvenoCLI/bin/Release/net10.0/${{ matrix.rid }}/publish/molveno${{ matrix.ext }}"
+          cp "$src" "${{ matrix.asset }}"
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3. Publish a GitHub Release (only on v* tags)
+  # ───────────────────────────────────────────────────────────────────────────
+  release:
+    name: Publish release
+    needs: [test-restaurantapp, build-cli]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Package source code
+        run: |
+          git archive --format=zip --prefix="404NameNotFound-${GITHUB_REF_NAME}/" \
+            -o "dist/source-code-${GITHUB_REF_NAME}.zip" HEAD
+
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum molveno-* source-code-* > SHA256SUMS.txt
+
+      - name: List release assets
+        run: ls -lh dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RestaurantApp ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          # Hyphenated tags (e.g. v1.0.0-dev) are development pre-releases;
+          # only plain version tags become the "latest" stable release.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          make_latest: ${{ !contains(github.ref_name, '-') }}
+          files: |
+            dist/molveno-linux-x64
+            dist/molveno-win-x64.exe
+            dist/molveno-osx-arm64
+            dist/source-code-${{ github.ref_name }}.zip
+            dist/SHA256SUMS.txt

@@ -1,0 +1,13 @@
+@props(['totalPending', 'totalReady', 'countCompleted'])
+
+<div class="flex items-center gap-5 text-sm">
+    <span class="flex items-center gap-1.5 text-sky-700">
+        <x-ui.badge variant="custom" :dot="true" dotColor="bg-sky-700" class="bg-transparent text-sky-700 px-0"><span data-summary="pending">{{ $totalPending }}</span> preparing</x-ui.badge>
+    </span>
+    <span class="flex items-center gap-1.5 text-amber-600 font-medium">
+        <x-ui.badge variant="custom" :dot="true" dotColor="bg-amber-400" class="bg-transparent text-amber-600 px-0"><span data-summary="ready">{{ $totalReady }}</span> ready</x-ui.badge>
+    </span>
+    <span class="flex items-center gap-1.5 text-green-600">
+        <x-ui.badge variant="custom" :dot="true" dotColor="bg-green-400" class="bg-transparent text-green-600 px-0"><span data-summary="completed">{{ $countCompleted }}</span> done</x-ui.badge>
+    </span>
+</div>
